@@ -1,0 +1,196 @@
+{
+  "feature_id": "02",
+  "feature_file": "02-graph-rendering.feature.md",
+  "generated": "2026-07-13",
+  "generator": "haiku-sub-agent via /peak-workflow:capture-requirements",
+  "requirements": [
+    {
+      "id": "TOR-02-k4HmFPL",
+      "title": "The /graph page footer shall display the application name and current semantic version matching the value declared in package.json",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "CLAUDE.md — Tool Hygiene & Operability: Version exposure",
+            "paraphrase": "Baseline tool-hygiene requirement: CLAUDE.md declares the web app's version-exposure mechanism is a footer display, since there is no server runtime for a /version endpoint."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-02-rG2HTvc",
+      "title": "The /graph page shall display a user-facing error message naming the problem and the next user action when graph-data.json or vector-index.json fails to load",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "The Next.js page must gracefully handle failures when fetching static graph and vector assets with helpful user-facing error messaging."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-02-TW7XEms",
+      "title": "The /graph page shall fetch graph-data.json and vector-index.json client-side on load and render all nodes and edges via react-force-graph without requiring any backend call after page load",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "Live-feeling static graph achieved by fetching precomputed graph-data.json client-side and rendering with react-force-graph."
+          },
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "The Next.js page fetches static graph-data.json and vector-index.json assets client-side and renders via react-force-graph with no backend calls."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S1",
+            "step": 1,
+            "paraphrase": "When a visitor lands on /graph, the page fetches graph-data.json and vector-index.json from static assets."
+          },
+          {
+            "scenario": "S4",
+            "step": 4,
+            "paraphrase": "The dev server locally runs the Next.js page, which fetches the locally-built graph-data.json and vector-index.json."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-02-Hja6xEo",
+      "title": "The /graph page shall render each edge from graph-data.json as a visible connecting line between the corresponding node pair",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Force-directed graph layout renders all edges from graph-data.json as visible connecting lines."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S1",
+            "step": 2,
+            "paraphrase": "The force-directed graph renders connecting lines for all edges, making relationships visible."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-02-AyzgOJs",
+      "title": "The /graph page shall color each node according to its folder/taxonomy value, using a visually distinct color per distinct taxonomy cluster",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "Nodes must be colored by folder taxonomy to visually group and distinguish content clusters."
+          },
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "Node color-coding by folder/taxonomy cluster mirrors content structure and organizes the graph visually."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S1",
+            "step": 2,
+            "paraphrase": "The force-directed graph renders nodes colored by folder/taxonomy cluster for visual organization."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-02-VIOZzEK",
+      "title": "The /graph page shall render a small distinct status dot per node reflecting its status value (active, revisiting, or dormant), styled separately from the node's taxonomy color",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "Status dot on each node displays active/revisiting/dormant state and must be visible and filterable."
+          },
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "Status dot is a small distinct indicator styled separately from taxonomy color to show engagement/freshness."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S1",
+            "step": 2,
+            "paraphrase": "Each node displays a status dot indicating its active/revisiting/dormant state."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-02-6fwdtOM",
+      "title": "The /graph page shall display a title tooltip when a visitor hovers over a node",
+      "traces_to": {
+        "vision": [],
+        "conops": [
+          {
+            "scenario": "S1",
+            "step": 3,
+            "paraphrase": "Visitors can hover over nodes to see title tooltips, enabling quick preview of node content."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-02-VLOPcgD",
+      "title": "The /graph page shall center and zoom the view on a clicked node with an animated transition lasting approximately 900 milliseconds",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "Click-to-node animation smoothly centers and zooms on clicked nodes with ~900ms duration for snappy interaction."
+          },
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "Click interactions feel snappy with ~900ms center/zoom animation, not instant jump-cut or sluggish delay."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S1",
+            "step": 4,
+            "paraphrase": "When a visitor clicks a node, the graph animates to center and zoom on that node over ~900ms."
+          },
+          {
+            "scenario": "S3",
+            "step": 2,
+            "paraphrase": "Clicking a node triggers a ~900ms center/zoom animation."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-02-mqgZkBc",
+      "title": "The /graph page shall render correctly with an empty graph (zero nodes) without a visible error, displaying an empty-state message instead",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "The 'generic point-at-a-repo tool' and 'live-feeling static graph' goals imply the page must degrade gracefully rather than break when a vault (e.g. a not-yet-populated public vault) yields zero nodes."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-02-pRzSHQL",
+      "title": "The /graph page shall remain interactive (pannable, zoomable, clickable) when rendering a graph of at least 40 nodes matching the seed public vault's target scale",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "The seed public vault contains 40+ sourced references; the graph must remain interactive at this scale."
+          }
+        ],
+        "conops": []
+      }
+    }
+  ],
+  "coverage_gaps": []
+}
