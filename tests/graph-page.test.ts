@@ -38,4 +38,26 @@ describe("app/graph/page.tsx", () => {
     expect(source).toContain("<SidePanel");
     expect(source).toContain("onNodeClick={setSelectedNode}");
   });
+
+  it("TOR-03-TOtRRhr: renders SearchInput above GraphCanvas", () => {
+    expect(source).toContain("<SearchInput");
+    expect(source).toContain("<GraphCanvas");
+    expect(source.indexOf("<SearchInput")).toBeLessThan(source.indexOf("<GraphCanvas"));
+  });
+
+  it("TOR-03-C1lczJo: captures the vector-index fetch into state instead of discarding it", () => {
+    expect(source).toContain("setVectorIndex(vectors)");
+    expect(source).not.toContain("await vectorResponse.json();\n");
+  });
+
+  it("TOR-03-6MpPbQh / TOR-03-UH4yx26: wires useSearchRanking's live scores into GraphCanvas", () => {
+    expect(source).toContain("useSearchRanking(");
+    expect(source).toContain("searchScores={scores}");
+    expect(source).toContain("relevanceThreshold={RELEVANCE_THRESHOLD}");
+  });
+
+  it("TOR-03-HjJLHTr: wires isSearchActive/hasResults into SearchInput", () => {
+    expect(source).toContain("isActive={isSearchActive}");
+    expect(source).toContain("hasResults={hasResults}");
+  });
 });

@@ -23,6 +23,8 @@ interface GraphCanvasProps {
   nodes: GraphNode[];
   edges: GraphEdge[];
   onNodeClick?: (node: GraphNode) => void;
+  searchScores?: Map<string, number> | null;
+  relevanceThreshold?: number;
 }
 
 const NODE_RADIUS = 5;
@@ -30,8 +32,15 @@ const STATUS_DOT_RADIUS = 2;
 const CLICK_ZOOM_LEVEL = 6;
 const CLICK_ZOOM_DURATION_MS = 900;
 const INITIAL_FIT_DURATION_MS = 400;
+const DIMMED_OPACITY = 0.15;
 
-export default function GraphCanvas({ nodes, edges, onNodeClick }: GraphCanvasProps) {
+export default function GraphCanvas({
+  nodes,
+  edges,
+  onNodeClick,
+  searchScores,
+  relevanceThreshold = 0,
+}: GraphCanvasProps) {
   const graphRef = useRef<ForceGraphMethods<GraphNode, GraphEdge> | undefined>(undefined);
 
   return (
@@ -43,6 +52,9 @@ export default function GraphCanvas({ nodes, edges, onNodeClick }: GraphCanvasPr
         const x = node.x ?? 0;
         const y = node.y ?? 0;
 
+        const dimmed = searchScores != null && (searchScores.get(node.id) ?? 0) < relevanceThreshold;
+        ctx.globalAlpha = dimmed ? DIMMED_OPACITY : 1;
+
         ctx.beginPath();
         ctx.arc(x, y, NODE_RADIUS, 0, 2 * Math.PI);
         ctx.fillStyle = getFolderColor(node.folder);
@@ -52,6 +64,8 @@ export default function GraphCanvas({ nodes, edges, onNodeClick }: GraphCanvasPr
         ctx.arc(x + NODE_RADIUS * 0.7, y - NODE_RADIUS * 0.7, STATUS_DOT_RADIUS, 0, 2 * Math.PI);
         ctx.fillStyle = statusColor(node.status);
         ctx.fill();
+
+        ctx.globalAlpha = 1;
       }}
       nodePointerAreaPaint={(node: NodeObject<GraphNode>, color: string, ctx: CanvasRenderingContext2D) => {
         const x = node.x ?? 0;

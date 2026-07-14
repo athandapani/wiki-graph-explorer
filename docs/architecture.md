@@ -30,7 +30,7 @@ whenever the source vault changes.
 | Styling | Tailwind CSS | ^4 | UI styling (graph controls, side panel, explainer) |
 | Test runner | Vitest | ^4.1.10 | Unit tests for build scripts and components |
 | Lint / format | ESLint + Prettier | ^9 / (bundled) | Static analysis and formatting |
-| Build-time embeddings | `@huggingface/transformers` with `Xenova/all-MiniLM-L6-v2` | ^4.2.0 | Per-page 384-dim embeddings; client-side query embedding mechanism pending (design-notes.md §4) |
+| Build-time embeddings | `@huggingface/transformers` with `Xenova/all-MiniLM-L6-v2` | ^4.2.0 | Per-page 384-dim embeddings; client-side query embedding via dynamic import (resolved, Epic TBZJM0j) |
 | Deployment | GitHub Pages via GitHub Actions | — | Hosting the static export |
 
 ---
@@ -102,17 +102,19 @@ Data fetching:
 - No backend API calls; all data is precomputed at build time.
 
 Graph Canvas Components:
-- `GraphCanvas.tsx` — Wrapper around `react-force-graph-2d`; renders nodes (colored by folder taxonomy via validated categorical palette) with small status dots (active/revisiting/dormant), edges, and hover tooltips showing node title and status. Click-to-center-zoom interaction animates over ~900ms; initial layout uses `zoomToFit`. Custom canvas draw callbacks (`nodeCanvasObject`, `nodePointerAreaPaint`) handle visual rendering. Exposes optional `onNodeClick` callback invoked when a node is clicked.
+- `GraphCanvas.tsx` — Wrapper around `react-force-graph-2d`; renders nodes (colored by folder taxonomy via validated categorical palette) with small status dots (active/revisiting/dormant), edges, and hover tooltips showing node title and status. Click-to-center-zoom interaction animates over ~900ms; initial layout uses `zoomToFit`. Custom canvas draw callbacks (`nodeCanvasObject`, `nodePointerAreaPaint`) handle visual rendering. Exposes optional `onNodeClick` callback invoked when a node is clicked. Accepts optional `searchScores` and `relevanceThreshold` props to dim non-matching nodes via `ctx.globalAlpha` during live search.
 - `nodeColor.ts` — Maps folder names to colors using an 8-hue validated categorical palette (worst adjacent CVD ΔE 24.2). Folders beyond 8 slots receive a generated golden-angle HSL color to avoid color collisions.
 - `StatusDot.tsx` — Maps content-freshness status (active/revisiting/dormant/unknown) to colors. Deliberately does NOT reuse the dataviz skill's reserved status palette (which means health/severity), since freshness is a different semantic concept. Reusable component for future UI expansions.
 - `EmptyState.tsx` — Renders a dedicated message when the graph contains zero nodes (e.g., empty vault).
 - `ErrorState.tsx` — Renders error message naming the problem and next action when JSON fetch fails.
+- `SearchInput.tsx` — Controlled search box with live query input. Displays "No closely matching results found" when a query has no results above the relevance threshold.
+- `useSearchRanking.ts` — React hook that debounces user input (250ms), performs client-side query embedding via dynamic import, scores every page by cosine similarity against its precomputed embedding, and returns scores and UI flags (isSearchActive, hasResults). Reuses the same `Xenova/all-MiniLM-L6-v2` model (384-dim) settled by the build-time embeddings step, guaranteeing embedding-space parity.
 - `SidePanel.tsx` — Slide-in panel that appears when a node is clicked, displaying the node's title, tags, content-freshness status dot, and list of directly connected related nodes. Includes a "View source on GitHub" link (built from hardcoded repo/branch/vault constants) that lets visitors verify page content is genuine and source-traced.
 - `Footer.tsx` — Displays `wiki-graph-explorer v<semver>` sourced from `package.json#version`.
 
 Design notes:
 - `react-force-graph-2d` touches canvas and window APIs at module scope, which breaks Next.js's build-time static-export prerender pass. The dynamic import with `ssr: false` ensures the library code never runs at build time, keeping the prerender pass clean even inside a `"use client"` file.
-- Semantic search UI (live query embedding and scoring) is deferred to a future epic pending a spike on client-side query embedding mechanisms.
+- Semantic search (live query embedding and cosine-similarity scoring) is implemented as of Epic TBZJM0j. Client-side query embedding delegates to the existing `computeEmbedding()` function via dynamic import, reusing the same model and configuration as build-time embeddings to guarantee embedding-space parity. See design-notes.md §19 for the resolution of this previously-open design question.
 
 ---
 

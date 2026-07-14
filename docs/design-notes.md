@@ -51,20 +51,21 @@ and only one of them is ever wired to the deployment path.
 
 ---
 
-## 4. Build-time page embeddings via `@huggingface/transformers` (resolved); client-side query embedding pending
+## 4. Build-time page embeddings via `@huggingface/transformers`; client-side query embedding resolved
 
 **Decision:** Build-time page embeddings are computed via `@huggingface/transformers` with
 `Xenova/all-MiniLM-L6-v2` (384 dimensions), written to `vector-index.json`, and fetched
-client-side. Client-side query embedding (for Scenario 2's live semantic search) remains a
-future epic requiring a spike before implementation.
+client-side. Client-side query embedding (for Scenario 2's live semantic search) is resolved via
+the same model, dynamically imported and reused in the browser at query time.
 
 **Rationale:** Real (not keyword-filter) semantic search is a core credibility requirement
-(Product Vision §2, §5). Build-time page embeddings are now settled and operational (Epic
-cxjcyqx). The `@huggingface/transformers` library with WASM/browser support was verified to work
-both at build-time (via Node.js) and has documented client-side browser support, making it a
-viable candidate for future client-side query embedding. However, the exact approach for embedding
-a live-typed query client-side and scoring it against precomputed page vectors must be resolved
-by a future spike epic before Scenario 2's search feature can be implemented.
+(Product Vision §2, §5). Build-time page embeddings are settled and operational (Epic
+cxjcyqx). The `@huggingface/transformers` library supports both Node.js (build-time) and browser
+(client-side) targets via conditional exports — no configuration changes were needed. Reusing the
+same model and configuration client-side (via `lib/query-embedding.ts` and `lib/cosine-similarity.ts`,
+integrated into the `useSearchRanking` hook) guarantees embedding-space parity between precomputed
+page vectors and live-typed queries, resolving the previously-open design question. See
+design-notes.md §19 for the implementation details of this resolution.
 
 ---
 
@@ -214,14 +215,51 @@ but doesn't prevent build-time imports.
 
 ---
 
-## 18. Known Issues and Deferred Work
+## 19. Client-Side Query Embedding Implementation: Dynamic Import + Debounce
 
-- **Client-side query embedding:** Scope for a future epic. Build-time embeddings are settled and operational (Epic cxjcyqx), but live query embedding and scoring requires architectural decisions (browser WASM/worker threading, network cost, query-vector caching). ConOps §8 flags this as a prerequisite for Scenario 2 (interactive semantic search).
+**Decision:** Client-side query embedding (for Scenario 2's live semantic search) delegates to the
+existing `computeEmbedding()` function via dynamic import inside the `useSearchRanking` hook,
+reusing `@huggingface/transformers` with `Xenova/all-MiniLM-L6-v2` (the same model settled by
+Epic cxjcyqx). The embedding is triggered inside a debounced effect (250ms), and every page is
+scored by cosine similarity against its precomputed embedding. A `RELEVANCE_THRESHOLD = 0.3`
+filters results. All execution is on the main thread; non-matching nodes are dimmed via
+`ctx.globalAlpha` in the canvas rendering loop (GraphCanvas.tsx).
 
-- **Semantic search UI:** The `/graph` page renders the force-directed graph with interactive zoom and click-to-center, and clicking a node opens a side panel showing selected node details (Epic V3PlLFL, now complete). A semantic search box is deferred to a future epic, pending resolution of client-side query embedding mechanisms (see "Client-side query embedding" above).
+**Rationale:** The open-risk question in §4 (exact approach for client-side query embedding) is
+resolved by the package design of `@huggingface/transformers` — its `exports` map resolves to
+`dist/transformers.web.js` for bundlers (Next.js/webpack), requiring zero configuration changes.
+Reusing the same model guarantees embedding-space parity with `vector-index.json` by construction.
+Debounce (250ms) balances responsiveness with WASM inference cost. Main-thread execution is
+justified at current vault scale (2–41 nodes per documented verification session). See
+Epic TBZJM0j handoff for the complete verification, including independent network-capture
+confirmation that no backend `/api/*` calls are made and all model weights are fetched from the
+public `huggingface.co` CDN.
 
-- **Graph legend / "Other" folder grouping:** Vaults with more than 8 distinct folders see golden-angle-generated colors for overflow folders (§13). A proper UI legend and possible "Other" category grouping for overflow remain out of scope for current epics.
+---
 
-- **GitHub Actions deployment workflow:** `.github/workflows/deploy.yml` is implemented and tested. Manual one-time setup required: Settings → Pages → Source: GitHub Actions must be enabled in the GitHub repo settings before the first deployment can publish to GitHub Pages.
+## 20. Known Issues and Deferred Work
 
-- **Requirements baseline misalignment (follow-up action):** The original TOR requirements (TOR-01-NTPrx23, TOR-01-IBry2Oi in `docs/requirements/01-build-pipeline.feature.md`) describe Related/Referenced By sourcing from YAML frontmatter. The implemented solution sources them from Markdown body sections (`## Related`, `## Referenced By` containing `[[slug|Title]]` wikilinks), which is correct against real vault data but a deviation from the literal Gherkin wording. A follow-up `/peak-workflow:capture-requirements` brownfield pass should correct the requirements baseline to prevent future confusion.
+- **Error handling for query embedding failure:** `useSearchRanking.ts` has no error boundary for
+  `embedQuery()` rejection (offline first visit, unsupported browser). On model-load failure, the
+  UI silently stalls in "still searching" state rather than surfacing a visible error. No TOR
+  describes this scenario, so not a requirements gap, but recommended as a follow-up quality
+  improvement.
+
+- **Web Worker consideration:** Main-thread query embedding is acceptable at current vault scale;
+  worth revisiting if a much larger public vault makes inference noticeably janky.
+
+- **Graph legend / "Other" folder grouping:** Vaults with more than 8 distinct folders see
+  golden-angle-generated colors for overflow folders (§13). A proper UI legend and possible
+  "Other" category grouping for overflow remain out of scope for current epics.
+
+- **GitHub Actions deployment workflow:** `.github/workflows/deploy.yml` is implemented and
+  tested. Manual one-time setup required: Settings → Pages → Source: GitHub Actions must be
+  enabled in the GitHub repo settings before the first deployment can publish to GitHub Pages.
+
+- **Requirements baseline misalignment (follow-up action):** The original TOR requirements
+  (TOR-01-NTPrx23, TOR-01-IBry2Oi in `docs/requirements/01-build-pipeline.feature.md`) describe
+  Related/Referenced By sourcing from YAML frontmatter. The implemented solution sources them from
+  Markdown body sections (`## Related`, `## Referenced By` containing `[[slug|Title]]` wikilinks),
+  which is correct against real vault data but a deviation from the literal Gherkin wording. A
+  follow-up `/peak-workflow:capture-requirements` brownfield pass should correct the requirements
+  baseline to prevent future confusion.
