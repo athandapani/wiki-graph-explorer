@@ -1,15 +1,23 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
+import { EmptyState } from "@/components/graph/EmptyState";
+import { ErrorState } from "@/components/graph/ErrorState";
+import { Footer } from "@/components/graph/Footer";
+import type { GraphEdge, GraphNode } from "@/components/graph/GraphCanvas";
+
+// react-force-graph-2d touches canvas/window at module scope, which breaks Next's build-time
+// prerender pass even inside a "use client" file — ssr: false keeps it out of that pass.
+const GraphCanvas = dynamic(() => import("@/components/graph/GraphCanvas"), { ssr: false });
 
 interface GraphData {
-  nodes: unknown[];
-  edges: unknown[];
+  nodes: GraphNode[];
+  edges: GraphEdge[];
 }
 
 export default function GraphPage() {
   const [graphData, setGraphData] = useState<GraphData | null>(null);
-  const [vectorIndexCount, setVectorIndexCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -23,9 +31,8 @@ export default function GraphPage() {
           throw new Error("Failed to load graph data.");
         }
         const graph = (await graphResponse.json()) as GraphData;
-        const vectorIndex = (await vectorResponse.json()) as unknown[];
+        await vectorResponse.json();
         setGraphData(graph);
-        setVectorIndexCount(vectorIndex.length);
       } catch {
         setError("Failed to load graph data.");
       }
@@ -33,18 +40,20 @@ export default function GraphPage() {
     void load();
   }, []);
 
-  if (error) {
-    return <p>{error}</p>;
-  }
-
-  if (!graphData) {
-    return <p>Loading graph…</p>;
-  }
-
   return (
-    <p>
-      Loaded {graphData.nodes.length} nodes, {graphData.edges.length} edges (
-      {vectorIndexCount} embeddings). Full graph rendering coming soon.
-    </p>
+    <div className="flex min-h-full flex-col">
+      <div className="flex-1">
+        {error ? (
+          <ErrorState />
+        ) : !graphData ? (
+          <p>Loading graph…</p>
+        ) : graphData.nodes.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <GraphCanvas nodes={graphData.nodes} edges={graphData.edges} />
+        )}
+      </div>
+      <Footer />
+    </div>
   );
 }
