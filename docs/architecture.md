@@ -20,16 +20,18 @@ whenever the source vault changes.
 
 ## 2. Tech Stack
 
-| Layer | Technology | Purpose |
-|---|---|---|
-| Framework | Next.js (`output: 'export'`), React, TypeScript | Static-export web app |
-| Package manager | npm | Dependency management |
-| Graph visualization | `react-force-graph` | Force-directed graph rendering |
-| Styling | Tailwind CSS | UI styling (graph controls, side panel, explainer) |
-| Test runner | Vitest | Unit tests for build scripts and components |
-| Lint / format | ESLint + Prettier | Static analysis and formatting |
-| Build-time embeddings | *(undecided — open risk, see design-notes.md)* | Per-page and query embeddings for semantic search |
-| Deployment | GitHub Pages via GitHub Actions | Hosting the static export |
+| Layer | Technology | Version | Purpose |
+|---|---|---|---|
+| Framework | Next.js (`output: 'export'`) | 16.2.10 | Static-export web app |
+| UI Library | React | 19.2.4 | Component model and rendering |
+| Language | TypeScript | ^5 | Type-safe JavaScript |
+| Package manager | npm | (bundled) | Dependency management |
+| Graph visualization | `react-force-graph` | (TBD) | Force-directed graph rendering |
+| Styling | Tailwind CSS | ^4 | UI styling (graph controls, side panel, explainer) |
+| Test runner | Vitest | ^4.1.10 | Unit tests for build scripts and components |
+| Lint / format | ESLint + Prettier | ^9 / (bundled) | Static analysis and formatting |
+| Build-time embeddings | *(undecided — open risk, see design-notes.md)* | — | Per-page and query embeddings for semantic search |
+| Deployment | GitHub Pages via GitHub Actions | — | Hosting the static export |
 
 ---
 
@@ -44,19 +46,35 @@ whenever the source vault changes.
 
 ## 4. API Design
 
-*(to be completed during implementation — endpoint table will be derived from the codebase)*
+No server runtime in production. The CLI surface is:
 
-No server runtime is planned in production; if any API-shaped surface emerges (e.g. a build
-script CLI interface), document it here instead of as HTTP endpoints.
+| Command | Flags | Behavior | Exit Code |
+|---|---|---|---|
+| `npm run build:graph -- --version` | `--version` | Prints `wiki-graph-explorer v<semver>` to stdout, exits silently | 0 |
+| `npm run build:graph -- --vault <path>` | `--vault <path>` (required) | Validates `<path>` is a directory, walks the vault, writes `graph-data.json` and `vector-index.json`, prints summary to stdout | 0 (success) or 1 (vault not found) |
+| `npm run build:graph` | (no args) | Missing required `--vault` flag | 2 |
+| `npm run build:graph -- --unknown` | Unknown flag | Unrecognized flag | 2 |
+
+- `--vault` is strictly required with no fallback (no environment variable, no current directory default, no cache).
+- Version is the single source of truth from `package.json#version`.
 
 ---
 
 ## 5. Backend Architecture
 
-*(to be completed during implementation — folder structure, key patterns, and service registrations)*
+The build-time pipeline is a Node.js CLI tool implemented across three modules:
 
-Expected shape: a build-time script (`scripts/build-graph.ts`) that walks the vault, parses
-frontmatter, derives `graph-data.json` and `vector-index.json`. No persistent backend service.
+| Module | Responsibility |
+|---|---|
+| `lib/cli.ts` | Parses `process.argv`, validates `--version` / `--vault` flags, returns `ParsedArgs` union (one of: version request, error with exit code, run request with vault path). |
+| `lib/logger.ts` | Stderr-only structured logger with four levels (DEBUG, INFO, WARN, ERROR), emitting format `[LEVEL] message`. All non-stdout output routes here. |
+| `scripts/build-graph.ts` | Main entrypoint. Reads version from `package.json`, delegates arg parsing to `cli.ts`, emits startup log line before any processing, validates vault path existence (exit 1 if not found), walks vault (future epic), writes `graph-data.json` and `vector-index.json`, emits final summary line to stdout, exits 0. |
+
+Key implementation details:
+- Version is read at runtime from `package.json` to ensure single source of truth (no hardcoding).
+- Startup log line (`[INFO] wiki-graph-explorer v<version> starting`) is emitted immediately after arg parsing and before any vault access, so it is the first observable output.
+- `--version` short-circuits before any startup log is emitted, so version queries remain silent on stderr (consistent with POSIX tools).
+- Vault walking and frontmatter parsing are deferred to a later epic; this epic stubs the output as `{ nodes: [], edges: [] }` to satisfy the TOR output contract.
 
 ---
 
