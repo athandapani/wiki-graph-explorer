@@ -1,7 +1,10 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "../lib/cli";
+import { buildGraph } from "../lib/graph-builder";
+import { writeGraphData } from "../lib/graph-data-writer";
 import * as logger from "../lib/logger";
+import { walkVault } from "../lib/vault-walker";
 
 function readVersion(): string {
   const pkgPath = path.join(__dirname, "..", "package.json");
@@ -34,16 +37,13 @@ function main(): void {
     process.exit(1);
   }
 
-  // Vault walking / frontmatter parsing is implemented in a later epic (rTWYZfw). For now this
-  // writes an empty stub so the build tool's output contract (TOR-01-847tYDS) is satisfiable.
-  const outputDir = path.join(process.cwd(), "local-build");
-  fs.mkdirSync(outputDir, { recursive: true });
-  const graphData = { nodes: [], edges: [] };
-  fs.writeFileSync(path.join(outputDir, "graph-data.json"), JSON.stringify(graphData, null, 2));
+  const filePaths = walkVault(vaultPath);
+  const { nodes, edges } = buildGraph(vaultPath, filePaths, logger.warn);
 
-  process.stdout.write(
-    `Wrote graph-data.json (${graphData.nodes.length} nodes, ${graphData.edges.length} edges)\n`,
-  );
+  const outputDir = path.join(process.cwd(), "local-build");
+  writeGraphData(outputDir, nodes, edges);
+
+  process.stdout.write(`Wrote graph-data.json (${nodes.length} nodes, ${edges.length} edges)\n`);
   process.exit(0);
 }
 
