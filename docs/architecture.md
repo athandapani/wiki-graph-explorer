@@ -102,11 +102,12 @@ Data fetching:
 - No backend API calls; all data is precomputed at build time.
 
 Graph Canvas Components:
-- `GraphCanvas.tsx` — Wrapper around `react-force-graph-2d`; renders nodes (colored by folder taxonomy via validated categorical palette) with small status dots (active/revisiting/dormant), edges, and hover tooltips showing node title and status. Click-to-center-zoom interaction animates over ~900ms; initial layout uses `zoomToFit`. Custom canvas draw callbacks (`nodeCanvasObject`, `nodePointerAreaPaint`) handle visual rendering.
+- `GraphCanvas.tsx` — Wrapper around `react-force-graph-2d`; renders nodes (colored by folder taxonomy via validated categorical palette) with small status dots (active/revisiting/dormant), edges, and hover tooltips showing node title and status. Click-to-center-zoom interaction animates over ~900ms; initial layout uses `zoomToFit`. Custom canvas draw callbacks (`nodeCanvasObject`, `nodePointerAreaPaint`) handle visual rendering. Exposes optional `onNodeClick` callback invoked when a node is clicked.
 - `nodeColor.ts` — Maps folder names to colors using an 8-hue validated categorical palette (worst adjacent CVD ΔE 24.2). Folders beyond 8 slots receive a generated golden-angle HSL color to avoid color collisions.
 - `StatusDot.tsx` — Maps content-freshness status (active/revisiting/dormant/unknown) to colors. Deliberately does NOT reuse the dataviz skill's reserved status palette (which means health/severity), since freshness is a different semantic concept. Reusable component for future UI expansions.
 - `EmptyState.tsx` — Renders a dedicated message when the graph contains zero nodes (e.g., empty vault).
 - `ErrorState.tsx` — Renders error message naming the problem and next action when JSON fetch fails.
+- `SidePanel.tsx` — Slide-in panel that appears when a node is clicked, displaying the node's title, tags, content-freshness status dot, and list of directly connected related nodes. Includes a "View source on GitHub" link (built from hardcoded repo/branch/vault constants) that lets visitors verify page content is genuine and source-traced.
 - `Footer.tsx` — Displays `wiki-graph-explorer v<semver>` sourced from `package.json#version`.
 
 Design notes:
