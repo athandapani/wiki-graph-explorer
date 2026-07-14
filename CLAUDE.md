@@ -142,6 +142,8 @@ Before marking an epic complete, run:
 - `docs/product-vision-planning/product-vision.md` — product vision & MVP scope
 - `docs/product-vision-planning/concept-of-operations.md` — operational scenarios, data flows,
   constraints
+- `docs/requirements/` — TOR requirements baseline (Gherkin `.feature.md` files + tracing
+  sidecars)
 - Original scoping session: `plans/PHASE-2-wiki-graph-explorer.md` in the `second-brain-site`
   repo (this tool was promoted out of that repo to be developed independently)
 - Inspiration reference: Nate Herk's "AI Stack, Connected" interactive graph demo
