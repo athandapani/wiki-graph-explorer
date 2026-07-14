@@ -11,6 +11,7 @@ export interface GraphNode {
   tags: string[];
   status: string;
   folder: string;
+  path: string;
 }
 
 export interface GraphEdge {
@@ -21,6 +22,7 @@ export interface GraphEdge {
 interface GraphCanvasProps {
   nodes: GraphNode[];
   edges: GraphEdge[];
+  onNodeClick?: (node: GraphNode) => void;
 }
 
 const NODE_RADIUS = 5;
@@ -29,7 +31,7 @@ const CLICK_ZOOM_LEVEL = 6;
 const CLICK_ZOOM_DURATION_MS = 900;
 const INITIAL_FIT_DURATION_MS = 400;
 
-export default function GraphCanvas({ nodes, edges }: GraphCanvasProps) {
+export default function GraphCanvas({ nodes, edges, onNodeClick }: GraphCanvasProps) {
   const graphRef = useRef<ForceGraphMethods<GraphNode, GraphEdge> | undefined>(undefined);
 
   return (
@@ -64,6 +66,7 @@ export default function GraphCanvas({ nodes, edges }: GraphCanvasProps) {
         const y = node.y ?? 0;
         graphRef.current?.centerAt(x, y, CLICK_ZOOM_DURATION_MS);
         graphRef.current?.zoom(CLICK_ZOOM_LEVEL, CLICK_ZOOM_DURATION_MS);
+        onNodeClick?.(node);
       }}
       onEngineStop={() => {
         graphRef.current?.zoomToFit(INITIAL_FIT_DURATION_MS);

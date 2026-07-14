@@ -8,6 +8,7 @@ export interface NodeRecord {
   tags: string[];
   status: string;
   folder: string;
+  path: string;
 }
 
 export interface EdgeRecord {
@@ -54,6 +55,7 @@ export function buildGraph(
       tags: parsed.tags,
       status: parsed.status,
       folder,
+      path: relPath,
     });
 
     pageTexts.push({
