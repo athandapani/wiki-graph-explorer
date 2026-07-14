@@ -1,0 +1,36 @@
+# Discovery Changelog
+
+**Date:** 2026-07-14
+**Mode:** Brownfield (post-MVP ideation)
+**Previous Version:** 1.0
+
+## What Changed
+
+| Document | Section | Change Type | Summary |
+|----------|---------|-------------|---------|
+| product-vision.md | §6 MVP Scope Summary | Modified | Graph view now specifies two selectable layout modes (force-directed default + new swim-lane) behind a toggle |
+| product-vision.md | §8 Key Business Scenarios | Added | New scenario 7: Layout mode exploration |
+| product-vision.md | §9 Design Direction | Modified | Split into force-directed (unchanged) and swim-lane (new) design bullets; documents the 4-lane cap and toggle behavior |
+| concept-of-operations.md | §3 Proposed System | Modified | Appended description of the layout-mode toggle and swim-lane rendering behavior |
+| concept-of-operations.md | §5 Operational Scenarios | Added | New Scenario 7: Layout mode exploration, with 8 numbered steps |
+| concept-of-operations.md | §7 Functional Summary | Modified | Graph rendering row now covers both layout modes |
+| concept-of-operations.md | §8 Operational Constraints & Assumptions | Added | New open risk: swim-lane rendering technical approach (react-force-graph fixed-position vs. custom renderer) unresolved, needs a spike; new constraint row documenting layout modes share one data fetch |
+| concept-of-operations.md | §9 Glossary | Added | New terms: "Swim lane", "Pill node" |
+
+## New Capabilities Identified
+
+- **Swim-lane layout mode**: a second, additive graph rendering mode inspired directly by Nate Herk's "AI Stack, Connected" demo — up to 4 horizontal lanes grouped by existing folder/taxonomy field, pill-shaped labeled nodes, edges hidden until a node is clicked, then animated curved connector lines draw from the clicked node to its related nodes. No camera pan/zoom in this mode (static board).
+- **Layout mode toggle**: a persistent UI control switching between force-directed (existing, unchanged) and swim-lane (new) rendering, with no data refetch — both modes render from the same `graph-data.json`.
+- **Lane-capping rule**: folders beyond the 4 largest/most-populated collapse into a single "Other" lane, to guarantee the board fits without a scrollbar.
+
+## Priority Signal
+
+- The user was explicit that the original inspiration reference (Nate Herk's tiered/pill/animated-connection demo) was the actual intended visual, and that the currently-built force-directed graph (epic baPTSK2, already Complete) reads as "too messy" on its own.
+- However, the user wants the toggle to **add** swim-lane mode alongside force-directed, not replace it — de-risking the change relative to already-completed and already-verified TOR-02 requirements for force-directed mode.
+- Swim-lane mode's defining interaction (animated on-click connector-line draw, static board) is the priority; force-directed mode requires no behavior change at all.
+
+## Deferred Items
+
+- The exact bucketing rule for which folders get their own lane vs. collapse into "Other" (e.g., top-N by node count vs. a manually curated list) is deferred to requirements capture / epic planning — flagged as an open risk in ConOps §8, not resolved in this discovery pass.
+- Whether `react-force-graph`'s fixed-position (`fx`/`fy`) mode can support the swim-lane visual and animation requirements, or whether a separate custom renderer is needed, is deferred to a technical spike (same open-risk entry).
+- No changes were made to the public vault's actual taxonomy/folder content (still seed/placeholder — only `concepts/` and `sources/` exist) — real lane assignment can't be finalized until the 40+-reference research vault is ingested (Product Vision §6, unchanged item).

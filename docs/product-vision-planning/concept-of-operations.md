@@ -1,7 +1,7 @@
 # wiki-graph-explorer — Concept of Operations (ConOps)
 
-**Document Version:** 1.0
-**Date:** 2026-07-12
+**Document Version:** 1.1
+**Date:** 2026-07-14
 **Status:** Draft
 
 ---
@@ -42,6 +42,14 @@ Visitors interact directly: clicking a node centers/zooms (~900ms animated) and 
 with page detail plus a GitHub source link; typing a query into the search box re-ranks and
 live-filters the graph via client-side cosine similarity against the precomputed embeddings — no
 backend calls after page load.
+
+A layout-mode toggle lets a visitor switch between this force-directed view and a swim-lane view.
+In swim-lane mode, the graph renders as a fixed board (no camera pan/zoom) of up to 4 horizontal
+lanes grouped by folder/taxonomy (folders beyond 4 collapse into a shared "Other" lane), with
+nodes rendered as labeled pill shapes. Edges are hidden by default in this mode; clicking a node
+animates curved connector lines from it to each related node and opens the side panel — the same
+side panel used in force-directed mode. Force-directed mode itself is unchanged: always-visible
+edges, click-to-zoom, no line animation.
 
 The deployed instance always points at a dedicated, always-public vault — seeded initially with
 original research on AI adoption in medium-sized enterprises (40+ sourced references) — never at
@@ -152,6 +160,23 @@ the private `second-brain` vault, which is used only for local, unpublished dev 
 
 **Outcome:** The explainer's abstract claim ("visualizing surfaces missing links") is demonstrated concretely through a real example in the live data
 
+### Scenario 7: Layout mode exploration
+**Actor:** Any visitor
+**Trigger:** Visitor clicks the layout-mode toggle on `/graph`
+**Goal:** Explore the graph in the presentation-style swim-lane layout, mirroring the Nate Herk "AI Stack, Connected" reference demo
+
+**Steps:**
+1. Visitor lands on `/graph` in the default force-directed mode
+2. Visitor clicks the layout-mode toggle
+3. The board re-renders as up to 4 horizontal lanes of pill-shaped nodes, grouped by folder/taxonomy (edges hidden, no camera movement)
+4. Visitor clicks a pill node
+5. Curved connector lines animate from the clicked node to each related node across lanes
+6. The side panel opens showing the same page detail as force-directed mode
+7. Visitor clicks another pill node; the prior connector lines clear and new ones animate from the newly clicked node
+8. Visitor toggles back to force-directed mode; the graph returns to its prior force-directed state
+
+**Outcome:** Visitor experiences both the original reference-demo-style tiered layout and the familiar force-directed exploration, confirming the tool offers both without conflicting behavior
+
 ## 6. System Interfaces & Data Flows
 
 | Source | Format | Produced By |
@@ -182,7 +207,7 @@ the private `second-brain` vault, which is used only for local, unpublished dev 
 
 | Area | Features |
 |---|---|
-| Graph rendering | Force-directed layout, folder/taxonomy coloring, status dots, undirected edges, click-to-center-zoom (~900ms) |
+| Graph rendering | Layout-mode toggle: force-directed (default — always-visible edges, folder/taxonomy coloring, status dots, click-to-center-zoom ~900ms) OR swim-lane (up to 4 folder/taxonomy lanes, pill nodes, edges hidden until click, then animated connector-line draw, no camera movement) |
 | Search | Build-time embeddings, static vector-index, client-side cosine similarity, live graph filtering |
 | Side panel | Page detail, GitHub source link |
 | Explainer | "Why build this" static content section |
@@ -200,6 +225,7 @@ the private `second-brain` vault, which is used only for local, unpublished dev 
 | Licensing | `react-force-graph` chosen partly to avoid `Cosmograph`'s CC BY-NC 4.0 ambiguity |
 | Input scope | Local filesystem path only; no remote-clone support yet |
 | **Open risk** | Client-side query embedding (Scenario 2, step 2) has no settled technical approach yet — needs a spike (e.g. transformers.js/WASM) before Scenario 2 is buildable as specified |
+| **Open risk** | Swim-lane rendering technical approach (Scenario 7) is unresolved — needs a spike to determine whether `react-force-graph`'s fixed-position mode (`fx`/`fy`) plus custom line-draw animation is sufficient, or whether a separate custom-built (SVG/Canvas) tiered renderer is required. The exact >4-folder "Other" lane bucketing rule also needs confirming once real vault taxonomy data exists |
 
 ## 9. Glossary
 
@@ -212,4 +238,7 @@ the private `second-brain` vault, which is used only for local, unpublished dev 
 | Status dot | Per-page engagement/freshness indicator, explicit frontmatter field |
 | `graph-data.json` | Static build artifact: nodes/edges/taxonomy/status |
 | `vector-index.json` | Static build artifact: precomputed per-page embeddings |
+| Swim lane | A horizontal band in the swim-lane layout mode grouping nodes by folder/taxonomy; capped at 4 visible lanes, with overflow folders collapsed into an "Other" lane |
+| Pill node | A rounded, labeled node shape used in swim-lane mode (vs. the bare colored dot used in force-directed mode) |
 | Rebuild-on-publish | New content requires a rebuild+redeploy; no real-time backend |
+| Layout mode | Force-directed and swim-lane are both client-side rendering modes over the same `graph-data.json`; no separate data fetch or build artifact per mode |

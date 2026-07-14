@@ -1,7 +1,7 @@
 # wiki-graph-explorer — Product Vision & Brief
 
-**Document Version:** 1.0
-**Date:** 2026-07-12
+**Document Version:** 1.1
+**Date:** 2026-07-14
 **Status:** Draft
 
 ---
@@ -63,9 +63,17 @@ in seconds what a paragraph of prose can only claim.
 
 ## 6. MVP Scope Summary
 
-- **Graph view**: force-directed layout (`react-force-graph`), node color by folder/taxonomy,
-  status-dot per node, `Related`/`Referenced By` collapsed into single undirected edges,
-  click-to-center-and-zoom (~900ms)
+- **Graph view**: two selectable layout modes via a visible toggle —
+  - *Force-directed* (existing/default): `react-force-graph`, node color by folder/taxonomy,
+    status-dot per node, `Related`/`Referenced By` collapsed into single undirected edges, all
+    edges always visible, click-to-center-and-zoom (~900ms), no line animation
+  - *Swim-lane* (new): static board (no camera pan/zoom), nodes grouped into up to 4 horizontal
+    lanes by folder/taxonomy (folders beyond 4 collapse into a shared "Other" lane; the
+    largest/most-populated folders each get their own lane), nodes rendered as labeled pill
+    shapes rather than bare dots, edges hidden by default — clicking a node animates curved
+    connector lines drawn from it to each connected node and opens the side panel
+  - Both modes share the same node coloring, status dots, hover tooltips, and
+    side-panel/search integration; switching modes is instant, no data refetch
 - **Search**: build-time embeddings per page (title/body/tags) → static vector-index JSON asset;
   client-side cosine-similarity ranking as the user types
 - **Side panel**: page detail + GitHub source link on node click
@@ -116,15 +124,29 @@ the homepage; `react-force-graph` chosen over `sigma.js`/`Cosmograph` partly to 
 6. **Missing-link discovery** — a visitor reads the "why build this" explainer and notices an
    under-connected node or isolated cluster, illustrating how graph visualization surfaces content
    gaps.
+7. **Layout mode exploration** — a visitor toggles from the default force-directed view to the
+   swim-lane view (tiered pill nodes, animated on-click connection lines, directly mirroring the
+   Nate Herk "AI Stack, Connected" reference demo), explores clustered lanes, then toggles back —
+   confirming the tool offers both a familiar force-directed explorer and a more structured,
+   presentation-style layout.
 
 ## 9. Design Direction
 
-- Force-directed graph as the primary visual, on a secondary page (`/graph`), not the
-  homepage/centerpiece
-- Node color-coding by folder/taxonomy cluster, mirroring the reference demo's category clusters
-- Status dot (`active`/`revisiting`/`dormant`) as a small distinct indicator — not a rating scale
-- Click interactions feel snappy: ~900ms center/zoom, not instant jump-cut, not sluggish
-- Side panel slides in without a full page navigation, keeping graph context visible
+- Two selectable layout modes on a secondary page (`/graph`), not the homepage/centerpiece:
+  force-directed (default) and swim-lane
+- Force-directed mode is unchanged from the original design: node color-coding by
+  folder/taxonomy cluster, always-visible edges, ~900ms click-to-center/zoom, no line animation
+- Swim-lane mode more literally mirrors the Nate Herk "AI Stack, Connected" reference demo:
+  fixed board (no camera pan/zoom), up to 4 horizontal lanes grouped by folder/taxonomy, nodes
+  as labeled pill shapes, edges hidden until a node is clicked, then animated connector lines
+  draw from the clicked node to each related node
+- The 4-lane cap is a hard visual constraint (the board must be fully visible with no
+  scrollbar), not just a preference — folders beyond 4 collapse into a shared "Other" lane
+- The mode toggle is a persistent, obvious control — switching feels instant, no data refetch
+- Status dot (`active`/`revisiting`/`dormant`) as a small distinct indicator — not a rating
+  scale — present in both modes
+- Side panel slides in without a full page navigation, keeping graph context visible — shared
+  behavior across both modes
 - Overall aesthetic reads as real webapp engineering (per the companion portfolio-site plan) — not
   a templated digital-garden look
 

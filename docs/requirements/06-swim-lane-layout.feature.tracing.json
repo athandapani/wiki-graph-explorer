@@ -1,0 +1,271 @@
+{
+  "feature_id": "06",
+  "feature_file": "06-swim-lane-layout.feature.md",
+  "generated": "2026-07-14",
+  "generator": "haiku-sub-agent via /peak-workflow:capture-requirements",
+  "requirements": [
+    {
+      "id": "TOR-06-DRtjcOk",
+      "title": "The /graph page shall display a layout-mode toggle control that switches between force-directed and swim-lane rendering modes",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "The graph view provides two selectable layout modes accessible via a visible toggle to let users switch between force-directed and swim-lane presentations."
+          },
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "The mode toggle is a prominent, persistent control on the interface that enables instant switching between the two layout presentations."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 2,
+            "paraphrase": "When a visitor clicks the layout-mode toggle, the interface responds by switching the board rendering between force-directed and swim-lane modes."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-06-mvJp8Oa",
+      "title": "The /graph page shall switch between layout modes without making a new network request for graph-data.json or vector-index.json",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Switching between modes is an instant client-side operation with no data refetch, allowing both modes to share the same fetched assets."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 3,
+            "paraphrase": "When the visitor toggles the layout mode, the board re-renders instantly using the already-fetched data without triggering new network requests."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-06-AFMTHM6",
+      "title": "The /graph page shall restore the force-directed view's prior pan/zoom state when a visitor toggles from swim-lane mode back to force-directed mode",
+      "traces_to": {
+        "vision": [],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 8,
+            "paraphrase": "When a visitor toggles back to force-directed mode from swim-lane mode, the graph restores the exact pan and zoom position it held before switching."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-06-6dbr9Jn",
+      "title": "The /graph page shall render nodes in swim-lane mode grouped into horizontal lanes by folder/taxonomy value, with at most 4 lanes visible",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Swim-lane mode organizes nodes into up to 4 horizontal lanes grouped by their folder/taxonomy classification, with the largest folders each receiving their own lane."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 3,
+            "paraphrase": "When the visitor toggles to swim-lane mode, the board re-renders with nodes organized into horizontal lanes, each grouped by its folder/taxonomy value, capped at 4 visible lanes."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-06-a3pVfbc",
+      "title": "The /graph page shall collapse folder/taxonomy values beyond the 4 largest into a single shared \"Other\" lane in swim-lane mode",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Folders beyond the 4 largest (measured by node count) collapse together into a single shared 'Other' lane to maintain the hard 4-lane visual constraint."
+          },
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "The 4-lane cap is a hard visual constraint enforced by collapsing all folders beyond the 4 most-populated into a shared 'Other' lane."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 3,
+            "paraphrase": "When the swim-lane board renders, folders beyond the 4 largest are grouped together into a single lane, preserving the fixed 4-lane layout."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-06-hCQUwZW",
+      "title": "The /graph page shall render each node in swim-lane mode as a labeled pill shape displaying the node's title",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Swim-lane mode renders nodes as labeled pill-shaped elements (rather than bare dots), each displaying the page's title inline."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 3,
+            "paraphrase": "When the swim-lane board renders, nodes appear as pill-shaped elements with inline title text, arranged within their respective lanes."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-06-0ZRtILL",
+      "title": "The /graph page shall display all swim-lane mode lanes within the viewport without a vertical scrollbar at default viewport size",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "The 4-lane cap enforces a hard visual constraint requiring all lanes to fit within the viewport without vertical scrolling at default size."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 3,
+            "paraphrase": "When the swim-lane board renders, all lanes fit within the visible viewport without requiring vertical scroll, maintaining full visibility of the layout."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-06-RlMt9hc",
+      "title": "The /graph page shall NOT pan or zoom the camera view when a visitor clicks a node in swim-lane mode",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Swim-lane mode uses a static, fixed-position board layout without camera pan/zoom, distinguishing it from force-directed mode's click-to-center behavior."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 4,
+            "paraphrase": "When the visitor clicks a pill node in swim-lane mode, the board position remains unchanged, maintaining the static layout perspective."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-06-tq70ta7",
+      "title": "The /graph page shall hide edges by default in swim-lane mode until a node is clicked",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Swim-lane mode hides connector edges by default, revealing them only when a node is clicked to animate the connection visualization."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 3,
+            "paraphrase": "When the swim-lane board renders, no connector lines are initially visible, keeping the lanes clean until the visitor interacts with a node."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-06-pbVYver",
+      "title": "The /graph page shall animate a curved connector line from a clicked node to each of its related nodes, drawing smoothly from source to destination over approximately 950 milliseconds",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Swim-lane mode uses animated curved connector lines drawn from a clicked node to each related node, directly mirroring the Nate Herk 'AI Stack, Connected' reference demo."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 5,
+            "paraphrase": "When the visitor clicks a pill node, curved connector lines animate smoothly from that node to each related node across the lanes."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-06-baMJL3X",
+      "title": "The /graph page shall clear previously animated connector lines and draw new ones when a different node is clicked in swim-lane mode",
+      "traces_to": {
+        "vision": [],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 7,
+            "paraphrase": "When the visitor clicks a different node, the prior connector lines immediately clear and new lines animate from the newly clicked node."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-06-n4fJkbK",
+      "title": "The /graph page shall open a side panel displaying the clicked node's page detail and a \"View source on GitHub\" link when a node is clicked in swim-lane mode",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Swim-lane mode integrates the same side-panel behavior as force-directed mode, opening to display page detail and GitHub source links on node click."
+          },
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "The side panel slides in without full page navigation, maintaining graph context visibility and providing consistent access to page detail across both layout modes."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 6,
+            "paraphrase": "When the visitor clicks a pill node, the side panel opens to show the node's page detail including title, tags, and status dot, plus a GitHub source link."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-06-NJmtnhV",
+      "title": "The /graph page shall remain interactive (clickable) in swim-lane mode when rendering a graph of at least 40 nodes",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "The seed/demo public vault is seeded with 40+ sourced references on AI adoption in enterprises, representing the expected data scale the feature must handle reliably."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-06-M0SNN90",
+      "title": "The /graph page shall render swim-lane mode correctly with an empty graph (zero nodes), displaying an empty-state message instead of a blank canvas",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Swim-lane mode is a peer rendering mode to force-directed mode over the same graph-data.json; it inherits the same robustness bar for the zero-node case that force-directed mode already commits to, so it must not present a broken or blank board when the vault has no content."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": null,
+            "paraphrase": "PM-derived edge case: swim-lane mode is a new rendering path independent of force-directed mode's canvas code, so it can fail differently on the same zero-node input; parallels the existing force-directed empty-state requirement (TOR-02-mqgZkBc) to keep the two modes' failure behavior consistent."
+          }
+        ]
+      }
+    }
+  ],
+  "coverage_gaps": []
+}
