@@ -1,0 +1,50 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { parseArgs } from "../lib/cli";
+import { buildGraph } from "../lib/graph-builder";
+import { writeGraphData } from "../lib/graph-data-writer";
+import * as logger from "../lib/logger";
+import { walkVault } from "../lib/vault-walker";
+
+function readVersion(): string {
+  const pkgPath = path.join(__dirname, "..", "package.json");
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8")) as { version: string };
+  return pkg.version;
+}
+
+function main(): void {
+  const version = readVersion();
+  const result = parseArgs(process.argv.slice(2));
+
+  if (result.mode === "version") {
+    process.stdout.write(`wiki-graph-explorer v${version}\n`);
+    process.exit(0);
+  }
+
+  if (result.mode === "error") {
+    process.stderr.write(`${result.message}\n`);
+    process.exit(result.exitCode);
+  }
+
+  logger.info(`wiki-graph-explorer v${version} starting`);
+
+  const vaultPath = result.vaultPath;
+  const vaultExists = fs.existsSync(vaultPath) && fs.statSync(vaultPath).isDirectory();
+  if (!vaultExists) {
+    process.stderr.write(
+      `Error: vault path not found at ${vaultPath}. Check --vault points to a valid wiki directory.\n`,
+    );
+    process.exit(1);
+  }
+
+  const filePaths = walkVault(vaultPath);
+  const { nodes, edges } = buildGraph(vaultPath, filePaths, logger.warn);
+
+  const outputDir = path.join(process.cwd(), "local-build");
+  writeGraphData(outputDir, nodes, edges);
+
+  process.stdout.write(`Wrote graph-data.json (${nodes.length} nodes, ${edges.length} edges)\n`);
+  process.exit(0);
+}
+
+main();

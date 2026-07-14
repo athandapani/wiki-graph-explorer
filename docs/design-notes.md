@@ -62,6 +62,60 @@ epic before the search feature can be implemented as specified.
 
 ---
 
-## 5. Known Issues and Deferred Work
+## 5. CLI Logging Convention: DEBUG/INFO/WARN/ERROR, stderr-only, [LEVEL] format
 
-*(to be populated as epics are implemented and design trade-offs are discovered)*
+**Decision:** The build tool's logging layer (`lib/logger.ts`) implements four levels (DEBUG, INFO, WARN, ERROR) that all write to stderr exclusively in the format `[LEVEL] message\n`.
+
+**Rationale:** The build tool's stdout must carry only parseable output (the final summary line); all diagnostics, progress, and timestamps route to stderr so a caller can capture or discard them independently. Prefixing with `[LEVEL]` makes it trivial for logs to be consumed by both humans and log aggregators. No timestamp, no structured JSON — human-readable plain text keeps the tool's output simple for local dev iteration while remaining machine-parseable.
+
+---
+
+## 6. `--vault` strictly required: no environment variable, no cache, no default
+
+**Decision:** The `--vault <path>` flag is mandatory with no fallback. There is no environment variable (e.g., `WIKI_VAULT`), no cached recent path, no current-directory default, and no conditional "try to find a vault" heuristic.
+
+**Rationale:** Vault contents are sensitive (personal knowledge, drafts, unpublished research) and can inadvertently contain PII (family names, health info, financial data). Requiring an explicit path makes the action intentional and prevents accidentally building from the wrong vault. A single-brain use case (e.g., GitHub CI with a known private vault) can pass `--vault` as a build-time argument; this is simpler than managing environment secrets.
+
+---
+
+## 7. Exit Code Discipline: 0 (success), 1 (operational failure), 2 (invalid invocation)
+
+**Decision:** The build tool exits with:
+- **0** — success (vault parsed, output written, summary printed)
+- **1** — operational failure (vault path doesn't exist, frontmatter malformed, embedding step failed, etc.)
+- **2** — invalid invocation (unrecognized flag, missing `--vault`, `--vault` given without a path, etc.)
+
+**Rationale:** This convention matches POSIX exit codes and allows callers to distinguish user mistakes (2) from environmental failures (1) without parsing stderr. A CI/CD pipeline can fail the build on 1 but warn or retry on 2.
+
+---
+
+## 8. Version Single Source of Truth: `package.json#version`
+
+**Decision:** The semantic version is stored exclusively in `package.json` (`version` field) and read at build-tool runtime (not hardcoded in source or embedded in binaries).
+
+**Rationale:** Keeps the version string in one place — no risk of drift between package.json and the CLI tool's reported version. `--version` and the startup log both read from the same `package.json` file at runtime, ensuring alignment even if version bumps are made in dev mode before a release commit.
+
+---
+
+## 9. Stub Output Strategy: Multi-Epic Build Tool
+
+**Decision:** Complex build-tool features (vault walking, frontmatter parsing, graph computation, embedding) are not built in the first epic. Instead, Epic 41CLei9 (CLI Foundation & Build Tool Hygiene) establishes the CLI operability skeleton (version reporting, logging, exit codes, error messaging, output contracts) and stubs the core output file (`graph-data.json`) with empty content (`{ nodes: [], edges: [] }`). Subsequent epics add real computation inside this skeleton without changing the CLI surface or output format.
+
+**Rationale:** This strategy allows quality gates (build, lint, typecheck, tests) to pass immediately with verified, empty output, reducing the risk of coupling CLI e2e tests to incomplete vault-walking logic. The skeleton is a stable anchor; later epics are isolated feature additions to the vault-walking and graph-computation layers rather than a rewrite of the entire tool.
+
+---
+
+## 11. Related/Referenced By Links: Markdown Body Sections, Not Frontmatter
+
+**Decision:** The graph builder extracts directional links from `## Related` and `## Referenced By` Markdown body sections containing `[[slug|Title]]` wikilinks, rather than from YAML frontmatter keys.
+
+**Rationale:** The original TOR wording specified frontmatter-based sourcing for these links (e.g., `Related: [...]` in the YAML header). However, the real Karpathy-pattern `second-brain` wiki stores these links exclusively as body-section H2 headers. Implementing the literal TOR wording produced zero edges against real data. This deviation was disclosed and user-approved during Epic rTWYZfw implementation; independently verified by manual inspection of real vault pages (e.g., `second-brain/wiki/concepts/deterministic-compiler-pipeline.md`). The implementation (via `lib/frontmatter-parser.ts#extractWikilinks()` and `lib/graph-builder.ts`) correctly parses body sections and is confirmed to work end-to-end against real vault data (41 nodes, 96 edges, all edges valid and sourced correctly).
+
+---
+
+## 12. Known Issues and Deferred Work
+
+- **Client-side query embedding:** ConOps §8 flags this as an open risk requiring a spike (e.g., transformers.js, WASM) before Scenario 2's live semantic search is buildable as specified. Decision pending.
+- **GitHub Actions deployment workflow:** Not yet implemented. On push to `main`, GitHub Pages should rebuild the static export and publish `out/` to `gh-pages`. This depends on a completed Next.js frontend (later epic).
+- **`react-force-graph` integration:** Dependency declared but not yet integrated. Graph visualization will be implemented in a later epic.
+- **Requirements baseline misalignment (follow-up action):** The original TOR requirements (TOR-01-NTPrx23, TOR-01-IBry2Oi in `docs/requirements/01-build-pipeline.feature.md`) describe Related/Referenced By sourcing from YAML frontmatter, but the implemented solution sources them from Markdown body sections. This is a correct implementation against real vault data but a deviation from the literal Gherkin wording. A follow-up `/peak-workflow:capture-requirements` brownfield pass should correct the requirements baseline to prevent future confusion.
