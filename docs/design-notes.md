@@ -105,9 +105,17 @@ epic before the search feature can be implemented as specified.
 
 ---
 
-## 10. Known Issues and Deferred Work
+## 11. Related/Referenced By Links: Markdown Body Sections, Not Frontmatter
 
-- **Vault walking and frontmatter parsing:** Intentionally deferred to Epic rTWYZfw. The build tool accepts a `--vault <path>` argument, validates it, and stubs output; real vault content processing is out of scope for this epic.
+**Decision:** The graph builder extracts directional links from `## Related` and `## Referenced By` Markdown body sections containing `[[slug|Title]]` wikilinks, rather than from YAML frontmatter keys.
+
+**Rationale:** The original TOR wording specified frontmatter-based sourcing for these links (e.g., `Related: [...]` in the YAML header). However, the real Karpathy-pattern `second-brain` wiki stores these links exclusively as body-section H2 headers. Implementing the literal TOR wording produced zero edges against real data. This deviation was disclosed and user-approved during Epic rTWYZfw implementation; independently verified by manual inspection of real vault pages (e.g., `second-brain/wiki/concepts/deterministic-compiler-pipeline.md`). The implementation (via `lib/frontmatter-parser.ts#extractWikilinks()` and `lib/graph-builder.ts`) correctly parses body sections and is confirmed to work end-to-end against real vault data (41 nodes, 96 edges, all edges valid and sourced correctly).
+
+---
+
+## 12. Known Issues and Deferred Work
+
 - **Client-side query embedding:** ConOps §8 flags this as an open risk requiring a spike (e.g., transformers.js, WASM) before Scenario 2's live semantic search is buildable as specified. Decision pending.
 - **GitHub Actions deployment workflow:** Not yet implemented. On push to `main`, GitHub Pages should rebuild the static export and publish `out/` to `gh-pages`. This depends on a completed Next.js frontend (later epic).
 - **`react-force-graph` integration:** Dependency declared but not yet integrated. Graph visualization will be implemented in a later epic.
+- **Requirements baseline misalignment (follow-up action):** The original TOR requirements (TOR-01-NTPrx23, TOR-01-IBry2Oi in `docs/requirements/01-build-pipeline.feature.md`) describe Related/Referenced By sourcing from YAML frontmatter, but the implemented solution sources them from Markdown body sections. This is a correct implementation against real vault data but a deviation from the literal Gherkin wording. A follow-up `/peak-workflow:capture-requirements` brownfield pass should correct the requirements baseline to prevent future confusion.

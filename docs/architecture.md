@@ -39,7 +39,7 @@ whenever the source vault changes.
 
 | Source | Format | Notes |
 |---|---|---|
-| Public vault markdown files | `.md` + YAML frontmatter (`title`, `tags`, `status`, `Related`, `Referenced By`) | Karpathy-pattern raw→wiki ingestion; the only content ever built for deployment |
+| Public vault markdown files | `.md` + YAML frontmatter (`title`, `tags`, `status`) + Markdown body sections (`## Related`, `## Referenced By` containing `[[slug\|Title]]` wikilinks) | Karpathy-pattern raw→wiki ingestion; the only content ever built for deployment |
 | Private `second-brain` vault | Same format | Local dev iteration only (sibling path, e.g. `../second-brain`); never committed or deployed |
 
 ---
