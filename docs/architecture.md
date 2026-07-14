@@ -26,11 +26,11 @@ whenever the source vault changes.
 | UI Library | React | 19.2.4 | Component model and rendering |
 | Language | TypeScript | ^5 | Type-safe JavaScript |
 | Package manager | npm | (bundled) | Dependency management |
-| Graph visualization | `react-force-graph` | (TBD) | Force-directed graph rendering |
+| Graph visualization | `react-force-graph` | (TBD — pending integration) | Force-directed graph rendering |
 | Styling | Tailwind CSS | ^4 | UI styling (graph controls, side panel, explainer) |
 | Test runner | Vitest | ^4.1.10 | Unit tests for build scripts and components |
 | Lint / format | ESLint + Prettier | ^9 / (bundled) | Static analysis and formatting |
-| Build-time embeddings | *(undecided — open risk, see design-notes.md)* | — | Per-page and query embeddings for semantic search |
+| Build-time embeddings | `@huggingface/transformers` with `Xenova/all-MiniLM-L6-v2` | ^4.2.0 | Per-page 384-dim embeddings; client-side query embedding mechanism pending (design-notes.md §4) |
 | Deployment | GitHub Pages via GitHub Actions | — | Hosting the static export |
 
 ---
@@ -51,39 +51,59 @@ No server runtime in production. The CLI surface is:
 | Command | Flags | Behavior | Exit Code |
 |---|---|---|---|
 | `npm run build:graph -- --version` | `--version` | Prints `wiki-graph-explorer v<semver>` to stdout, exits silently | 0 |
-| `npm run build:graph -- --vault <path>` | `--vault <path>` (required) | Validates `<path>` is a directory, walks the vault, writes `graph-data.json` and `vector-index.json`, prints summary to stdout | 0 (success) or 1 (vault not found) |
+| `npm run build:graph -- --vault <path>` | `--vault <path>` (required) | Validates `<path>` is a directory, walks the vault, writes `graph-data.json` and `vector-index.json` to output directory (default `local-build`), prints summary to stdout | 0 (success) or 1 (vault not found) |
+| `npm run build:graph -- --vault <path> --out <dir>` | `--vault <path>` (required), `--out <dir>` (optional, default `local-build`) | Writes both JSON assets to the specified output directory | 0 or 1 |
 | `npm run build:graph` | (no args) | Missing required `--vault` flag | 2 |
 | `npm run build:graph -- --unknown` | Unknown flag | Unrecognized flag | 2 |
 
 - `--vault` is strictly required with no fallback (no environment variable, no current directory default, no cache).
+- `--out` defaults to `local-build` if omitted; used by CI/CD workflows to specify alternate output (e.g., `--out public` for deployment).
 - Version is the single source of truth from `package.json#version`.
 
 ---
 
 ## 5. Backend Architecture
 
-The build-time pipeline is a Node.js CLI tool implemented across three modules:
+The build-time pipeline is a Node.js CLI tool that walks a vault directory, parses Markdown + YAML frontmatter, builds a graph, computes embeddings, and writes two JSON artifacts. Key modules:
 
 | Module | Responsibility |
 |---|---|
-| `lib/cli.ts` | Parses `process.argv`, validates `--version` / `--vault` flags, returns `ParsedArgs` union (one of: version request, error with exit code, run request with vault path). |
+| `lib/cli.ts` | Parses `process.argv`, validates `--version` / `--vault` / `--out` flags, returns `ParsedArgs` union (one of: version request, error with exit code, run request with vault/output paths). |
 | `lib/logger.ts` | Stderr-only structured logger with four levels (DEBUG, INFO, WARN, ERROR), emitting format `[LEVEL] message`. All non-stdout output routes here. |
-| `scripts/build-graph.ts` | Main entrypoint. Reads version from `package.json`, delegates arg parsing to `cli.ts`, emits startup log line before any processing, validates vault path existence (exit 1 if not found), walks vault (future epic), writes `graph-data.json` and `vector-index.json`, emits final summary line to stdout, exits 0. |
+| `lib/vault-walker.ts` | Recursive `.md` file discovery under `--vault` path, skips dotfiles/hidden dirs. |
+| `lib/frontmatter-parser.ts` | YAML frontmatter parsing (using `gray-matter`) + body-section wikilink extraction from `## Related` / `## Referenced By` H2 sections containing `[[slug\|Title]]` wikilinks. |
+| `lib/graph-builder.ts` | Constructs node records (id, title, tags, status, folder), extracts directional links, collapses into deduplicated undirected edges, returns page texts for embedding. |
+| `lib/graph-data-writer.ts` | Serializes graph nodes/edges to `graph-data.json` (full overwrite). |
+| `lib/embeddings.ts` | `computeEmbedding()` — generates 384-dim vector via `@huggingface/transformers` and `Xenova/all-MiniLM-L6-v2` model; supports `WGE_FAKE_EMBEDDINGS=1` test seam for fast testing. |
+| `lib/vector-index-writer.ts` | Serializes vector entries to `vector-index.json` (full overwrite). |
+| `lib/second-brain-path-check.ts` | Detects hardcoded `../second-brain` path references in committed source (safety boundary). |
+| `scripts/build-graph.ts` | Main entrypoint. Reads version from `package.json`, parses args, emits startup log, validates vault path, orchestrates vault walk → graph build → embedding computation → JSON writes, emits summary line to stdout, exits 0/1/2. |
+| `scripts/check-no-second-brain-path.ts` | Runs `git ls-files` and scans for second-brain path violations; used in CI/CD. |
 
 Key implementation details:
 - Version is read at runtime from `package.json` to ensure single source of truth (no hardcoding).
-- Startup log line (`[INFO] wiki-graph-explorer v<version> starting`) is emitted immediately after arg parsing and before any vault access, so it is the first observable output.
+- Startup log line (`[INFO] wiki-graph-explorer v<version> starting`) is emitted immediately after arg parsing and before any vault access, making it the first observable output.
 - `--version` short-circuits before any startup log is emitted, so version queries remain silent on stderr (consistent with POSIX tools).
-- Vault walking and frontmatter parsing are deferred to a later epic; this epic stubs the output as `{ nodes: [], edges: [] }` to satisfy the TOR output contract.
+- Related/Referenced By links are sourced from Markdown body-section H2 headers (`## Related`, `## Referenced By`), not YAML frontmatter, reflecting how the real Karpathy-pattern vault stores cross-references (design-notes.md §11).
+- Embeddings are computed once per page at build time; the resulting `vector-index.json` maps page IDs to their 384-dim vectors for downstream semantic search (client-side query embedding mechanism pending).
 
 ---
 
 ## 6. Frontend Architecture
 
-*(to be completed during implementation — pages, component hierarchy, data fetching patterns)*
+| Route | Component | Behavior |
+|---|---|---|
+| `/` | `app/page.tsx` | Home/landing page (placeholder) |
+| `/graph` | `app/graph/page.tsx` | Fetches `graph-data.json` and `vector-index.json` client-side via `fetch()`, displays node/edge/embedding counts. `react-force-graph` rendering integration pending. |
 
-Expected shape: a `/graph` page fetching the two static JSON assets client-side, rendering via
-`react-force-graph`, with a search box, side panel, and explainer section.
+Data fetching:
+- Both JSON assets are fetched client-side on page load via `Promise.all([fetch("/graph-data.json"), fetch("/vector-index.json")])`.
+- Assets are hosted as static files in the `public/` directory after the build pipeline writes them to the Next.js output.
+- No backend API calls; all data is precomputed at build time.
+
+Component hierarchy (planned):
+- `/graph` page will render a graph canvas (via `react-force-graph`), interactive node/edge selection, side panel with details, and semantic search box (pending client-side query embedding).
+- `react-force-graph` integration and search UX are deferred to later epics.
 
 ---
 
@@ -97,10 +117,21 @@ None planned — rebuild-on-publish only, no dynamic backend.
 
 ## 8. Container / Infrastructure
 
-*(to be completed during implementation — Dockerfile stages, build pipeline, deployment model)*
+**Deployment:** GitHub Pages via GitHub Actions workflow (`.github/workflows/deploy.yml`).
 
-Expected shape: GitHub Actions workflow building the Next.js static export and publishing
-`out/` to GitHub Pages on push to `main` (and on tag push).
+**Build pipeline (triggered on push to `master`)**:
+1. Checkout code
+2. Install Node.js 20 + npm dependencies
+3. Run `npm run check:vault-safety` — scans git-tracked files for hardcoded `../second-brain` path references; exits 1 if found
+4. Run `npm run build:graph -- --vault public-vault/wiki --out public` — parses public vault, generates `graph-data.json` and `vector-index.json`, writes to `public/` directory
+5. Run `npm run build` — Next.js static export; reads JSON assets from `public/`, emits static HTML/CSS/JS to `out/`
+6. Upload `out/` to GitHub Pages artifact
+7. Deploy artifact to GitHub Pages (requires manual one-time repo settings enablement: Settings → Pages → Source: GitHub Actions)
+
+**Key constraints:**
+- Vault path is hardcoded in workflow (`public-vault/wiki`) with no override mechanism — prevents accidental deployment of private vault content.
+- Output directory is hardcoded as `public` — becomes the fetch root for client-side JSON asset requests.
+- No container runtime in production; deployed artifact is pure static files.
 
 ---
 
