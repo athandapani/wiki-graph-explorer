@@ -1,9 +1,10 @@
 export type ParsedArgs =
   | { mode: "version" }
   | { mode: "error"; exitCode: 1 | 2; message: string }
-  | { mode: "run"; vaultPath: string };
+  | { mode: "run"; vaultPath: string; outDir: string };
 
-const RECOGNIZED_FLAGS = new Set(["--version", "--vault"]);
+const RECOGNIZED_FLAGS = new Set(["--version", "--vault", "--out"]);
+const DEFAULT_OUT_DIR = "local-build";
 
 export function parseArgs(argv: string[]): ParsedArgs {
   for (const arg of argv) {
@@ -38,5 +39,8 @@ export function parseArgs(argv: string[]): ParsedArgs {
     };
   }
 
-  return { mode: "run", vaultPath };
+  const outFlagIndex = argv.indexOf("--out");
+  const outDir = outFlagIndex === -1 ? DEFAULT_OUT_DIR : argv[outFlagIndex + 1] || DEFAULT_OUT_DIR;
+
+  return { mode: "run", vaultPath, outDir };
 }

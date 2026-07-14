@@ -33,9 +33,14 @@ describe("parseArgs", () => {
     expect("vaultPath" in noVaultResult).toBe(false);
   });
 
-  it("given a valid --vault <path>, when parsed, then mode is run with that path", () => {
+  it("given a valid --vault <path>, when parsed, then mode is run with that path and the default outDir", () => {
     const result = parseArgs(["--vault", "/some/path"]);
-    expect(result).toEqual({ mode: "run", vaultPath: "/some/path" });
+    expect(result).toEqual({ mode: "run", vaultPath: "/some/path", outDir: "local-build" });
+  });
+
+  it("given --vault <path> --out <dir>, when parsed, then mode is run with the given outDir", () => {
+    const result = parseArgs(["--vault", "/some/path", "--out", "public"]);
+    expect(result).toEqual({ mode: "run", vaultPath: "/some/path", outDir: "public" });
   });
 
   it("given --version, when parsed, then mode is version", () => {

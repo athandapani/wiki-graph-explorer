@@ -1,10 +1,12 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "../lib/cli";
+import { computeVectorIndexEntries } from "../lib/embeddings";
 import { buildGraph } from "../lib/graph-builder";
 import { writeGraphData } from "../lib/graph-data-writer";
 import * as logger from "../lib/logger";
 import { walkVault } from "../lib/vault-walker";
+import { writeVectorIndex } from "../lib/vector-index-writer";
 
 function readVersion(): string {
   const pkgPath = path.join(__dirname, "..", "package.json");
@@ -12,7 +14,7 @@ function readVersion(): string {
   return pkg.version;
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const version = readVersion();
   const result = parseArgs(process.argv.slice(2));
 
@@ -38,13 +40,18 @@ function main(): void {
   }
 
   const filePaths = walkVault(vaultPath);
-  const { nodes, edges } = buildGraph(vaultPath, filePaths, logger.warn);
+  const { nodes, edges, pageTexts } = buildGraph(vaultPath, filePaths, logger.warn);
+  const entries = await computeVectorIndexEntries(pageTexts);
 
-  const outputDir = path.join(process.cwd(), "local-build");
+  const outputDir = path.resolve(process.cwd(), result.outDir);
   writeGraphData(outputDir, nodes, edges);
+  writeVectorIndex(outputDir, entries);
 
   process.stdout.write(`Wrote graph-data.json (${nodes.length} nodes, ${edges.length} edges)\n`);
   process.exit(0);
 }
 
-main();
+main().catch((error: unknown) => {
+  process.stderr.write(`Unexpected error: ${String(error)}\n`);
+  process.exit(1);
+});
