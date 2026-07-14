@@ -52,6 +52,14 @@ describe("buildGraph", () => {
     expect(nodes[0].status).toBe("current");
   });
 
+  it("TOR-04-JCORp98: given a page under a subfolder, when built, then node path is the vault-relative path", () => {
+    writePage(vaultDir, "sources/example.md", { title: "Example", tags: [], status: "current" }, "## Body\ncontent");
+
+    const { nodes } = buildGraph(vaultDir, walkVault(vaultDir), warnSpy);
+
+    expect(nodes[0].path).toBe("sources/example.md");
+  });
+
   it("TOR-01-aqsjUxj: given a page under change-management/, when built, then folder is 'change-management'", () => {
     writePage(vaultDir, "change-management/example.md", { title: "Example", tags: [], status: "current" }, "## Body\ncontent");
 

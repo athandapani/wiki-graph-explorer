@@ -42,4 +42,9 @@ describe("components/graph/GraphCanvas.tsx", () => {
     expect(source).toContain("onEngineStop");
     expect(source).toContain("zoomToFit");
   });
+
+  it("TOR-04-I0T4GDu: invokes the onNodeClick callback prop when a node is clicked", () => {
+    expect(source).toContain("onNodeClick?: (node: GraphNode) => void");
+    expect(source).toContain("onNodeClick?.(node)");
+  });
 });

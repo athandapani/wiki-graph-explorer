@@ -32,4 +32,10 @@ describe("app/graph/page.tsx", () => {
   it("TOR-02-k4HmFPL: always renders the Footer alongside every page state", () => {
     expect(source).toContain("<Footer");
   });
+
+  it("TOR-04-I0T4GDu: lifts selected-node state and renders SidePanel", () => {
+    expect(source).toContain("useState<GraphNode | null>(null)");
+    expect(source).toContain("<SidePanel");
+    expect(source).toContain("onNodeClick={setSelectedNode}");
+  });
 });

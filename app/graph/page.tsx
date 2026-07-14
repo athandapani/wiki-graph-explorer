@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/graph/EmptyState";
 import { ErrorState } from "@/components/graph/ErrorState";
 import { Footer } from "@/components/graph/Footer";
 import type { GraphEdge, GraphNode } from "@/components/graph/GraphCanvas";
+import { SidePanel } from "@/components/graph/SidePanel";
 
 // react-force-graph-2d touches canvas/window at module scope, which breaks Next's build-time
 // prerender pass even inside a "use client" file — ssr: false keeps it out of that pass.
@@ -19,6 +20,7 @@ interface GraphData {
 export default function GraphPage() {
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
 
   useEffect(() => {
     async function load(): Promise<void> {
@@ -50,9 +52,19 @@ export default function GraphPage() {
         ) : graphData.nodes.length === 0 ? (
           <EmptyState />
         ) : (
-          <GraphCanvas nodes={graphData.nodes} edges={graphData.edges} />
+          <GraphCanvas
+            nodes={graphData.nodes}
+            edges={graphData.edges}
+            onNodeClick={setSelectedNode}
+          />
         )}
       </div>
+      <SidePanel
+        node={selectedNode}
+        edges={graphData?.edges ?? []}
+        allNodes={graphData?.nodes ?? []}
+        onClose={() => setSelectedNode(null)}
+      />
       <Footer />
     </div>
   );

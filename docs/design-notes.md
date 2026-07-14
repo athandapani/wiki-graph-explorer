@@ -198,13 +198,29 @@ but doesn't prevent build-time imports.
 
 ---
 
-## 16. Known Issues and Deferred Work
+## 16. Edge Endpoint Shape Mutation: Runtime Dual-Form Handling in SidePanel
+
+**Decision:** The `SidePanel.tsx` component's `getRelatedNodeIds()` function defensively handles both forms that an edge endpoint can take at runtime: the original string id (e.g., `"page-1"`), and the node-object-reference (e.g., `{ id: "page-1", ... }`) that `react-force-graph-2d` and its underlying d3-force simulation mutate edges into in place once the layout simulation runs. The implementation uses a type-safe escape hatch (`edge.source as unknown as EdgeEndpoint`) to bridge the type system to both shapes.
+
+**Rationale:** `react-force-graph-2d` delegates graph layout to d3-force, which mutates graph data structures in place during initialization and simulation. Specifically, numeric/string edge source and target references are replaced with references to the actual node objects so the physics engine can directly access node position and velocity data. This happens after the component receives the edge data but before rendering is complete. Any code that reads edges (like SidePanel's related-nodes lookup) must account for both shapes: the string form (before d3 runs), and the object form (after). The `as unknown as EdgeEndpoint` cast is a deliberate type-safety escape, not a defect — it's necessary, documented in a comment, and unit-tested against both shapes to prevent regressions.
+
+---
+
+## 17. GitHub Source Link Construction: Hardcoded Repository Constants
+
+**Decision:** The `lib/github-source-link.ts` module builds GitHub "View source on GitHub" URLs by concatenating hardcoded owner, repo name, branch, and vault-subpath constants, rather than deriving them from `git remote` or environment variables at runtime.
+
+**Rationale:** The application is a static export with no server runtime in production (design-notes.md §2). Reading `git remote` at runtime is impossible in a static HTML/CSS/JS deployment. Pre-computing and hardcoding these values is consistent with the existing precedent of hardcoding deployment-sensitive paths (the CI/CD workflow's `--vault` and `--out` flags; see design-notes.md §10). This makes the GitHub link a build-time constant, identical across all deployments of the same version.
+
+---
+
+## 18. Known Issues and Deferred Work
 
 - **Client-side query embedding:** Scope for a future epic. Build-time embeddings are settled and operational (Epic cxjcyqx), but live query embedding and scoring requires architectural decisions (browser WASM/worker threading, network cost, query-vector caching). ConOps §8 flags this as a prerequisite for Scenario 2 (interactive semantic search).
 
-- **Side-panel and search UI:** The `/graph` page renders the force-directed graph with interactive zoom and click-to-center, but a side panel (showing selected node details) and semantic search box are deferred to a future epic (V3PlLFL). The graph canvas itself is complete and verifiable (Epic baPTSK2); search awaits client-side embedding infrastructure.
+- **Semantic search UI:** The `/graph` page renders the force-directed graph with interactive zoom and click-to-center, and clicking a node opens a side panel showing selected node details (Epic V3PlLFL, now complete). A semantic search box is deferred to a future epic, pending resolution of client-side query embedding mechanisms (see "Client-side query embedding" above).
 
-- **Graph legend / "Other" folder grouping:** Vaults with more than 8 distinct folders see golden-angle-generated colors for overflow folders (§13). A proper UI legend and possible "Other" category grouping for overflow is deferred to the side-panel epic (V3PlLFL).
+- **Graph legend / "Other" folder grouping:** Vaults with more than 8 distinct folders see golden-angle-generated colors for overflow folders (§13). A proper UI legend and possible "Other" category grouping for overflow remain out of scope for current epics.
 
 - **GitHub Actions deployment workflow:** `.github/workflows/deploy.yml` is implemented and tested. Manual one-time setup required: Settings → Pages → Source: GitHub Actions must be enabled in the GitHub repo settings before the first deployment can publish to GitHub Pages.
 
