@@ -18,6 +18,10 @@ build/
 /local-build/
 /.build/
 
+# Production build output generated fresh by CI into public/ — never committed
+/public/graph-data.json
+/public/vector-index.json
+
 # Testing
 coverage/
 

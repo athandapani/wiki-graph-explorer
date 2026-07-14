@@ -12,6 +12,7 @@ function runCli(args: string[]): { stdout: string; stderr: string; exitCode: num
   const result = spawnSync(process.execPath, [tsxCli, buildGraphScript, ...args], {
     cwd: repoRoot,
     encoding: "utf-8",
+    env: { ...process.env, WGE_FAKE_EMBEDDINGS: "1" },
   });
   return {
     stdout: result.stdout ?? "",
@@ -42,6 +43,11 @@ ${body}
 
 function readGraphData(): { nodes: Array<Record<string, unknown>>; edges: Array<Record<string, unknown>> } {
   const outputFile = path.join(repoRoot, "local-build", "graph-data.json");
+  return JSON.parse(fs.readFileSync(outputFile, "utf-8"));
+}
+
+function readVectorIndex(): Array<{ id: string; embedding: number[] }> {
+  const outputFile = path.join(repoRoot, "local-build", "vector-index.json");
   return JSON.parse(fs.readFileSync(outputFile, "utf-8"));
 }
 
@@ -204,5 +210,26 @@ describe("build-graph CLI", () => {
     const graphData = readGraphData();
     const ids = graphData.nodes.map((n) => n.id).sort();
     expect(ids).toEqual(["page-1", "page-3", "page-4"]);
+  });
+
+  it("TOR-01-uY4K5t1: given a newly added page, when the tool runs again, then graph-data.json and vector-index.json both include an entry for it, with no tool-code changes", () => {
+    writePage(tmpVaultDir, "page-1.md", { title: "Page 1", tags: [], status: "current" }, "## Body\ncontent");
+    writePage(tmpVaultDir, "page-2.md", { title: "Page 2", tags: [], status: "current" }, "## Body\ncontent");
+
+    expect(runCli(["--vault", tmpVaultDir]).exitCode).toBe(0);
+    expect(readGraphData().nodes).toHaveLength(2);
+    expect(readVectorIndex()).toHaveLength(2);
+
+    writePage(tmpVaultDir, "page-new.md", { title: "Page New", tags: [], status: "current" }, "## Body\ncontent");
+
+    expect(runCli(["--vault", tmpVaultDir]).exitCode).toBe(0);
+
+    const graphData = readGraphData();
+    expect(graphData.nodes.map((n) => n.id).sort()).toEqual(["page-1", "page-2", "page-new"]);
+
+    const vectorIndex = readVectorIndex();
+    expect(vectorIndex.map((entry) => entry.id).sort()).toEqual(["page-1", "page-2", "page-new"]);
+    const newEntry = vectorIndex.find((entry) => entry.id === "page-new");
+    expect(newEntry?.embedding.length).toBeGreaterThan(0);
   });
 });

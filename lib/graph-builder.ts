@@ -20,12 +20,18 @@ interface DirectionalLink {
   to: string;
 }
 
+export interface PageText {
+  id: string;
+  text: string;
+}
+
 export function buildGraph(
   vaultPath: string,
   filePaths: string[],
   warn: (message: string) => void,
-): { nodes: NodeRecord[]; edges: EdgeRecord[] } {
+): { nodes: NodeRecord[]; edges: EdgeRecord[]; pageTexts: PageText[] } {
   const nodes: NodeRecord[] = [];
+  const pageTexts: PageText[] = [];
   const links: DirectionalLink[] = [];
 
   for (const filePath of filePaths) {
@@ -48,6 +54,11 @@ export function buildGraph(
       tags: parsed.tags,
       status: parsed.status,
       folder,
+    });
+
+    pageTexts.push({
+      id,
+      text: [parsed.title, parsed.tags.join(" "), parsed.body].join("\n"),
     });
 
     for (const target of extractWikilinks(parsed.body, "Related")) {
@@ -75,5 +86,5 @@ export function buildGraph(
     edges.push({ source: a, target: b });
   }
 
-  return { nodes, edges };
+  return { nodes, edges, pageTexts };
 }

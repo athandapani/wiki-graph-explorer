@@ -48,17 +48,20 @@ and only one of them is ever wired to the deployment path.
 
 ---
 
-## 4. Client-side query embedding — open risk, unresolved
+## 4. Build-time page embeddings — resolved; client-side query embedding pending
 
-**Decision:** *(Not yet decided.)* ConOps §8 flags client-side query embedding (needed for
-Scenario 2's live semantic search) as an open risk requiring a spike — e.g. transformers.js/WASM
-— before it's buildable as specified.
+**Decision:** Build-time page embeddings are computed via `@huggingface/transformers` with
+`Xenova/all-MiniLM-L6-v2` (384 dimensions), written to `vector-index.json`, and fetched
+client-side. Client-side query embedding (for Scenario 2's live semantic search) remains an
+open risk requiring a spike before it can be implemented as specified.
 
 **Rationale:** Real (not keyword-filter) semantic search is a core credibility requirement
-(Product Vision §2, §5) — a fake "AI search" demo would be actively penalized by a discerning
-evaluator. But no settled technical approach exists yet for embedding a typed query client-side
-in a way that's comparable to the build-time page embeddings. This must be resolved by a spike
-epic before the search feature can be implemented as specified.
+(Product Vision §2, §5). Build-time page embeddings are now settled and operational (Epic
+cxjcyqx); the `@huggingface/transformers` library with WASM/browser support is suitable for
+both build-time and future client-side query embedding, resolving the technical spike risk for
+that mechanism. However, the exact approach for embedding a live-typed query client-side and
+scoring it against precomputed page vectors must be resolved by a future spike epic before
+Scenario 2's search feature can be implemented.
 
 ---
 
@@ -105,7 +108,39 @@ epic before the search feature can be implemented as specified.
 
 ---
 
-## 11. Related/Referenced By Links: Markdown Body Sections, Not Frontmatter
+## 10. GitHub Actions Deployment Safety: Hardcoded Public Vault Path
+
+**Decision:** The GitHub Actions workflow (`.github/workflows/deploy.yml`) hardcodes the vault
+path as `--vault public-vault/wiki` with no override mechanism. The output directory is also
+hardcoded as `--out public`. These values are not configurable via secrets, environment
+variables, or workflow inputs.
+
+**Rationale:** Vault contents are sensitive and can contain PII. Hardcoding the public vault
+path eliminates the risk of accidentally deploying the wrong vault due to misconfigured
+secrets or environment variables. A one-time manual deployment from a different vault would
+require editing the workflow file, making the deployment decision explicit and reviewable
+before push.
+
+---
+
+## 11. Repository-Wide Second-Brain Path Check: Prevent Accidental Secrets Leakage
+
+**Decision:** A pre-commit check (`lib/second-brain-path-check.ts`) scans all git-tracked files for
+hardcoded references to the private `../second-brain` vault path. The check uses a path-shaped
+regex, excludes `.md` documentation files (where the path is legitimately mentioned as context),
+and runs as the first step in the CI/CD workflow (`npm run check:vault-safety`). A violation
+exits with code 1 and blocks the build.
+
+**Rationale:** The private `second-brain` vault contains org-sensitive, family, and health
+material that must never be committed or deployed. Hardcoding a path reference in configuration
+or code (e.g., `.env`, `next.config.ts`, environment variables) could cause the wrong vault to
+be accidentally built and deployed. The regex check surfaces such references before they reach
+the build step, preventing the breach. Documentation files are excluded because CLAUDE.md
+legitimately describes the local dev setup and expected directory structure.
+
+---
+
+## 12. Related/Referenced By Links: Markdown Body Sections, Not Frontmatter
 
 **Decision:** The graph builder extracts directional links from `## Related` and `## Referenced By` Markdown body sections containing `[[slug|Title]]` wikilinks, rather than from YAML frontmatter keys.
 
@@ -113,9 +148,12 @@ epic before the search feature can be implemented as specified.
 
 ---
 
-## 12. Known Issues and Deferred Work
+## 14. Known Issues and Deferred Work
 
-- **Client-side query embedding:** ConOps §8 flags this as an open risk requiring a spike (e.g., transformers.js, WASM) before Scenario 2's live semantic search is buildable as specified. Decision pending.
-- **GitHub Actions deployment workflow:** Not yet implemented. On push to `main`, GitHub Pages should rebuild the static export and publish `out/` to `gh-pages`. This depends on a completed Next.js frontend (later epic).
-- **`react-force-graph` integration:** Dependency declared but not yet integrated. Graph visualization will be implemented in a later epic.
-- **Requirements baseline misalignment (follow-up action):** The original TOR requirements (TOR-01-NTPrx23, TOR-01-IBry2Oi in `docs/requirements/01-build-pipeline.feature.md`) describe Related/Referenced By sourcing from YAML frontmatter, but the implemented solution sources them from Markdown body sections. This is a correct implementation against real vault data but a deviation from the literal Gherkin wording. A follow-up `/peak-workflow:capture-requirements` brownfield pass should correct the requirements baseline to prevent future confusion.
+- **Client-side query embedding:** Scope for a future epic. Build-time embeddings are settled, but live query embedding requires architectural decisions (browser WASM/worker threading, network cost). ConOps §8 flags this as a prerequisite for Scenario 2 (interactive semantic search).
+
+- **`react-force-graph` integration:** Dependency is declared in `package.json` but integration deferred to a later epic. The `/graph` page currently displays node/edge/embedding counts; full graph rendering and zoom/click-to-center interaction will be added when this integration is implemented.
+
+- **GitHub Actions deployment workflow:** `.github/workflows/deploy.yml` is implemented and tested. Manual one-time setup required: Settings → Pages → Source: GitHub Actions must be enabled in the GitHub repo settings before the first deployment can publish to GitHub Pages.
+
+- **Requirements baseline misalignment (follow-up action):** The original TOR requirements (TOR-01-NTPrx23, TOR-01-IBry2Oi in `docs/requirements/01-build-pipeline.feature.md`) describe Related/Referenced By sourcing from YAML frontmatter. The implemented solution sources them from Markdown body sections (`## Related`, `## Referenced By` containing `[[slug|Title]]` wikilinks), which is correct against real vault data but a deviation from the literal Gherkin wording. A follow-up `/peak-workflow:capture-requirements` brownfield pass should correct the requirements baseline to prevent future confusion.
