@@ -47,4 +47,17 @@ describe("components/graph/GraphCanvas.tsx", () => {
     expect(source).toContain("onNodeClick?: (node: GraphNode) => void");
     expect(source).toContain("onNodeClick?.(node)");
   });
+
+  it("TOR-03-UH4yx26: dims nodes below the relevance threshold via ctx.globalAlpha", () => {
+    expect(source).toContain("searchScores?: Map<string, number> | null");
+    expect(source).toContain("relevanceThreshold?: number");
+    expect(source).toContain(
+      "const dimmed = searchScores != null && (searchScores.get(node.id) ?? 0) < relevanceThreshold;",
+    );
+    expect(source).toContain("ctx.globalAlpha = dimmed ? DIMMED_OPACITY : 1");
+  });
+
+  it("TOR-03-e3TJKQb: restores full opacity for every node when searchScores is null/unset", () => {
+    expect(source).toContain("ctx.globalAlpha = 1");
+  });
 });
