@@ -13,4 +13,23 @@ describe("app/graph/page.tsx", () => {
     expect(source).toContain('fetch("/graph-data.json")');
     expect(source).toContain('fetch("/vector-index.json")');
   });
+
+  it("TOR-02-TW7XEms: dynamically imports GraphCanvas with ssr disabled", () => {
+    expect(source).toContain('dynamic(() => import("@/components/graph/GraphCanvas")');
+    expect(source).toContain("ssr: false");
+  });
+
+  it("TOR-02-rG2HTvc: renders ErrorState when the fetch fails", () => {
+    expect(source).toContain("<ErrorState");
+    expect(source).toContain("setError(");
+  });
+
+  it("TOR-02-mqgZkBc: renders EmptyState when graph-data.json has zero nodes", () => {
+    expect(source).toContain("<EmptyState");
+    expect(source).toContain("graphData.nodes.length === 0");
+  });
+
+  it("TOR-02-k4HmFPL: always renders the Footer alongside every page state", () => {
+    expect(source).toContain("<Footer");
+  });
 });
