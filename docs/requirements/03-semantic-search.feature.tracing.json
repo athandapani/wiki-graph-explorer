@@ -1,0 +1,133 @@
+{
+  "feature_id": "03",
+  "feature_file": "03-semantic-search.feature.md",
+  "generated": "2026-07-13",
+  "generator": "haiku-sub-agent via /peak-workflow:capture-requirements",
+  "requirements": [
+    {
+      "id": "TOR-03-TOtRRhr",
+      "title": "The /graph page shall provide a visible search input above the graph canvas",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Search is a core MVP feature supporting live semantic re-ranking via a client-side input."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S2",
+            "step": 1,
+            "paraphrase": "A visitor notices the search input above the graph canvas."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-03-C1lczJo",
+      "title": "The /graph page shall embed a visitor's typed query client-side and compute cosine similarity against each page's precomputed embedding from vector-index.json",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "Real semantic search requires typed queries to rank pages by cosine similarity over build-time-precomputed embeddings."
+          },
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Build-time embeddings per page enable client-side cosine-similarity ranking as the user types."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S2",
+            "step": 2,
+            "paraphrase": "The client-side JS embeds the typed query and computes cosine similarity against precomputed per-page embeddings."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-03-6MpPbQh",
+      "title": "The /graph page shall re-rank and visually highlight graph nodes by similarity score in real time as the visitor types, without a page reload or backend call",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Search provides live-filtering the graph with real-time re-ranking based on cosine-similarity scores."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S2",
+            "step": 4,
+            "paraphrase": "Nodes are re-ranked/highlighted by similarity score in real time as the visitor types."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-03-UH4yx26",
+      "title": "The /graph page shall dim or fade nodes below a relevance threshold out of the active view when a search query is active",
+      "traces_to": {
+        "vision": [],
+        "conops": [
+          {
+            "scenario": "S2",
+            "step": 5,
+            "paraphrase": "Nodes below the relevance threshold dim or fade out of view to highlight the most relevant results."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-03-82mnBKb",
+      "title": "The /graph page shall surface a page as a top-ranked search result when the query is conceptually related to that page's content even if the query's exact words do not appear in the page text",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§2 — Problem Statement",
+            "paraphrase": "The tool must provide genuine semantic search, not a keyword filter that deceives users into thinking AI-powered search is real."
+          },
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "Real semantic search must rank by conceptual similarity, not keyword presence."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S2",
+            "step": 6,
+            "paraphrase": "The visitor can confirm that a page surfaces even when it never contains the literal query words, proving semantic rather than keyword matching."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-03-e3TJKQb",
+      "title": "The /graph page shall restore the full unfiltered graph view when the visitor clears the search input",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Search is described as 'client-side cosine-similarity ranking as the user types' — a live binding to input state implies clearing the input is the natural inverse operation that restores the unfiltered graph."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-03-HjJLHTr",
+      "title": "The /graph page shall display a no-results indication when a query's highest similarity score falls below the relevance threshold for every page",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "The 'real semantic search' goal implies honest feedback when nothing meets the relevance bar, rather than silently showing a misleading full or empty graph — this is the negative-path counterpart to the ranking requirement."
+          }
+        ],
+        "conops": []
+      }
+    }
+  ],
+  "coverage_gaps": []
+}

@@ -1,0 +1,154 @@
+{
+  "feature_id": "04",
+  "feature_file": "04-side-panel.feature.md",
+  "generated": "2026-07-13",
+  "generator": "haiku-sub-agent via /peak-workflow:capture-requirements",
+  "requirements": [
+    {
+      "id": "TOR-04-I0T4GDu",
+      "title": "The /graph page shall open a side panel showing page detail when a visitor clicks a node",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "Side panel on node click shows page detail and GitHub source link for transparency."
+          },
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Side panel displays page detail and GitHub source link when a node is clicked."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S1",
+            "step": 5,
+            "paraphrase": "After clicking a node, a side panel opens showing page detail and GitHub source link."
+          },
+          {
+            "scenario": "S3",
+            "step": 2,
+            "paraphrase": "Clicking a node triggers the side panel to open."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-04-GOmpoij",
+      "title": "The side panel shall slide in without triggering a full page navigation, keeping the graph visible and in its current center/zoom state",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "Side panel slides in without full page navigation, keeping graph context visible during exploration."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S3",
+            "step": 3,
+            "paraphrase": "The side panel slides in as an overlay while the graph remains visible in its current state."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-04-tgCQzbT",
+      "title": "The side panel shall close when the visitor explicitly dismisses it, returning full focus to the graph canvas",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "The panel is described as sliding in 'without a full page navigation, keeping graph context visible' — a slide-in overlay pattern implies a matching dismiss action so the visitor can return to unobstructed graph exploration."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-04-OSiZDmK",
+      "title": "The side panel shall display the node's title, tags, and status dot",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Side panel displays page detail including title, tags, and status."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S1",
+            "step": 5,
+            "paraphrase": "Side panel shows page title, tags, status dot, and related-node list."
+          },
+          {
+            "scenario": "S3",
+            "step": 3,
+            "paraphrase": "The side panel displays page title, tags, and status dot."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-04-p0sfy0j",
+      "title": "The side panel shall display a list of the node's related nodes derived from its graph edges",
+      "traces_to": {
+        "vision": [],
+        "conops": [
+          {
+            "scenario": "S1",
+            "step": 5,
+            "paraphrase": "Side panel lists each directly connected related node."
+          },
+          {
+            "scenario": "S3",
+            "step": 3,
+            "paraphrase": "The side panel shows a list of related nodes."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-04-JCORp98",
+      "title": "The side panel shall display a \"View source on GitHub\" link that opens the raw Markdown file for that page in a new tab",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "Source transparency requires a working link to the page's raw Markdown source on GitHub for verification."
+          },
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Side panel includes a GitHub source link to the raw .md file."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S1",
+            "step": 5,
+            "paraphrase": "Side panel displays a 'View source on GitHub' link to the raw .md file."
+          },
+          {
+            "scenario": "S3",
+            "step": 4,
+            "paraphrase": "Side panel shows a 'View source on GitHub' link that opens the raw .md file."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-04-ldlbRRl",
+      "title": "The side panel shall preserve its open state and displayed content when a visitor returns to the /graph browser tab after visiting the GitHub source link in a separate tab",
+      "traces_to": {
+        "vision": [],
+        "conops": [
+          {
+            "scenario": "S3",
+            "step": 7,
+            "paraphrase": "After visiting the GitHub source link in a new tab and returning to the graph tab, the side panel remains open showing the same node's detail."
+          }
+        ]
+      }
+    }
+  ],
+  "coverage_gaps": []
+}

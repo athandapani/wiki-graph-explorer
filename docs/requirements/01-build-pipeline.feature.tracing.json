@@ -1,0 +1,374 @@
+{
+  "feature_id": "01",
+  "feature_file": "01-build-pipeline.feature.md",
+  "generated": "2026-07-13",
+  "generator": "haiku-sub-agent via /peak-workflow:capture-requirements",
+  "requirements": [
+    {
+      "id": "TOR-01-Oequ51V",
+      "title": "The build tool shall report its name and semantic version to standard output when invoked with --version, exiting with code 0",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "CLAUDE.md — Tool Hygiene & Operability: Version exposure",
+            "paraphrase": "This is a baseline tool-hygiene requirement, not derived from the vision doc — CLAUDE.md declares --version as the CLI's mechanism for exposing its version to an end user."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-01-pWeHInR",
+      "title": "The build tool shall emit a log line at startup containing its name and semantic version at INFO level",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "CLAUDE.md — Tool Hygiene & Operability: Version stamped at log startup",
+            "paraphrase": "Baseline tool-hygiene requirement: CLAUDE.md declares the first log line at process startup must name the tool and its version."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-01-ZkmB8Qn",
+      "title": "The build tool shall emit log records at the levels DEBUG, INFO, WARN, and ERROR in human-readable prefixed plain-text format written to standard error",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "CLAUDE.md — Tool Hygiene & Operability: Logging convention",
+            "paraphrase": "Baseline tool-hygiene requirement: CLAUDE.md declares the four-level, human-readable, stderr-only logging convention for the build tool."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-01-LplbdUv",
+      "title": "The build tool shall exit with code 0 on success, code 1 on operational failure, and code 2 on invalid invocation",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "CLAUDE.md — Tool Hygiene & Operability: Exit code convention",
+            "paraphrase": "Baseline tool-hygiene requirement: CLAUDE.md declares the 0/1/2 exit-code convention so calling scripts and CI can distinguish success, operational failure, and invocation errors."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-01-Z0d0o1e",
+      "title": "The build tool shall reject invocation without a --vault argument with exit code 2 and a usage hint",
+      "traces_to": {
+        "vision": [],
+        "conops": [
+          {
+            "scenario": "S4",
+            "step": 1,
+            "paraphrase": "Every operational scenario begins by the author pointing the tool at a specific vault path — the tool has no meaningful behavior without one, so an invocation lacking --vault is an invalid-invocation case the PM persona surfaced as an implicit negative-path requirement."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-847tYDS",
+      "title": "The build tool shall write primary build output confirmation to standard output and shall write diagnostics, progress, and log output to standard error",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "CLAUDE.md — Tool Hygiene & Operability: stdout / stderr discipline",
+            "paraphrase": "Baseline tool-hygiene requirement: CLAUDE.md declares stdout carries primary/parseable output while stderr carries diagnostics, progress, and logs."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-01-FPff1RV",
+      "title": "The build tool shall emit user-facing error messages to standard error that name the problem and name the next user action",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "CLAUDE.md — Tool Hygiene & Operability: Error message standard",
+            "paraphrase": "Baseline tool-hygiene requirement: CLAUDE.md declares that user-facing errors must name both the problem and the next user action."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-01-NTPrx23",
+      "title": "The build tool shall walk every Markdown file under the vault path and parse its YAML frontmatter (title, tags, status, Related, Referenced By) into a node record",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "The tool must process Markdown wiki content with structured metadata to transform raw vault files into queryable node records, supporting the graph data structure."
+          },
+          {
+            "section": "§10 — Data Strategy",
+            "paraphrase": "Vault content uses git-committed Markdown with frontmatter-driven metadata; the build tool must parse this frontmatter to extract page attributes for the graph."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S4",
+            "step": 2,
+            "paraphrase": "When the author points the CLI at a local vault path, the tool walks the vault to discover and parse all Markdown files, extracting their frontmatter into node records."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-IBry2Oi",
+      "title": "The build tool shall collapse directional Related and Referenced By frontmatter links between two pages into a single undirected edge in graph-data.json",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "The graph representation collapses directional backlink relationships into undirected edges to simplify the force-directed visualization."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S4",
+            "step": 2,
+            "paraphrase": "During parsing, the tool synthesizes undirected graph edges from the frontmatter's directional Related and Referenced By relationships."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-aqsjUxj",
+      "title": "The build tool shall assign each node a folder/taxonomy value derived from the page's directory path within the vault",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "Nodes must be grouped and colored by folder taxonomy to visually cluster related content in the graph."
+          },
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "Node color-coding by folder/taxonomy cluster organizes the graph visually to mirror content structure."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S1",
+            "step": 2,
+            "paraphrase": "The graph renders nodes colored by their folder/taxonomy cluster, which the tool derives from each page's directory path during the build."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-dEUM3Pp",
+      "title": "The build tool shall skip a Markdown file with missing or malformed frontmatter, emit a WARN log identifying the file, and continue processing the remaining vault",
+      "traces_to": {
+        "vision": [],
+        "conops": [
+          {
+            "scenario": "S4",
+            "step": 2,
+            "paraphrase": "The tool must handle real-world messiness by gracefully skipping malformed files while continuing to process the rest of the vault."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-6H0EK6c",
+      "title": "The build tool shall produce zero nodes and zero edges in graph-data.json, without error, when run against a vault directory containing no Markdown files",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "The 'generic point-at-a-repo tool' goal implies the tool must behave predictably across arbitrary vault states, including the degenerate case of an empty or not-yet-populated vault, without crashing."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-01-cqloSLI",
+      "title": "The build tool shall write graph-data.json as a single valid JSON document containing top-level nodes and edges arrays",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "The tool must emit a valid graph-data.json artifact containing nodes and edges that the Next.js page will fetch client-side."
+          },
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Static graph-data.json is fetched client-side by the Next.js page; it must be valid JSON with nodes and edges arrays."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S4",
+            "step": 2,
+            "paraphrase": "The tool builds a valid graph-data.json file containing the parsed nodes and synthesized edges."
+          },
+          {
+            "scenario": "S5",
+            "step": 4,
+            "paraphrase": "The build regenerates graph-data.json to include new pages added to the public vault."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-EsImTv8",
+      "title": "The build tool shall compute a precomputed embedding for each vault page's title, body, and tags and write it to vector-index.json alongside the page id",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "Build-time precomputed embeddings over page content enable real semantic search at query time without dynamic backend calls."
+          },
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "The tool computes build-time embeddings per page and writes a static vector-index.json asset for client-side cosine-similarity ranking."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S4",
+            "step": 3,
+            "paraphrase": "The tool computes embeddings per page and writes a vector-index.json file alongside graph-data.json."
+          },
+          {
+            "scenario": "S5",
+            "step": 4,
+            "paraphrase": "The rebuild regenerates vector-index.json with embeddings for new pages."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-FFu6OJ3",
+      "title": "The build tool shall regenerate graph-data.json and vector-index.json fully on every run, with no incremental/partial update",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§10 — Data Strategy",
+            "paraphrase": "Static derived artifacts (graph-data.json and vector-index.json) are regenerated fully on each build with no incremental updates."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-01-p7AxyYn",
+      "title": "The build tool shall write its output assets only to the local path specified by the user and shall never transmit vault content to any network destination",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "Safe-by-construction boundary ensures private vault content never leaves the local machine during build."
+          },
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Content isolation guarantees the tool only outputs to local paths and makes no network calls that could leak private content."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S4",
+            "step": 6,
+            "paraphrase": "Local iteration against the private second-brain produces output JSON assets only to the local build directory, never published."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-igqi4aJ",
+      "title": "The build tool shall require an explicit --vault path argument for every invocation and shall never fall back to a default or previously used vault path",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "Safe-by-construction boundary requires explicit vault path on every invocation to prevent accidental use of wrong vault."
+          },
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Input supports local filesystem path only, requiring an explicit --vault argument."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-01-5d0lrAs",
+      "title": "The deployed production build configuration shall reference a single hardcoded --vault path pointing at the dedicated public vault, with no build-time flag or environment variable able to override it",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "Safe-by-construction boundary requires the production build configuration to hardcode the public vault path with no override capability."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-01-lgzWfrv",
+      "title": "The repository shall never contain a committed file referencing the second-brain private vault's filesystem path",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "Safe-by-construction boundary prevents accidental exposure by ensuring no committed code references the private vault's path."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-01-uY4K5t1",
+      "title": "The build tool shall include newly added vault pages in graph-data.json and vector-index.json on the next run without any tool-code changes",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "The tool must be generic, supporting point-at-a-repo operation without code changes as vault content evolves."
+          },
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Rebuild-on-publish workflow allows new vault pages to appear in the live graph on rebuild without tool modifications."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S5",
+            "step": 4,
+            "paraphrase": "When new pages are added to the public vault, rebuilding the tool generates updated graph-data.json and vector-index.json automatically."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-ly1VpL1",
+      "title": "The build pipeline shall support producing a full Next.js static export that embeds the current graph-data.json and vector-index.json, deployable with no server runtime",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "Live-feeling static graph requires a Next.js page that fetches graph-data.json client-side and renders via react-force-graph."
+          },
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Build pipeline produces static assets (graph-data.json and vector-index.json) fetched client-side by the Next.js /graph page."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S5",
+            "step": 5,
+            "paraphrase": "The Next.js static export build packages the current graph and vector assets for static hosting."
+          }
+        ]
+      }
+    }
+  ],
+  "coverage_gaps": []
+}
