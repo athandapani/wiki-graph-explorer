@@ -11,14 +11,17 @@ These notes capture design decisions and rationale that complement the Architect
 
 ---
 
-## 1. `react-force-graph` over `sigma.js` / `Cosmograph`
+## 1. `react-force-graph-2d` over `sigma.js` / `Cosmograph`
 
-**Decision:** Use `react-force-graph` for the force-directed graph rendering.
+**Decision:** Use `react-force-graph-2d` (the 2D canvas variant) for the force-directed graph rendering.
 
 **Rationale:** `Cosmograph` is licensed CC BY-NC 4.0, which is a license risk on a job-seeking
-portfolio site (non-commercial restriction is ambiguous in this context). `react-force-graph`
-avoids that risk while still meeting the interaction requirements (click-to-center-zoom,
-node coloring, hover tooltips).
+portfolio site (non-commercial restriction is ambiguous in this context). `react-force-graph-2d`
+avoids that risk while meeting the interaction requirements (click-to-center-zoom, node coloring,
+hover tooltips). The 2D canvas variant is lighter than the full bundle (which includes 3D/VR
+capabilities) and produces no visual artifacts on 40+-node graphs. Direct canvas drawing (via
+`nodeCanvasObject` and `nodePointerAreaPaint` callbacks) enables performant, custom node rendering
+with colored bodies and small status dots.
 
 ---
 
@@ -48,20 +51,20 @@ and only one of them is ever wired to the deployment path.
 
 ---
 
-## 4. Build-time page embeddings — resolved; client-side query embedding pending
+## 4. Build-time page embeddings via `@huggingface/transformers` (resolved); client-side query embedding pending
 
 **Decision:** Build-time page embeddings are computed via `@huggingface/transformers` with
 `Xenova/all-MiniLM-L6-v2` (384 dimensions), written to `vector-index.json`, and fetched
-client-side. Client-side query embedding (for Scenario 2's live semantic search) remains an
-open risk requiring a spike before it can be implemented as specified.
+client-side. Client-side query embedding (for Scenario 2's live semantic search) remains a
+future epic requiring a spike before implementation.
 
 **Rationale:** Real (not keyword-filter) semantic search is a core credibility requirement
 (Product Vision §2, §5). Build-time page embeddings are now settled and operational (Epic
-cxjcyqx); the `@huggingface/transformers` library with WASM/browser support is suitable for
-both build-time and future client-side query embedding, resolving the technical spike risk for
-that mechanism. However, the exact approach for embedding a live-typed query client-side and
-scoring it against precomputed page vectors must be resolved by a future spike epic before
-Scenario 2's search feature can be implemented.
+cxjcyqx). The `@huggingface/transformers` library with WASM/browser support was verified to work
+both at build-time (via Node.js) and has documented client-side browser support, making it a
+viable candidate for future client-side query embedding. However, the exact approach for embedding
+a live-typed query client-side and scoring it against precomputed page vectors must be resolved
+by a future spike epic before Scenario 2's search feature can be implemented.
 
 ---
 
@@ -148,11 +151,60 @@ legitimately describes the local dev setup and expected directory structure.
 
 ---
 
-## 14. Known Issues and Deferred Work
+## 13. Taxonomy Node Colors: Validated Categorical Palette with Golden-Angle Overflow
 
-- **Client-side query embedding:** Scope for a future epic. Build-time embeddings are settled, but live query embedding requires architectural decisions (browser WASM/worker threading, network cost). ConOps §8 flags this as a prerequisite for Scenario 2 (interactive semantic search).
+**Decision:** Nodes are colored by folder (taxonomy) using a validated 8-hue categorical palette
+(worst adjacent color-vision-deficiency ΔE 24.2, sourced from the project's `dataviz` skill).
+Folders beyond the first 8 receive generated golden-angle HSL colors to avoid collisions.
 
-- **`react-force-graph` integration:** Dependency is declared in `package.json` but integration deferred to a later epic. The `/graph` page currently displays node/edge/embedding counts; full graph rendering and zoom/click-to-center interaction will be added when this integration is implemented.
+**Rationale:** Nodes-with-different-folders must render distinctly (TOR-02-AyzgOJs). A validated
+categorical palette ensures accessibility (CVD-safe) and perceptual separation. A naive cycling
+approach (reusing the 8 colors for folder #9, #10, etc.) would collide with an earlier folder's
+color, breaking the requirement; golden-angle hue distribution ensures all colors remain distinct
+even for arbitrarily many folders. A proper UI legend or "Other" grouping for overflow folders is
+deferred to the future side-panel epic (V3PlLFL).
+
+---
+
+## 14. Content-Freshness Status Dots: Deliberate Separation from Health/Severity Colors
+
+**Decision:** Status dots (small circles rendered atop each node) indicate content freshness
+(active/revisiting/dormant/unknown). Colors are: active=#0ca30c (good-ish green), revisiting=#fab219
+(warning-ish amber), dormant/unknown=#898781 (neutral gray). These colors deliberately do NOT reuse
+the dataviz skill's reserved status palette (good/warning/serious/critical, which encodes
+health/severity).
+
+**Rationale:** Status dots encode a different semantic concept than the palette's health/severity
+meaning. Conflating them would create confusion — a node with "critical health" (serious red) but
+"active freshness" (good green) would send contradictory visual signals. By borrowing only the
+"good" and "warning" hues for the two freshness states that map naturally (thriving, needs attention)
+and using a neutral gray for dormant/unknown, we avoid semantic collision while maintaining visual
+coherence.
+
+---
+
+## 15. Dynamic Import Requirement for `react-force-graph-2d` in Static Export
+
+**Decision:** The GraphCanvas component is imported dynamically via `next/dynamic(..., { ssr: false })`
+in `app/graph/page.tsx`, never as a static import.
+
+**Rationale:** `react-force-graph-2d` touches canvas and window APIs at module scope (during
+`import`, not just on render). Next.js's build-time static-export prerender pass runs all module
+imports at build time to prerender HTML. Loading `react-force-graph-2d` at build time fails
+because there is no browser/canvas in the Node.js build environment. The `ssr: false` flag tells
+Next.js to skip this component during the prerender pass, leaving it for the browser. This is
+necessary even inside a `"use client"` file, which only marks the module for client-side evaluation
+but doesn't prevent build-time imports.
+
+---
+
+## 16. Known Issues and Deferred Work
+
+- **Client-side query embedding:** Scope for a future epic. Build-time embeddings are settled and operational (Epic cxjcyqx), but live query embedding and scoring requires architectural decisions (browser WASM/worker threading, network cost, query-vector caching). ConOps §8 flags this as a prerequisite for Scenario 2 (interactive semantic search).
+
+- **Side-panel and search UI:** The `/graph` page renders the force-directed graph with interactive zoom and click-to-center, but a side panel (showing selected node details) and semantic search box are deferred to a future epic (V3PlLFL). The graph canvas itself is complete and verifiable (Epic baPTSK2); search awaits client-side embedding infrastructure.
+
+- **Graph legend / "Other" folder grouping:** Vaults with more than 8 distinct folders see golden-angle-generated colors for overflow folders (§13). A proper UI legend and possible "Other" category grouping for overflow is deferred to the side-panel epic (V3PlLFL).
 
 - **GitHub Actions deployment workflow:** `.github/workflows/deploy.yml` is implemented and tested. Manual one-time setup required: Settings → Pages → Source: GitHub Actions must be enabled in the GitHub repo settings before the first deployment can publish to GitHub Pages.
 

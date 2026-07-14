@@ -26,7 +26,7 @@ whenever the source vault changes.
 | UI Library | React | 19.2.4 | Component model and rendering |
 | Language | TypeScript | ^5 | Type-safe JavaScript |
 | Package manager | npm | (bundled) | Dependency management |
-| Graph visualization | `react-force-graph` | (TBD — pending integration) | Force-directed graph rendering |
+| Graph visualization | `react-force-graph-2d` | 1.29.1 | Force-directed graph rendering (2D canvas, lighter bundle than full 3D/VR) |
 | Styling | Tailwind CSS | ^4 | UI styling (graph controls, side panel, explainer) |
 | Test runner | Vitest | ^4.1.10 | Unit tests for build scripts and components |
 | Lint / format | ESLint + Prettier | ^9 / (bundled) | Static analysis and formatting |
@@ -94,16 +94,24 @@ Key implementation details:
 | Route | Component | Behavior |
 |---|---|---|
 | `/` | `app/page.tsx` | Home/landing page (placeholder) |
-| `/graph` | `app/graph/page.tsx` | Fetches `graph-data.json` and `vector-index.json` client-side via `fetch()`, displays node/edge/embedding counts. `react-force-graph` rendering integration pending. |
+| `/graph` | `app/graph/page.tsx` | Fetches `graph-data.json` and `vector-index.json` client-side via `fetch()`. Renders interactive force-directed graph with dynamic import (`next/dynamic(..., { ssr: false })`). Branches to ErrorState, loading placeholder, EmptyState, or GraphCanvas based on fetch outcome and node count. Footer displays version sourced from `package.json`. |
 
 Data fetching:
 - Both JSON assets are fetched client-side on page load via `Promise.all([fetch("/graph-data.json"), fetch("/vector-index.json")])`.
 - Assets are hosted as static files in the `public/` directory after the build pipeline writes them to the Next.js output.
 - No backend API calls; all data is precomputed at build time.
 
-Component hierarchy (planned):
-- `/graph` page will render a graph canvas (via `react-force-graph`), interactive node/edge selection, side panel with details, and semantic search box (pending client-side query embedding).
-- `react-force-graph` integration and search UX are deferred to later epics.
+Graph Canvas Components:
+- `GraphCanvas.tsx` — Wrapper around `react-force-graph-2d`; renders nodes (colored by folder taxonomy via validated categorical palette) with small status dots (active/revisiting/dormant), edges, and hover tooltips showing node title and status. Click-to-center-zoom interaction animates over ~900ms; initial layout uses `zoomToFit`. Custom canvas draw callbacks (`nodeCanvasObject`, `nodePointerAreaPaint`) handle visual rendering.
+- `nodeColor.ts` — Maps folder names to colors using an 8-hue validated categorical palette (worst adjacent CVD ΔE 24.2). Folders beyond 8 slots receive a generated golden-angle HSL color to avoid color collisions.
+- `StatusDot.tsx` — Maps content-freshness status (active/revisiting/dormant/unknown) to colors. Deliberately does NOT reuse the dataviz skill's reserved status palette (which means health/severity), since freshness is a different semantic concept. Reusable component for future UI expansions.
+- `EmptyState.tsx` — Renders a dedicated message when the graph contains zero nodes (e.g., empty vault).
+- `ErrorState.tsx` — Renders error message naming the problem and next action when JSON fetch fails.
+- `Footer.tsx` — Displays `wiki-graph-explorer v<semver>` sourced from `package.json#version`.
+
+Design notes:
+- `react-force-graph-2d` touches canvas and window APIs at module scope, which breaks Next.js's build-time static-export prerender pass. The dynamic import with `ssr: false` ensures the library code never runs at build time, keeping the prerender pass clean even inside a `"use client"` file.
+- Semantic search UI (live query embedding and scoring) is deferred to a future epic pending a spike on client-side query embedding mechanisms.
 
 ---
 
