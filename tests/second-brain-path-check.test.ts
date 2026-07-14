@@ -4,10 +4,15 @@ import * as path from "node:path";
 import { describe, expect, it } from "vitest";
 import { findSecondBrainPathViolations } from "../lib/second-brain-path-check";
 
+// Built at runtime (not a literal "second-brain/" substring) so this test file's own committed
+// source never trips the very check it exercises — see the last test in this file, which scans
+// the real repo's tracked files including this one.
+const SECOND_BRAIN_SEGMENT = ["second", "brain"].join("-");
+
 describe("findSecondBrainPathViolations", () => {
   it("TOR-01-lgzWfrv: given a non-.md file containing a path-shaped second-brain reference, when scanned, then it is flagged", () => {
     const violations = findSecondBrainPathViolations([
-      { path: "scripts/build.ts", content: 'const vault = "../second-brain/wiki";' },
+      { path: "scripts/build.ts", content: `const vault = "../${SECOND_BRAIN_SEGMENT}/wiki";` },
     ]);
     expect(violations).toEqual(["scripts/build.ts"]);
   });
