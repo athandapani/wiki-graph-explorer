@@ -6,8 +6,10 @@ import { EmptyState } from "@/components/graph/EmptyState";
 import { ErrorState } from "@/components/graph/ErrorState";
 import { Footer } from "@/components/graph/Footer";
 import type { GraphEdge, GraphNode } from "@/components/graph/GraphCanvas";
+import { LayoutModeToggle, type LayoutMode } from "@/components/graph/LayoutModeToggle";
 import { SearchInput } from "@/components/graph/SearchInput";
 import { SidePanel } from "@/components/graph/SidePanel";
+import SwimLaneCanvas from "@/components/graph/SwimLaneCanvas";
 import { RELEVANCE_THRESHOLD, useSearchRanking } from "@/components/graph/useSearchRanking";
 import type { VectorIndexEntry } from "@/lib/embeddings";
 
@@ -25,6 +27,7 @@ export default function GraphPage() {
   const [vectorIndex, setVectorIndex] = useState<VectorIndexEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>("force-directed");
   const { query, setQuery, scores, isSearchActive, hasResults } = useSearchRanking(
     vectorIndex ?? [],
   );
@@ -57,23 +60,41 @@ export default function GraphPage() {
           <ErrorState />
         ) : !graphData ? (
           <p>Loading graph…</p>
-        ) : graphData.nodes.length === 0 ? (
-          <EmptyState />
         ) : (
           <>
+            <LayoutModeToggle mode={layoutMode} onChange={setLayoutMode} />
             <SearchInput
               value={query}
               onChange={setQuery}
               isActive={isSearchActive}
               hasResults={hasResults}
             />
-            <GraphCanvas
-              nodes={graphData.nodes}
-              edges={graphData.edges}
-              onNodeClick={setSelectedNode}
-              searchScores={scores}
-              relevanceThreshold={RELEVANCE_THRESHOLD}
-            />
+            <div
+              className="h-full"
+              style={{ display: layoutMode === "force-directed" ? "block" : "none" }}
+            >
+              {graphData.nodes.length === 0 ? (
+                <EmptyState />
+              ) : (
+                <GraphCanvas
+                  nodes={graphData.nodes}
+                  edges={graphData.edges}
+                  onNodeClick={setSelectedNode}
+                  searchScores={scores}
+                  relevanceThreshold={RELEVANCE_THRESHOLD}
+                />
+              )}
+            </div>
+            <div
+              className="h-full"
+              style={{ display: layoutMode === "swim-lane" ? "block" : "none" }}
+            >
+              <SwimLaneCanvas
+                nodes={graphData.nodes}
+                edges={graphData.edges}
+                onNodeClick={setSelectedNode}
+              />
+            </div>
           </>
         )}
       </div>
