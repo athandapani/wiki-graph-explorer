@@ -10,7 +10,7 @@ describe("components/graph/ExplainerSection.tsx", () => {
 
   it("TOR-05-G72S3H4: renders a heading and descriptive text about second-brain/dynamic-context benefits and missing-link discovery", () => {
     expect(source).toContain("Why build this");
-    expect(source).toMatch(/second-brain/i);
+    expect(source.toLowerCase()).toContain("second-brain");
     expect(source).toMatch(/dynamic context|dynamic, relevant context|relevant context/i);
     expect(source).toMatch(/missing link|content gap|isolated/i);
   });

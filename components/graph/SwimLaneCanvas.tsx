@@ -126,6 +126,14 @@ export default function SwimLaneCanvas({ nodes, edges, isDark, onNodeClick }: Sw
       .filter((candidate): candidate is GraphNode => candidate !== undefined);
   }, [activeNodeId, edges, revealableIds, nodesById]);
 
+  // Nodes that stay fully visible (not dimmed) when a node is active: the active node itself
+  // plus everything it's directly connected to. Everything else in the board dims out so the
+  // active node's connections stand out.
+  const highlightedIds = useMemo(() => {
+    if (activeNodeId == null) return null;
+    return new Set([activeNodeId, ...getRelatedNodeIds(activeNodeId, edges)]);
+  }, [activeNodeId, edges]);
+
   const laneNodes = useMemo(
     () => [...baseNodes, ...revealedNodes],
     [baseNodes, revealedNodes],
@@ -182,7 +190,7 @@ export default function SwimLaneCanvas({ nodes, edges, isDark, onNodeClick }: Sw
 
   return (
     <div ref={boardRef} className="relative flex h-full flex-col overflow-hidden">
-      <svg className="pointer-events-none absolute inset-0 h-full w-full">
+      <svg className="pointer-events-none absolute inset-0 -z-10 h-full w-full">
         {activeNodeId != null &&
           connectorPaths.map(({ targetId, d, color, isRevealed }) => (
             <ConnectorPath
@@ -213,6 +221,7 @@ export default function SwimLaneCanvas({ nodes, edges, isDark, onNodeClick }: Sw
                   isActive={node.id === activeNodeId}
                   isDark={isDark}
                   isRevealed={revealableIds.has(node.id)}
+                  isDimmed={highlightedIds != null && !highlightedIds.has(node.id)}
                   onClick={handlePillClick}
                   pillRef={(el) => {
                     if (el) {

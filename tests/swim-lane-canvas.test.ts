@@ -76,4 +76,15 @@ describe("components/graph/SwimLaneCanvas.tsx", () => {
   it("colors each connector line by its destination node's folder color", () => {
     expect(source).toContain("getFolderColor(targetNode.folder, isDark)");
   });
+
+  it("dims nodes that are not the active node and not directly connected to it", () => {
+    expect(source).toContain(
+      "new Set([activeNodeId, ...getRelatedNodeIds(activeNodeId, edges)])",
+    );
+    expect(source).toContain("isDimmed={highlightedIds != null && !highlightedIds.has(node.id)}");
+  });
+
+  it("renders the connector-line svg behind the pill nodes (negative z-index)", () => {
+    expect(source).toContain('className="pointer-events-none absolute inset-0 -z-10 h-full w-full"');
+  });
 });

@@ -9,6 +9,7 @@ interface PillNodeProps {
   isActive: boolean;
   isDark: boolean;
   isRevealed?: boolean;
+  isDimmed?: boolean;
   onClick: (node: GraphNode) => void;
   pillRef?: (element: HTMLButtonElement | null) => void;
 }
@@ -18,6 +19,7 @@ export function PillNode({
   isActive,
   isDark,
   isRevealed = false,
+  isDimmed = false,
   onClick,
   pillRef,
 }: PillNodeProps) {
@@ -31,7 +33,7 @@ export function PillNode({
       aria-pressed={isActive}
       className={`flex max-w-[150px] shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-all ${
         isRevealed ? "border-dashed" : ""
-      }`}
+      } ${isDimmed ? "opacity-30" : ""}`}
       style={{
         backgroundColor: `${accent}${isDark ? "33" : "1f"}`,
         borderColor: `${accent}${isActive ? "ff" : "80"}`,
