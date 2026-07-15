@@ -60,3 +60,54 @@ Scenario: [TOR-03-HjJLHTr] The /graph page shall display a no-results indication
     Given a visitor types a query with no conceptually related page in the vault
     When the ranking computes
     Then the page shall display an indication that no closely matching results were found
+
+
+# --------------------------------------------------------------------------------------------------
+# Search in Both Layout Modes (added 2026-07-15, Cycle 2 — issue #4 finding A1)
+# --------------------------------------------------------------------------------------------------
+
+Scenario: [TOR-03-Z3ApPfB] The /graph page shall apply the active search query's similarity ranking to the swim-lane board, highlighting and dimming pill nodes exactly as it does force-directed nodes
+    #
+    # Note:
+    #   1. Issue #4 finding A1 — the headline feature was dead in the default view. Search was wired
+    #      only to the force-directed canvas, so a visitor landing on the swim-lane board and typing
+    #      a query saw nothing happen. This is the highest-priority fix of the cycle.
+    #   2. This requirement is about the swim-lane board specifically; TOR-03-6MpPbQh and
+    #      TOR-03-UH4yx26 already bind the equivalent force-directed behavior.
+    #
+    Given a visitor is viewing swim-lane mode
+    And graph-data.json contains pages both above and below the relevance threshold for a test query
+    When the visitor types that query into the search input
+    Then pill nodes scoring above the relevance threshold should render visually highlighted
+    And pill nodes scoring below the relevance threshold should render visually dimmed
+    And clearing the query should return every pill node to its unfiltered appearance
+
+Scenario: [TOR-03-PzdJnrT] The /graph page shall preserve the active search query and its resulting filtering when the visitor switches layout modes
+    Given a visitor has typed a query that is actively filtering the force-directed view
+    When the visitor switches to swim-lane mode
+    Then the search input should still contain that query
+    And the swim-lane board should render with the same set of nodes highlighted as matched the query in force-directed mode
+
+
+# --------------------------------------------------------------------------------------------------
+# Header Placement & Result Count (added 2026-07-15, Cycle 2)
+# --------------------------------------------------------------------------------------------------
+
+Scenario: [TOR-03-LgIpadO] The /graph page shall display the search input in a persistently visible header position that remains reachable without scrolling in both layout modes
+    #
+    # Note:
+    #   1. This refines TOR-03-TOtRRhr (search input visible above the graph canvas) by binding the
+    #      input to an always-visible header slot. Both requirements hold; a header placement above
+    #      the canvas satisfies each of them.
+    #
+    Given a visitor loads the /graph page
+    When the visitor scrolls the page and switches between force-directed and swim-lane modes
+    Then the search input should remain visible in the page header throughout
+    And the search input should be reachable without scrolling in either layout mode
+
+Scenario: [TOR-03-1LlqKF1] The /graph page shall display a count of how many pages match the active search query, updating live as the query changes
+    Given a visitor types a query matching exactly 7 pages above the relevance threshold
+    When the ranking updates
+    Then the page should display a visible result count reporting 7 matching pages
+    And the count should update as the visitor edits the query
+    And the count should disappear or reset when the visitor clears the search input

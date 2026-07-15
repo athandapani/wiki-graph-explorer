@@ -42,3 +42,24 @@ Scenario: [TOR-05-EmhMDFS] The side panel shall display a node's full related-no
     Given a visitor clicks an under-connected node
     When the side panel opens
     Then the panel should display that node's complete related-node list, allowing the visitor to observe its sparse connections directly
+
+
+# --------------------------------------------------------------------------------------------------
+# Per-Mode Explainer Accuracy (added 2026-07-15, Cycle 2 — issue #4 finding A8)
+# --------------------------------------------------------------------------------------------------
+
+Scenario: [TOR-05-OMWVZWL] The /graph page's explainer section shall name the layout mode in which each affordance it describes actually exists, and shall not describe an affordance as available in a mode that does not offer it
+    #
+    # Note:
+    #   1. Issue #4 finding A8: the explainer told visitors to filter nodes and read node sizing,
+    #      but both affordances live only in force-directed mode, two clicks deep behind the
+    #      "Options & help" control (TOR-06-DRtjcOk) — and the visitor lands in swim-lane mode.
+    #      Copy that describes a control the reader cannot find reads as a broken promise, which
+    #      costs more trust than saying nothing.
+    #   2. This is a copy-accuracy requirement, verified by reading the rendered explainer against
+    #      the affordances each mode actually presents.
+    #
+    Given a visitor reads the explainer section on /graph
+    When the explainer describes the status/folder filtering and node-sizing affordances
+    Then the explainer text should explicitly name the layout mode offering each affordance
+    And every affordance the explainer names should be reachable by the visitor in the mode named

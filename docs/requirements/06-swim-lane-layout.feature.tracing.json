@@ -1,7 +1,7 @@
 {
   "feature_id": "06",
   "feature_file": "06-swim-lane-layout.feature.md",
-  "generated": "2026-07-14",
+  "generated": "2026-07-15",
   "generator": "haiku-sub-agent via /peak-workflow:capture-requirements",
   "requirements": [
     {
@@ -53,14 +53,24 @@
     },
     {
       "id": "TOR-06-AFMTHM6",
-      "title": "The /graph page shall restore the force-directed view's prior pan/zoom state when a visitor toggles from swim-lane mode back to force-directed mode",
+      "title": "The /graph page shall re-fit the force-directed camera to the graph bounds when a visitor toggles from swim-lane mode back to force-directed mode",
+      "amended": {
+        "date": "2026-07-15",
+        "cycle": "Cycle 2",
+        "reason": "The requirement was inverted: issue #4 finding A2 showed that restoring a stale pan/zoom left the visitor staring at a tiny off-screen clump. ConOps S7.9 now requires camera re-fit on switch. The prior pan/zoom state is deliberately discarded."
+      },
       "traces_to": {
-        "vision": [],
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "Camera re-fit on layout switch (not pan/zoom restoration) fixes issue #4 finding A2, ensuring the visitor never faces an off-screen clump after toggling modes."
+          }
+        ],
         "conops": [
           {
             "scenario": "S7",
-            "step": 8,
-            "paraphrase": "When a visitor toggles back to force-directed mode from swim-lane mode, the graph restores the exact pan and zoom position it held before switching."
+            "step": 9,
+            "paraphrase": "When a visitor toggles back to force-directed mode, the camera re-fits to show all nodes in the viewport; the prior pan/zoom state is discarded to ensure readability."
           }
         ]
       }
@@ -305,6 +315,96 @@
           }
         ],
         "conops": []
+      }
+    },
+    {
+      "id": "TOR-06-BxA7IRn",
+      "title": "The /graph page shall display a \"+N more\" affordance in each swim-lane whose hidden low-connectivity nodes number at least one, reporting the exact count hidden from that lane",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "Hidden-node transparency surfaces zero/low-degree nodes via a '+N more' affordance instead of silently dropping them, fixing issue #4 finding A7."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 4,
+            "paraphrase": "When a lane has hidden low-connectivity nodes, the board displays a '+N more' affordance showing exactly how many nodes are hidden, preventing silent omission."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-06-YjETzyC",
+      "title": "The /graph page shall render every hidden low-connectivity node of a lane onto the board when a visitor activates that lane's \"+N more\" affordance",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "The '+N more' affordance is not merely a count but an interactive control that reveals hidden nodes on demand."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 4,
+            "paraphrase": "When a visitor activates the '+N more' affordance, all previously hidden low-connectivity nodes render as pills within that lane."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-06-ihpx0Ya",
+      "title": "The /graph page shall omit the \"+N more\" affordance from any swim-lane that has no hidden nodes",
+      "traces_to": {
+        "vision": [],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 4,
+            "paraphrase": "Lanes with full node visibility omit the affordance entirely, keeping the board clean when there are no hidden nodes."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-06-cSCqVtt",
+      "title": "The /graph page shall size each swim-lane pill to fit its node's full title text, rendering no ellipsis truncation",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "Pills sized to their full label text with no ellipsis truncation keep the swim-lane board readable, fixing issue #4 finding B5."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 3,
+            "paraphrase": "When a pill renders with a long title, it expands to display the complete text without truncation or ellipsis."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-06-JuNSwaW",
+      "title": "The /graph page shall render each swim-lane as a tinted rounded container carrying its folder/taxonomy heading and a short lane descriptor",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "Tinted lane containers with descriptors provide visual structure and context for each taxonomy cluster, making the board more legible and intentional."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 3,
+            "paraphrase": "Each lane renders within a tinted rounded container displaying its folder/taxonomy name and a short descriptor of what that lane holds."
+          }
+        ]
       }
     }
   ],

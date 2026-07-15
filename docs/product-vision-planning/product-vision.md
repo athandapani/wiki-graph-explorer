@@ -1,7 +1,7 @@
 # wiki-graph-explorer — Product Vision & Brief
 
-**Document Version:** 1.1
-**Date:** 2026-07-14
+**Document Version:** 1.2
+**Date:** 2026-07-15
 **Status:** Draft
 
 ---
@@ -61,6 +61,21 @@ in seconds what a paragraph of prose can only claim.
 | Source transparency | Side panel on node click shows page detail + working link to that page's source on GitHub |
 | Safe-by-construction boundary | The deployed instance only ever points at the dedicated public vault; zero path by which private-vault content reaches the built page |
 
+**Demo-quality goals (Cycle 2 — from the issue #4 critical review vs the "AI Stack, Connected"
+reference):**
+
+| Goal | Success Criteria |
+|---|---|
+| Cold-visitor onboarding | A first-time visitor understands what the page is and how to start within ~10 seconds: hero/tagline row, "start anywhere" empty-state panel with folder + status legend, stats footer showing the raw→wiki provenance chain |
+| Browsable detail panel | Every connected page in the side panel is a clickable chip that selects that node; panel shows a per-page description (frontmatter `description` or first-paragraph fallback) and a colored folder badge |
+| Search works everywhere | Semantic search visibly filters/highlights in **both** layout modes, with a result count; Ctrl+K (or `/`) focuses search; search promoted to an always-visible header position |
+| Keyboard support | Esc closes popovers and clears the node selection ("Esc to reset" hinted in the stats footer) |
+| Responsive layout | `/graph` is usable at 390px viewport width — side panel becomes a bottom sheet/overlay, board stays readable |
+| Deliberate visual identity | Geist typography actually applied (no Arial fallback); committed surface palette + folder-accent system; full pill labels (no ellipsis truncation); tinted lane containers with descriptors |
+| Guided tour | One "Take a tour" control steps through 4–5 curated linked nodes with captions; Esc exits |
+| Demo-scale deployed dataset | Deployed public vault built from ~40 ingested research sources (fanning out to potentially a few hundred wiki pages/connections), replacing the 2-page placeholder |
+| Source transparency actually works | Repo made public after a history audit for private content; GitHub source links resolve (path-join bug fixed and verified against the deployed vault) |
+
 ## 6. MVP Scope Summary
 
 - **Graph view**: two selectable layout modes via a visible toggle —
@@ -91,6 +106,50 @@ in seconds what a paragraph of prose can only claim.
   `second-brain-site` plan's placeholder) because it ties directly back into the applied-AI career
   positioning while remaining original research — never confidential org data.
 
+### Demo-Quality Upgrade (Cycle 2)
+
+Post-MVP scope driven by the issue #4 critical review of `/graph` against the "AI Stack,
+Connected" reference demo:
+
+- **Hero row**: bold page identity + one-line promise inviting interaction, above the graph
+- **Onboarding / "start anywhere" panel**: the side panel's empty state becomes an onboarding
+  card — what the map is built from, a color-coded folder legend, a status-dot legend, and
+  pointers on where to begin
+- **Rich detail panel**: colored folder badge, per-page description (frontmatter `description`
+  field with first-paragraph fallback, emitted by `build-graph`), and "Connected pages" grouped
+  by folder as clickable chips — clicking a chip selects that node (panel becomes a navigation
+  surface, not a dead end)
+- **Stats footer**: `Built from K raw sources → Y wiki pages and Z connections` + "Esc to reset" hint.
+  Presented as one provenance sentence rather than three loose counts — the raw→wiki derivation is
+  the technique the artifact exists to prove, and K is spot-checkable against the source links.
+  Vaults with no `raw/` sibling (fixtures, third-party vaults) declare no provenance, so the clause
+  is omitted entirely and the footer reads `Y wiki pages · Z connections` — never "built from 0"
+- **Keyboard support**: Esc closes the Options popover / clears selection / exits the tour;
+  Ctrl+K (or `/`) focuses search
+- **Search promotion**: always-visible header placement, works in both layout modes, shows a
+  result count
+- **Responsive layout**: breakpoints so 390px-wide viewports get a usable board with the side
+  panel as a bottom sheet/overlay
+- **Visual identity pass**: Geist fonts applied, deliberate background/surface palette with the
+  folder-color accent system, full pill labels sized to their text, tinted rounded lane
+  containers with short lane descriptors, consistent hover/focus states, typographic hierarchy
+- **Guided tour**: a single "Take a tour" control stepping through 4–5 curated linked nodes
+  with captions
+- **Hidden-node transparency**: swim-lane mode surfaces zero/low-degree nodes via a "+N more"
+  affordance/count instead of silently dropping them
+- **Explainer accuracy**: explainer copy corrected to match the UI that actually exists per mode
+- **Review bug fixes**: search live in the default swim-lane view (A1), force-directed camera
+  re-fit on layout switch + reset-view control (A2), source-link path join fixed (A3),
+  click-to-zoom centering + selection ring/halo + connection highlighting/dimming in
+  force-directed mode (A6), theme-aware edge/link colors and label decluttering at zoom (A6),
+  Geist font actually applied (A9)
+- **Demo-vault research ingestion (separate epic)**: the author provides a deep-research
+  Markdown file (e.g. Perplexity output) with ~40 source links on AI adoption in medium-sized
+  enterprises; an ingestion pass creates `raw/` entries and interlinked wiki pages
+  Karpathy-style, replacing the 2-page placeholder vault
+- **Repo goes public**: after a history audit confirms no private content, so raw GitHub source
+  links resolve for anonymous visitors
+
 *Cross-cutting concerns:* content isolation (tool only ever deployed against a vault that's
 public-by-construction, never a filtered export); placement as a secondary page (e.g. `/graph`), not
 the homepage; `react-force-graph` chosen over `sigma.js`/`Cosmograph` partly to sidestep
@@ -107,6 +166,12 @@ the homepage; `react-force-graph` chosen over `sigma.js`/`Cosmograph` partly to 
 - Any tooling to help *author* vault content beyond the initial research-ingestion pass (this tool
   reads/renders existing wiki content only)
 - Career case-study content itself (separate `second-brain-site` portfolio track)
+- Persona-based multi-tours ("I'm new here" / "I build things" / "I run a business") — one
+  single guided tour only for Cycle 2
+- Arrow-key node-to-node graph traversal (keyboard scope is Esc + search focus only)
+- Automated research pipeline — the deep-research step for the demo vault is manual/user-provided
+  (Perplexity or similar), never automated in-tool
+- In-app raw-markdown reader (source transparency stays a GitHub link)
 
 ## 8. Key Business Scenarios
 
@@ -114,9 +179,11 @@ the homepage; `react-force-graph` chosen over `sigma.js`/`Cosmograph` partly to 
    explores the live force-directed graph of the AI-in-enterprises research vault, and leaves
    convinced this is a working artifact, not a mockup.
 2. **Semantic search demo** — a technical evaluator types a query like "change management" and
-   watches the graph live-filter via real cosine-similarity ranking, not keyword matching.
-3. **Node deep-dive** — any visitor clicks a node, the side panel opens with page detail and a
-   GitHub source link, and they click through to the raw markdown to verify real sourced content.
+   watches the graph live-filter via real cosine-similarity ranking, not keyword matching — in
+   whichever layout mode is active, with a visible result count and a Ctrl+K focus affordance.
+3. **Node deep-dive** — any visitor clicks a node, the side panel opens with a folder badge,
+   per-page description, and connected pages as clickable chips grouped by folder; a working
+   GitHub source link lets them click through to the raw markdown to verify real sourced content.
 4. **Local dev iteration** — the tool author runs the tool against a local `second-brain` path to
    iterate on graph/search quality using rich real data, with output never published.
 5. **Public-vault rebuild & publish** — the author adds new research pages to the public vault,
@@ -129,6 +196,17 @@ the homepage; `react-force-graph` chosen over `sigma.js`/`Cosmograph` partly to 
    Nate Herk "AI Stack, Connected" reference demo), explores clustered lanes, then toggles back —
    confirming the tool offers both a familiar force-directed explorer and a more structured,
    presentation-style layout.
+8. **Cold-visitor onboarding** — a first-time visitor lands on `/graph`, reads the hero/tagline,
+   sees the "start anywhere" panel with folder and status legends, notes the stats footer
+   ("Built from K raw sources → Y wiki pages and Z connections"), and starts exploring within seconds
+   without any prior context.
+9. **Guided tour** — a visitor clicks "Take a tour" and is stepped through 4–5 curated linked
+   nodes with short captions, experiencing both the graph's navigation and the content's depth
+   without having to choose where to start; Esc exits at any point.
+10. **Demo-vault research ingestion** — the author brings a deep-research Markdown file
+    (~40 source links on AI adoption in medium-sized enterprises), runs the Karpathy-pattern
+    ingestion pass to produce `raw/` entries and interlinked wiki pages, and the rebuilt deployed
+    graph shows demo-scale density instead of the 2-page placeholder.
 
 ## 9. Design Direction
 
@@ -149,6 +227,16 @@ the homepage; `react-force-graph` chosen over `sigma.js`/`Cosmograph` partly to 
   behavior across both modes
 - Overall aesthetic reads as real webapp engineering (per the companion portfolio-site plan) — not
   a templated digital-garden look
+- **Visual identity (Cycle 2):** Geist typography applied throughout (never the Arial fallback);
+  a deliberate background/surface palette with the folder-color system doubling as the accent
+  system; clear typographic hierarchy for the hero, lane headings, and panel
+- Pills sized to their full label text — no ellipsis truncation on the board
+- Lanes as tinted rounded containers with a short descriptor next to each heading, no large
+  empty voids
+- Search lives in the header, always visible, with a Ctrl+K affordance and a result count
+- Consistent hover/focus transitions on pills, chips, and controls
+- Onboarding surfaces (hero, start-anywhere panel, legend, stats footer) frame the graph so a
+  cold visitor never faces an unexplained canvas
 
 ## 10. Data Strategy
 
@@ -158,6 +246,19 @@ Vault content is git-committed Markdown, frontmatter-driven (`Related`/`Referenc
 dynamic backend/CMS: "freshness" means whatever was true at the last deploy. Local dev builds point
 at the `second-brain` path for testing only; only builds against the dedicated public vault are ever
 deployed.
+
+**Cycle 2 additions:** `graph-data.json` gains a per-page `description` field, sourced from an
+optional frontmatter `description:` with a first-body-paragraph fallback (emitted by
+`build-graph`). It also gains a top-level `meta.sourceCount`, counting the `raw/` entries the vault
+was ingested from, which feeds the stats footer's provenance clause. `raw/` is a convention of this
+project's own vaults, not a constraint the tool imposes on vaults it renders: `meta.sourceCount` is
+`null` when a vault has no `raw/` sibling and `0` when it has an empty one, and the footer omits its
+provenance clause in both cases rather than claiming a pipeline that does not exist. The public demo
+vault is populated via a one-time research-ingestion epic: the
+author supplies a deep-research Markdown file (~40 source links, AI adoption in medium-sized
+enterprises); the ingestion pass creates `raw/` entries and interlinked `wiki/` pages
+Karpathy-style. The repo becomes public (after a history audit) so raw GitHub source links
+resolve for anonymous visitors.
 
 ## 11. Backlog / Future Vision
 
@@ -171,4 +272,8 @@ deployed.
 - Real authentication (e.g. Cloudflare Access) if a non-public mode is ever needed
 - Generalizing the taxonomy/status framework for other wiki practitioners to point the tool at
   their own vaults
-- Analytics on which nodes/queries visitors actually explore
+- Analytics on which nodes/queries visitors actually explore (including tour completion)
+- Persona-based tour paths ("I'm new here" / "I build things" / "I run a business") beyond the
+  single Cycle 2 tour
+- Arrow-key node-to-node keyboard traversal of the graph
+- In-app raw-markdown reader as an alternative to GitHub source links

@@ -42,9 +42,9 @@ vault is still seed/placeholder content).
 
 | TOR ID | Feature File | Scenario Title |
 |--------|--------------|-----------------|
-| TOR-06-DRtjcOk | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall provide a persistent control for switching between force-directed and swim-lane rendering modes _(amended 2026-07-15 — see Note below)_ |
+| TOR-06-DRtjcOk | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall provide a persistent control for switching between force-directed and swim-lane rendering modes |
 | TOR-06-mvJp8Oa | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall switch between layout modes without making a new network request for graph-data.json or vector-index.json |
-| TOR-06-AFMTHM6 | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall restore the force-directed view's prior pan/zoom state when a visitor toggles from swim-lane mode back to force-directed mode |
+| ~~TOR-06-AFMTHM6~~ | `docs/requirements/06-swim-lane-layout.feature.md` | **Superseded — see note below.** Current scenario title: The /graph page shall re-fit the force-directed camera to the graph bounds when a visitor toggles from swim-lane mode back to force-directed mode |
 | TOR-06-6dbr9Jn | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall render nodes in swim-lane mode grouped into horizontal lanes by folder/taxonomy value, with at most 4 lanes visible |
 | TOR-06-a3pVfbc | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall collapse folder/taxonomy values beyond the 4 largest into a single shared "Other" lane in swim-lane mode |
 | TOR-06-hCQUwZW | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall render each node in swim-lane mode as a labeled pill shape displaying the node's title |
@@ -73,6 +73,21 @@ vault is still seed/placeholder content).
 > in `docs/requirements/04-side-panel.feature.md`, updated to describe an always-visible
 > column rather than a slide-in/closeable overlay. See this epic's implemented handoff for
 > the full reconciliation record and Spec Deviations table.
+
+> **Note (2026-07-15, Cycle 2) — `TOR-06-AFMTHM6` superseded, coverage withdrawn.**
+> This epic shipped the requirement as it then read: restore the force-directed view's prior
+> pan/zoom state when toggling back from swim-lane. The Cycle 2 requirements amendment
+> **inverted** it — it now requires a camera **re-fit** to the graph bounds, because issue #4
+> finding A2 established that restoring a stale pan/zoom is exactly what leaves a visitor
+> staring at a tiny off-screen clump after a mode switch (ConOps S7.9, v1.2).
+>
+> This epic's shipped code therefore satisfies a requirement that no longer exists, and does
+> **not** satisfy the amended one. `TOR-06-AFMTHM6` has been removed from this epic's status
+> sidecar `requirements:` field so `/peak-workflow:status` stops reporting it as covered, and
+> reassigned to **Epic niaTair** (Phase 5 — Force-Directed Focus & Framing) for
+> re-implementation. Nothing about this epic's other 18 TORs changed; its `status: Complete`
+> stands for those. Do not treat the strikethrough row above as implementable work — the
+> authoritative anchor now lives in Epic niaTair.
 
 ## Key Components
 

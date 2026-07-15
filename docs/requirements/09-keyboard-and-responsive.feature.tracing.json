@@ -1,0 +1,201 @@
+{
+  "feature_id": "09",
+  "feature_file": "09-keyboard-and-responsive.feature.md",
+  "generated": "2026-07-15",
+  "generator": "haiku-sub-agent via /peak-workflow:capture-requirements",
+  "requirements": [
+    {
+      "id": "TOR-09-O0Wu0vg",
+      "title": "The /graph page shall move keyboard focus to the header search input when the visitor presses Ctrl+K or the forward-slash key",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "Keyboard support with Ctrl+K affordance enables technical visitors to jump to search by reflex."
+          },
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "Search lives in the header with a Ctrl+K affordance enabling rapid query entry for keyboard-driven visitors."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S11",
+            "step": 1,
+            "paraphrase": "When a visitor presses Ctrl+K or /, the header search input receives keyboard focus, enabling rapid query entry."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-09-gEPQ6wm",
+      "title": "The /graph page shall clear the search query and remove focus from the search input when the visitor presses Esc while the search input is focused",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "Esc closes popovers and clears the node selection as part of a keyboard de-escalation chain."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S11",
+            "step": 2,
+            "paraphrase": "When the visitor presses Esc while the search input is focused, the query clears and focus leaves the input."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-09-a6cppkl",
+      "title": "The /graph page shall clear the current node selection when the visitor presses Esc while a node is selected, returning the side panel to the start-anywhere card",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "Esc clears node selection as part of the keyboard de-escalation chain, returning the visitor to the onboarding state."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S11",
+            "step": 3,
+            "paraphrase": "When a visitor presses Esc with a node selected, the selection clears and the side panel returns to the start-anywhere card."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-09-4BewmC1",
+      "title": "The /graph page shall close the Options popover when the visitor presses Esc, leaving the underlying page immediately clickable",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "Keyboard support closes popovers on Esc, fixing issue #4 finding A4 where the backdrop swallowed the next click."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S11",
+            "step": 4,
+            "paraphrase": "When a visitor presses Esc with the Options popover open, the popover closes immediately and the next click registers on the board."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-09-L9qGFOu",
+      "title": "The /graph page shall exit the guided tour when the visitor presses Esc during a tour step",
+      "traces_to": {
+        "vision": [],
+        "conops": [
+          {
+            "scenario": "S11",
+            "step": 5,
+            "paraphrase": "During a guided tour, Esc exits the tour, leaving the current step's node selected."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-09-YrywFkB",
+      "title": "The /graph page shall de-escalate exactly one UI state per Esc press, in the order tour, then Options popover, then search, then node selection",
+      "traces_to": {
+        "vision": [],
+        "conops": [
+          {
+            "scenario": "S11",
+            "step": 6,
+            "paraphrase": "The Esc de-escalation chain peels one layer per press in order: tour, Options popover, search query, then node selection."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-09-ULogLhW",
+      "title": "The /graph page shall render the graph board at a usable width occupying the majority of the viewport at a 390px viewport width",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "Responsive layout at 390px ensures the page works for mobile visitors, fixing issue #4 finding A5 where the board was crushed to a sliver."
+          },
+          {
+            "section": "§8 — Operational Constraints & Assumptions",
+            "paraphrase": "390px viewport width is the design floor for /graph usability on mobile devices."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S10",
+            "step": 1,
+            "paraphrase": "When a visitor opens /graph on a 390px-wide mobile device, the board occupies at least 80% of the viewport width."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-09-Gx908bc",
+      "title": "The /graph page shall present the side panel as a bottom sheet overlay, rather than a side column, when a node is selected at a 390px viewport width",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "Responsive layout transforms the side panel into a bottom sheet on mobile, keeping the board usable on small screens."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S10",
+            "step": 2,
+            "paraphrase": "When a node is selected at 390px width, the side panel appears as a bottom sheet overlay rather than a fixed sidebar."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-09-FSqHlRx",
+      "title": "The bottom sheet shall select the target node when a visitor taps a connected-page chip within it at a 390px viewport width",
+      "traces_to": {
+        "vision": [],
+        "conops": [
+          {
+            "scenario": "S10",
+            "step": 4,
+            "paraphrase": "On mobile, tapping a connected-page chip in the bottom sheet selects that node and updates the sheet's content."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-09-rOB5DZW",
+      "title": "The /graph page shall leave the board interactive after the visitor dismisses the bottom sheet at a 390px viewport width",
+      "traces_to": {
+        "vision": [],
+        "conops": [
+          {
+            "scenario": "S10",
+            "step": 5,
+            "paraphrase": "After dismissing the bottom sheet on mobile, the board remains fully interactive and tappable."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-09-kMjRcRb",
+      "title": "The /graph page shall render the header, search input, and hero row legibly and within the viewport at a 390px viewport width",
+      "traces_to": {
+        "vision": [],
+        "conops": [
+          {
+            "scenario": "S10",
+            "step": 6,
+            "paraphrase": "On mobile at 390px width, the header, search input, and hero row all render legibly without requiring horizontal scrolling."
+          }
+        ]
+      }
+    }
+  ],
+  "coverage_gaps": []
+}

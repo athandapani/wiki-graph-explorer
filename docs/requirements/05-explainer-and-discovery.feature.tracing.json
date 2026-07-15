@@ -1,7 +1,7 @@
 {
   "feature_id": "05",
   "feature_file": "05-explainer-and-discovery.feature.md",
-  "generated": "2026-07-13",
+  "generated": "2026-07-15",
   "generator": "haiku-sub-agent via /peak-workflow:capture-requirements",
   "requirements": [
     {
@@ -90,6 +90,25 @@
             "scenario": "S6",
             "step": 5,
             "paraphrase": "A visitor recognizes a concept that logically should connect to other nodes but doesn't yet, by directly observing the sparse related-node list the side panel displays for that node."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-05-OMWVZWL",
+      "title": "The /graph page's explainer section shall name the layout mode in which each affordance it describes actually exists, and shall not describe an affordance as available in a mode that does not offer it",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "Explainer accuracy fixes issue #4 finding A8, ensuring the copy matches the UI that actually exists; describing a control the reader cannot find costs trust."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S6",
+            "step": 1,
+            "paraphrase": "When a visitor reads the explainer, it explicitly names the layout mode offering each affordance (e.g., 'filtering is available in force-directed mode'), preventing false promises about features that only exist elsewhere."
           }
         ]
       }
