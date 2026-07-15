@@ -61,11 +61,11 @@ describe("app/graph/page.tsx", () => {
     expect(source).toContain("hasResults={hasResults}");
   });
 
-  it("TOR-06-DRtjcOk: renders a persistent LayoutModeToggle wired to layoutMode state", () => {
-    expect(source).toContain("<LayoutModeToggle");
-    expect(source).toContain('useState<LayoutMode>("force-directed")');
-    expect(source).toContain("mode={layoutMode}");
-    expect(source).toContain("onChange={setLayoutMode}");
+  it("TOR-06-DRtjcOk: renders a persistent OptionsPanel wired to layoutMode state, defaulting to swim-lane", () => {
+    expect(source).toContain("<OptionsPanel");
+    expect(source).toContain('useState<LayoutMode>("swim-lane")');
+    expect(source).toContain("layoutMode={layoutMode}");
+    expect(source).toContain("onLayoutModeChange={setLayoutMode}");
   });
 
   it("TOR-06-mvJp8Oa: fetches graph-data.json and vector-index.json exactly once, never inside the toggle path", () => {

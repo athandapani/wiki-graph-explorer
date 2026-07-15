@@ -15,7 +15,7 @@ describe("components/graph/PillNode.tsx", () => {
   });
 
   it("TOR-06-hCQUwZW: reuses taxonomy coloring and the status dot for visual consistency", () => {
-    expect(source).toContain("getFolderColor(node.folder)");
+    expect(source).toContain("getFolderColor(node.folder, isDark)");
     expect(source).toContain("<StatusDot");
   });
 });

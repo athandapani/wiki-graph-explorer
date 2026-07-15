@@ -41,15 +41,15 @@ export function SidePanel({ node, edges, allNodes, onClose }: SidePanelProps) {
     : [];
 
   return (
-    <aside
-      aria-hidden={!node}
-      className={`fixed top-0 right-0 h-full w-80 transform overflow-y-auto border-l border-black/10 bg-background p-4 text-foreground shadow-lg transition-transform duration-300 ease-in-out dark:border-white/10 ${
-        node ? "translate-x-0" : "translate-x-full"
-      }`}
-    >
-      {node && (
+    <aside className="h-full w-80 shrink-0 overflow-y-auto border-l border-black/10 bg-background p-4 text-foreground shadow-lg dark:border-white/10">
+      {node ? (
         <>
-          <button type="button" onClick={onClose} aria-label="Close panel" className="mb-4 text-sm">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close panel"
+            className="mb-4 text-sm"
+          >
             Close
           </button>
           <h2 className="text-lg font-semibold">{node.title}</h2>
@@ -85,6 +85,10 @@ export function SidePanel({ node, edges, allNodes, onClose }: SidePanelProps) {
             View source on GitHub
           </a>
         </>
+      ) : (
+        <p className="text-sm text-foreground/60">
+          Select a node to see its details, tags, and related pages here.
+        </p>
       )}
     </aside>
   );

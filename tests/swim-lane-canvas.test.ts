@@ -10,13 +10,30 @@ describe("components/graph/SwimLaneCanvas.tsx", () => {
 
   it("TOR-06-6dbr9Jn: is a client component that groups nodes into lanes via assignLanes", () => {
     expect(source).toContain('"use client"');
-    expect(source).toContain("assignLanes(nodes)");
+    expect(source).toContain("assignLanes(laneNodes)");
   });
 
-  it("TOR-06-0ZRtILL: lays out lanes to fit the viewport height without a vertical scrollbar", () => {
+  it("TOR-06-0ZRtILL: stacks lanes vertically as full-width bands, wrapping each lane's pills within the viewport with no scrollbars", () => {
     expect(source).toContain("flex h-full flex-col");
-    expect(source).toContain("flex-1");
-    expect(source).toContain("overflow-y-hidden");
+    expect(source).toContain("overflow-hidden");
+    expect(source).toContain("flex-wrap");
+    expect(source).not.toContain("overflow-y-auto");
+    expect(source).not.toContain("overflow-x-auto");
+  });
+
+  it("hides zero-connection nodes from the board and reduces low-connection nodes to click-revealable", () => {
+    expect(source).toContain("if (degree === 0) continue;");
+    expect(source).toContain("degree <= LOW_DEGREE_THRESHOLD");
+    expect(source).toContain("revealable.add(node.id)");
+  });
+
+  it("falls back to showing all nodes if degree-based filtering would leave the board empty", () => {
+    expect(source).toContain("if (base.length === 0)");
+  });
+
+  it("pulls a low-connection related node into its lane and connects it with a dashed line when revealed by a click", () => {
+    expect(source).toContain("getRelatedNodeIds(activeNodeId, edges)\n      .filter((id) => revealableIds.has(id))");
+    expect(source).toContain('strokeDasharray="3 3"');
   });
 
   it("TOR-06-RlMt9hc: has no camera/pan-zoom API, so clicking a node cannot move a viewport", () => {
@@ -48,5 +65,14 @@ describe("components/graph/SwimLaneCanvas.tsx", () => {
   it("TOR-06-M0SNN90: renders EmptyState instead of a board when there are zero nodes", () => {
     expect(source).toContain("nodes.length === 0");
     expect(source).toContain("<EmptyState");
+  });
+
+  it("anchors connector lines to each pill's top/bottom mid-point rather than its center", () => {
+    expect(source).toContain('edge === "top" ? rect.top : rect.bottom');
+    expect(source).toContain("pickConnectorEdges(sourceCenterY, targetCenterY)");
+  });
+
+  it("colors each connector line by its destination node's folder color", () => {
+    expect(source).toContain("getFolderColor(targetNode.folder, isDark)");
   });
 });
