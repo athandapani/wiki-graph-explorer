@@ -27,11 +27,26 @@ Scenario: [TOR-06-mvJp8Oa] The /graph page shall switch between layout modes wit
     Then no new network request should be made for graph-data.json or vector-index.json
     And the mode switch should complete without a full page reload
 
-Scenario: [TOR-06-AFMTHM6] The /graph page shall restore the force-directed view's prior pan/zoom state when a visitor toggles from swim-lane mode back to force-directed mode
+Scenario: [TOR-06-AFMTHM6] The /graph page shall re-fit the force-directed camera to the graph bounds when a visitor toggles from swim-lane mode back to force-directed mode
+    #
+    # Note: amended 2026-07-15 (Cycle 2) — change-control event, user-approved during
+    # /peak-workflow:capture-requirements.
+    #
+    # This requirement originally read: "The /graph page shall restore the force-directed
+    # view's prior pan/zoom state when a visitor toggles from swim-lane mode back to
+    # force-directed mode." Issue #4 finding A2 showed that restoring a stale pan/zoom is
+    # precisely what leaves the visitor staring at a tiny off-screen clump after a mode
+    # switch. ConOps S7.9 (v1.2) now requires the opposite behavior — a camera re-fit on
+    # switch — so the original text was inverted rather than merely refined. The prior
+    # pan/zoom state is deliberately discarded; a visitor who wants their old framing back
+    # re-establishes it by panning, and a "reset view" control (TOR-02-IrF7v8x) is always
+    # available.
+    #
     Given a visitor has panned or zoomed the force-directed view to a non-default position
     And the visitor toggles to swim-lane mode
     When the visitor toggles back to force-directed mode
-    Then the force-directed view should render at the same pan/zoom position it held immediately before switching to swim-lane mode
+    Then the force-directed view should re-fit the camera so that every node is visible within the viewport
+    And the view should not render at the pan/zoom position it held immediately before switching to swim-lane mode
 
 
 # --------------------------------------------------------------------------------------------------
@@ -145,3 +160,55 @@ Scenario: [TOR-06-Zk8pLwR] The /graph page shall reveal low-connectivity nodes i
     When the visitor clicks the node it is connected to
     Then the low-connectivity node should appear within its lane, rendered with a dashed pill border
     And a dashed connector line should connect the clicked node to it
+
+
+# --------------------------------------------------------------------------------------------------
+# Hidden-Node Transparency (added 2026-07-15, Cycle 2 — issue #4 finding A7)
+# --------------------------------------------------------------------------------------------------
+
+Scenario: [TOR-06-BxA7IRn] The /graph page shall display a "+N more" affordance in each swim-lane whose hidden low-connectivity nodes number at least one, reporting the exact count hidden from that lane
+    #
+    # Note:
+    #   1. Issue #4 finding A7: 8 of 47 nodes were invisible on the board with no count and no
+    #      affordance. TOR-06-nQ4vXsD and TOR-06-Zk8pLwR still hold — those nodes stay off the
+    #      board by default — but a visitor evaluating whether this artifact is honest must be able
+    #      to see that something was withheld and how much. Silent omission is the failure mode
+    #      this requirement exists to prevent.
+    #
+    Given a lane whose folder/taxonomy contains 3 nodes hidden from the board for having zero or one edge
+    When the swim-lane board renders
+    Then that lane should display a visible affordance reading "+3 more"
+
+Scenario: [TOR-06-YjETzyC] The /graph page shall render every hidden low-connectivity node of a lane onto the board when a visitor activates that lane's "+N more" affordance
+    Given a lane displaying a "+3 more" affordance for its 3 hidden nodes
+    When the visitor activates that affordance
+    Then all 3 previously hidden nodes should render as pills within that lane
+    And each revealed node should be clickable, opening the side panel exactly as a normally-rendered pill does
+
+Scenario: [TOR-06-ihpx0Ya] The /graph page shall omit the "+N more" affordance from any swim-lane that has no hidden nodes
+    Given a lane in which every node has 2 or more edges and is therefore rendered on the board
+    When the swim-lane board renders
+    Then no "+N more" affordance should render in that lane
+
+
+# --------------------------------------------------------------------------------------------------
+# Pill and Lane Presentation (added 2026-07-15, Cycle 2 — issue #4 findings B5, B6)
+# --------------------------------------------------------------------------------------------------
+
+Scenario: [TOR-06-cSCqVtt] The /graph page shall size each swim-lane pill to fit its node's full title text, rendering no ellipsis truncation
+    #
+    # Note:
+    #   1. This strengthens TOR-06-hCQUwZW (pill displays the node's title as inline text) by
+    #      binding the title to render in full. Issue #4 finding B5: truncated pills made the board
+    #      unreadable and forced a click to learn what a node even was.
+    #
+    Given graph-data.json contains a node whose title is long relative to other node titles in its lane
+    When the swim-lane board renders that node
+    Then the pill should display that node's complete title text
+    And the rendered pill text should contain no ellipsis or truncation marker
+
+Scenario: [TOR-06-JuNSwaW] The /graph page shall render each swim-lane as a tinted rounded container carrying its folder/taxonomy heading and a short lane descriptor
+    Given a visitor is viewing swim-lane mode with at least 2 lanes rendered
+    When the board renders
+    Then each lane should render within a rounded container with a background tint distinguishing it from the board background
+    And each lane container should display its folder/taxonomy name as a heading alongside a short descriptor of what that lane holds

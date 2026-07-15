@@ -1,7 +1,7 @@
 {
   "feature_id": "01",
   "feature_file": "01-build-pipeline.feature.md",
-  "generated": "2026-07-13",
+  "generated": "2026-07-15",
   "generator": "haiku-sub-agent via /peak-workflow:capture-requirements",
   "requirements": [
     {
@@ -365,6 +365,143 @@
             "scenario": "S5",
             "step": 5,
             "paraphrase": "The Next.js static export build packages the current graph and vector assets for static hosting."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-FQuBqe1",
+      "title": "The build tool shall emit a description field on each node in graph-data.json sourced from that page's frontmatter description field when present",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§10 — Data Strategy",
+            "paraphrase": "The build tool emits a per-page description field in graph-data.json, sourced from frontmatter or falling back to the first body paragraph, enabling rich detail display in the side panel."
+          },
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "The rich detail panel relies on per-page description content to provide users with a 1–3 sentence summary without clicking through to the source."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S12",
+            "step": 4,
+            "paraphrase": "During demo-vault ingestion, authored wiki pages include description frontmatter; the build tool captures and emits these as node descriptions in the deployed graph-data.json."
+          },
+          {
+            "scenario": "S3",
+            "step": 3,
+            "paraphrase": "When a visitor clicks a node, the side panel displays the node's description, enabling quick understanding of the page's focus without visiting the source."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-r0LGd50",
+      "title": "The build tool shall fall back to a page's first body paragraph as the node description when the page's frontmatter declares no description field",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§10 — Data Strategy",
+            "paraphrase": "Description field fallback to the first body paragraph ensures every page carries a summary even without explicit frontmatter, providing a graceful default behavior."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S3",
+            "step": 3,
+            "paraphrase": "When a page lacks a frontmatter description, the build tool synthesizes one from the page's first body paragraph, ensuring the side panel always displays a description."
+          },
+          {
+            "scenario": "S12",
+            "step": 4,
+            "paraphrase": "During ingestion, pages without explicit description fields automatically derive one from their first paragraph, reducing manual data entry."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-l3K1BGM",
+      "title": "The build tool shall emit an empty description for a page that has neither a frontmatter description nor any body paragraph, without error and without omitting the node",
+      "traces_to": {
+        "vision": [],
+        "conops": [
+          {
+            "scenario": "S4",
+            "step": 2,
+            "paraphrase": "The tool gracefully handles edge cases like front-matter-only pages, emitting an empty description field rather than crashing or silently omitting the node."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-vhBOpOz",
+      "title": "The build tool shall emit a top-level meta.sourceCount field in graph-data.json reporting the number of raw source entries ingested into the vault",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§10 — Data Strategy",
+            "paraphrase": "The meta.sourceCount field bridges the ingestion workflow (raw entries per source) to the deployed footer, enabling visitors to spot-check the 'built from K sources' claim."
+          },
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "The stats footer's 'built from K sources' figure directly powers an end-to-end transparency claim; meta.sourceCount supplies the denominator for this claim."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S12",
+            "step": 4,
+            "paraphrase": "After ingestion produces raw/ entries, the build tool counts them and emits meta.sourceCount in graph-data.json, surfacing the ingestion scale in the deployed footer."
+          },
+          {
+            "scenario": "S8",
+            "step": 4,
+            "paraphrase": "The stats footer displays the sourceCount from graph-data.json's meta field, showing visitors the scale of research that seeds the graph."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-gi1qoBS",
+      "title": "The build tool shall emit meta.sourceCount as null and continue the build when no sibling raw directory exists for the given vault path",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Generic point-at-a-repo tool)",
+            "paraphrase": "The tool's headline claim is that any Karpathy-pattern vault renders with no per-vault code changes. A 'raw/' sibling is this project's own convention, so its absence must be an ordinary case rather than an error, and null records that provenance is simply unknown for that vault."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S8",
+            "step": 4,
+            "paraphrase": "The footer's provenance clause can only be drawn when the vault declares sources. Emitting null rather than 0 lets the page distinguish 'this vault claims no provenance' from 'this vault ingested nothing', so it never renders a claim it cannot support."
+          }
+        ]
+      },
+      "amended": {
+        "date": "2026-07-15",
+        "cycle": "Cycle 2",
+        "reason": "Originally emitted 0 when no raw/ sibling existed. Reworked to emit null: 0 asserts 'ingested zero sources', a fact the tool cannot know when the directory is simply absent. The null/0 split is consumed by TOR-08-dkecfj5, which omits the footer's provenance clause in both cases. Not a change-control event — the TOR was authored this cycle and is unmerged."
+      }
+    },
+    {
+      "id": "TOR-01-gYbfrvE",
+      "title": "The build tool shall emit meta.sourceCount as 0 when a sibling raw directory exists for the given vault path but contains no Markdown files",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§10 — Data Strategy (Cycle 2 additions)",
+            "paraphrase": "Pins the honest reading of an empty but present raw/ directory: the vault does declare a provenance location, and what it holds is genuinely zero, which is a different fact from declaring none at all."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S8",
+            "step": 4,
+            "paraphrase": "Separates the two no-provenance cases feeding the footer so the data layer stays truthful, even though both render identically to the visitor."
           }
         ]
       }

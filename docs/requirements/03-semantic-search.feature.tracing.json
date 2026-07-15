@@ -1,7 +1,7 @@
 {
   "feature_id": "03",
   "feature_file": "03-semantic-search.feature.md",
-  "generated": "2026-07-13",
+  "generated": "2026-07-15",
   "generator": "haiku-sub-agent via /peak-workflow:capture-requirements",
   "requirements": [
     {
@@ -126,6 +126,90 @@
           }
         ],
         "conops": []
+      }
+    },
+    {
+      "id": "TOR-03-Z3ApPfB",
+      "title": "The /graph page shall apply the active search query's similarity ranking to the swim-lane board, highlighting and dimming pill nodes exactly as it does force-directed nodes",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "Search works everywhere across both layout modes, fixing issue #4 finding A1 where search was dead in the default swim-lane view."
+          },
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "Search promotion to an always-visible header with dual-mode support ensures the headline feature functions in both force-directed and swim-lane modes."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S2",
+            "step": 5,
+            "paraphrase": "When a visitor types a query in swim-lane mode, pill nodes highlight or dim by similarity score exactly as force-directed nodes do."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-03-PzdJnrT",
+      "title": "The /graph page shall preserve the active search query and its resulting filtering when the visitor switches layout modes",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "Mode-persistent search state allows visitors to refine their query in one mode and explore the filtered results in the other without re-typing."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S2",
+            "step": 6,
+            "paraphrase": "When a visitor switches layout modes, the search query and its filtering persist, maintaining the active query context across modes."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-03-LgIpadO",
+      "title": "The /graph page shall display the search input in a persistently visible header position that remains reachable without scrolling in both layout modes",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "Search promotion to the header makes it an always-reachable affordance, supporting the headline scenario of live semantic re-ranking on any page visit."
+          },
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "Search lives in the header, always visible, with a Ctrl+K affordance enabling rapid query entry for any visitor."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S2",
+            "step": 1,
+            "paraphrase": "The search input appears in a persistent header slot, always accessible without scrolling, serving as the entry point for semantic search."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-03-1LlqKF1",
+      "title": "The /graph page shall display a count of how many pages match the active search query, updating live as the query changes",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "The result count makes the search's behavior transparent by showing the visitor how many matches the current query has."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S2",
+            "step": 6,
+            "paraphrase": "The page displays a live-updating result count, showing the visitor how many pages match the active query."
+          }
+        ]
       }
     }
   ],

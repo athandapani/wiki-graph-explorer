@@ -1,0 +1,158 @@
+{
+  "feature_id": "10",
+  "feature_file": "10-demo-vault.feature.md",
+  "generated": "2026-07-15",
+  "generator": "haiku-sub-agent via /peak-workflow:capture-requirements",
+  "requirements": [
+    {
+      "id": "TOR-10-RJsxsqn",
+      "title": "The demo-vault ingestion shall produce one raw entry in the public vault's raw directory for each source link in the author-provided deep-research Markdown file",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "Demo-vault research ingestion populates the public vault from ~40 ingested research sources on AI adoption in medium-sized enterprises."
+          },
+          {
+            "section": "§10 — Data Strategy",
+            "paraphrase": "The demo vault is populated via a one-time research-ingestion epic: the author supplies a deep-research Markdown file with ~40 source links and the ingestion pass creates raw entries and interlinked wiki pages."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S12",
+            "step": 2,
+            "paraphrase": "When the ingestion pass begins with an author-provided deep-research file containing 40 source links, one raw entry is created per source."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-10-WYqcBSs",
+      "title": "The demo-vault ingestion shall produce interlinked wiki pages carrying title, tags, status, and description frontmatter with Related and Referenced By wikilink sections",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "The Karpathy-pattern ingestion process creates interlinked wiki pages with all required frontmatter and wikilink sections."
+          },
+          {
+            "section": "§10 — Data Strategy",
+            "paraphrase": "From raw entries, interlinked wiki pages are authored with frontmatter-driven metadata and Related/Referenced By sections."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S12",
+            "step": 3,
+            "paraphrase": "After raw entries are created, the ingestion process authors interlinked wiki pages with title, tags, status, description frontmatter and Related/Referenced By wikilinks."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-10-sFT4xQU",
+      "title": "The public vault shall build into a graph whose node and edge counts demonstrate demo-scale density rather than the placeholder vault's near-empty board",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "The deployed public vault is built from ~40 ingested research sources, fanning out to a few hundred wiki pages and connections, replacing the 2-page placeholder."
+          },
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "Demo-vault ingestion replaces the 2-page placeholder vault with a demo-scale dataset."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S12",
+            "step": 4,
+            "paraphrase": "When the populated public vault is built, graph-data.json contains at least 40 nodes and 60 edges, demonstrating demo-scale density."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-10-pNUhGW1",
+      "title": "The public vault shall contain only original research content, with no confidential organizational, family, or health material from the private second-brain vault",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP)",
+            "paraphrase": "Safe-by-construction boundary ensures private vault content never reaches the deployed page."
+          },
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "The seed/demo public vault content is original research on AI adoption, never confidential org data."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S12",
+            "step": 5,
+            "paraphrase": "When every page is reviewed prior to commit, only content from the deep-research file or the author's synthesis exists in the public vault."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-10-VQAEhzb",
+      "title": "The repository's full git history shall be audited and confirmed free of private content before the repository's visibility is changed to public",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "Repo goes public after a history audit confirms no private content, a critical precondition for transparency."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S12",
+            "step": 6,
+            "paraphrase": "Before the repository visibility is flipped to public, the full git history across all commits and branches is audited and confirmed free of private, organizational, or family/health content."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-10-vaZLdHp",
+      "title": "The repository shall be publicly readable by an anonymous, unauthenticated client once its history audit has passed",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "Source transparency works when the repository is public so GitHub source links resolve for anonymous visitors."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S3",
+            "step": 8,
+            "paraphrase": "When a visitor clicks the GitHub source link, the raw .md file resolves in the public repository without authentication."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-10-7O3vg4B",
+      "title": "The deployed /graph page's stats footer shall render its full provenance clause, reporting a source count equal to the number of sources ingested into the public vault",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§10 — Data Strategy",
+            "paraphrase": "The meta.sourceCount field supplies the deployed footer's 'built from K sources' claim, closing the loop from ingestion to display."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S12",
+            "step": 7,
+            "paraphrase": "Closes the loop from ingestion through the build to the deployed footer, and asserts the deployed page must never fall back to the no-provenance rendering — that fallback appearing in production would signal the ingestion or build silently broke."
+          }
+        ]
+      }
+    }
+  ],
+  "coverage_gaps": []
+}

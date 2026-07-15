@@ -57,6 +57,90 @@
         ],
         "conops": []
       }
+    },
+    {
+      "id": "TOR-07-37VPhrV",
+      "title": "The / and /graph pages shall render body and heading text in the Geist typeface, never falling back to Arial or a generic sans-serif default",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "Geist typography actually applied (not falling back to Arial) signals deliberate design and finishes the product aesthetic, fixing issue #4 finding A9."
+          },
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "Deliberate visual identity includes Geist typography applied throughout, never hidden behind fallbacks."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S8",
+            "step": 1,
+            "paraphrase": "When a visitor loads the page, all body and heading text renders in the Geist typeface, contributing to a polished first impression."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-07-DsHsIKN",
+      "title": "The /graph page shall render a visible typographic hierarchy in which the hero heading, section and lane headings, and side-panel body text are distinguishable by size and weight",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "Clear typographic hierarchy for the hero, lane headings, and panel guides visitors through content importance and structure."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S8",
+            "step": 2,
+            "paraphrase": "When the page renders, text hierarchy clearly distinguishes the hero heading, lane headings, and body content by size and weight."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-07-7ha0SK5",
+      "title": "The / and /graph pages shall render surfaces from a declared palette in which the graph's folder colors serve as the interface accent colors",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "A deliberate palette with folder-color accents makes the interface feel authored around its own data, fixing issue #4 finding B10."
+          },
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "Deliberate visual identity with a committed palette and folder-accent system ensures the interface reads as intentional, not templated."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S8",
+            "step": 1,
+            "paraphrase": "When a visitor loads the page, surfaces render colors from a declared palette with folder colors doubling as interface accents."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-07-juwVT2o",
+      "title": "The /graph page shall render a visible focus indicator on every interactive control when that control receives keyboard focus",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "Keyboard support with visible focus states ensures accessibility for keyboard-driven visitors."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S11",
+            "step": 1,
+            "paraphrase": "When a visitor tabs through interactive controls, each control renders a visible focus indicator upon receiving keyboard focus."
+          }
+        ]
+      }
     }
   ],
   "coverage_gaps": []

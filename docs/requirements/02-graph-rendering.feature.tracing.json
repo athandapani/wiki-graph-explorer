@@ -1,7 +1,7 @@
 {
   "feature_id": "02",
   "feature_file": "02-graph-rendering.feature.md",
-  "generated": "2026-07-13",
+  "generated": "2026-07-15",
   "generator": "haiku-sub-agent via /peak-workflow:capture-requirements",
   "requirements": [
     {
@@ -189,6 +189,158 @@
           }
         ],
         "conops": []
+      }
+    },
+    {
+      "id": "TOR-02-lcYAVDz",
+      "title": "The /graph page shall fit the force-directed graph to the viewport on initial render so that every node is visible without the visitor panning or zooming",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "Initial camera framing is a critical first impression; nodes must be legible and visible without requiring immediate navigation, addressing the issue #4 finding A2."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S3",
+            "step": 2,
+            "paraphrase": "When the force-directed graph renders on initial load, the camera fits all nodes within the viewport so the visitor sees the full graph without panning."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-02-3eqveD9",
+      "title": "The /graph page shall render the force-directed graph at a zoom level where node labels are legible on initial load",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "Legible labels on initial load reduce the friction for first-time visitors to start reading node content without extra zooming."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S3",
+            "step": 2,
+            "paraphrase": "When the graph renders at the initial zoom level, node labels remain legible without the visitor zooming in further."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-02-IrF7v8x",
+      "title": "The /graph page shall provide a visible reset-view control that re-fits the force-directed camera so every node is visible when activated",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "A reset-view control allows visitors to restore the initial framing after exploring via pan/zoom, providing an easy return to the overview."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 9,
+            "paraphrase": "When a visitor activates the reset-view control, the force-directed camera re-fits to show all nodes in the viewport."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-02-XgckKbI",
+      "title": "The /graph page shall land a clicked node at the visual center of the graph canvas when its click-to-zoom animation completes",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "Centering the clicked node fixes the issue #4 finding A6, where nodes landed off-center, breaking the visual affordance of 'clicking zooms to that node'."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S3",
+            "step": 2,
+            "paraphrase": "After the click-to-center-zoom animation completes, the selected node rests at the canvas center, not off-edge."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-02-dO7evaS",
+      "title": "The /graph page shall render a selection ring or halo around the currently selected node, distinguishing it from every unselected node",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "A visible selection indicator provides clear visual feedback for the active node, fixing issue #4 finding A6 where selection was ambiguous."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S3",
+            "step": 2,
+            "paraphrase": "When a node is selected, a ring or halo renders around it to visually distinguish the active selection."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-02-D3bxP8j",
+      "title": "The /graph page shall highlight a selected node's directly connected nodes and edges while dimming nodes unrelated to the selection",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "Connection highlighting and dimming clarifies which nodes relate to the selected node, addressing issue #4 finding A6 to make the graph more readable on click."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S3",
+            "step": 2,
+            "paraphrase": "When a node is selected, connected nodes and edges highlight while unrelated nodes dim, showing the selection's neighborhood."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-02-q6cZSCD",
+      "title": "The /graph page shall render force-directed edge and link colors that remain visible against the active theme's canvas background in both dark and light themes",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "Theme-aware edge colors ensure the graph remains readable in both dark and light themes, addressing issue #4 finding A6."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S7",
+            "step": 2,
+            "paraphrase": "When the visitor switches themes, edge colors adapt to remain visible against the new canvas background."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-02-NyPLTRl",
+      "title": "The /graph page shall hide force-directed node labels below a zoom threshold so that a zoomed-out view renders as readable nodes rather than overlapping text",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "Label decluttering at zoom-out levels fixes issue #4 finding A6, preventing an unreadable wall of overlapping text when the visitor zooms out to see the full graph."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S1",
+            "step": 2,
+            "paraphrase": "When a visitor zooms out on the force-directed graph, node labels disappear to keep the display readable, reappearing as they zoom in."
+          }
+        ]
       }
     }
   ],

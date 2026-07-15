@@ -183,3 +183,94 @@ Scenario: [TOR-01-ly1VpL1] The build pipeline shall support producing a full Nex
     When the Next.js static export build is run
     Then the export output directory should contain a self-contained /graph page bundle with graph-data.json and vector-index.json accessible via client-side fetch
     And no server-side API route should be present in the export output
+
+
+# --------------------------------------------------------------------------------------------------
+# Per-Page Description Emission (added 2026-07-15, Cycle 2)
+# --------------------------------------------------------------------------------------------------
+
+Scenario: [TOR-01-FQuBqe1] The build tool shall emit a description field on each node in graph-data.json sourced from that page's frontmatter description field when present
+    Given a vault page whose frontmatter contains 'description: A short summary of this page.'
+    When the Tool is Run with '--vault <path>'
+    Then that page's node entry in graph-data.json should contain a 'description' field
+    And that field's value should be the string "A short summary of this page."
+
+Scenario: [TOR-01-r0LGd50] The build tool shall fall back to a page's first body paragraph as the node description when the page's frontmatter declares no description field
+    #
+    # Note:
+    #   1. "First body paragraph" means the first contiguous block of non-empty prose after the
+    #      closing frontmatter delimiter, excluding Markdown headings.
+    #   2. The fallback is emitted as plain text — inline Markdown markup (links, emphasis) is
+    #      stripped so the side panel renders a clean 1-3 sentence summary (ConOps S3.3).
+    #
+    Given a vault page with no 'description' key in its frontmatter and body content:
+        """
+        # Change Management
+
+        Adoption stalls when process change outpaces training. This page collects
+        evidence on sequencing the two.
+
+        ## Related
+        - [[training-programs]]
+        """
+    When the Tool is Run with '--vault <path>'
+    Then that page's node entry in graph-data.json should contain a 'description' field
+    And that field's value should be the string "Adoption stalls when process change outpaces training. This page collects evidence on sequencing the two."
+
+Scenario: [TOR-01-l3K1BGM] The build tool shall emit an empty description for a page that has neither a frontmatter description nor any body paragraph, without error and without omitting the node
+    Given a vault page with valid frontmatter, no 'description' key, and a body containing only headings and wikilinks
+    When the Tool is Run with '--vault <path>'
+    Then that page's node entry in graph-data.json should still be present
+    And that node's 'description' field should be an empty string
+    And the exit code should be 0
+
+
+# --------------------------------------------------------------------------------------------------
+# Source Count Metadata (added 2026-07-15, Cycle 2)
+# --------------------------------------------------------------------------------------------------
+
+Scenario: [TOR-01-vhBOpOz] The build tool shall emit a top-level meta.sourceCount field in graph-data.json reporting the number of raw source entries ingested into the vault
+    #
+    # Note:
+    #   1. This field feeds the stats footer's provenance clause (ConOps S8.4, S12.7).
+    #   2. Per the Karpathy-pattern ingestion workflow, one 'raw/' entry is created per ingested
+    #      source (ConOps S12.2), so sourceCount is the count of Markdown files under the 'raw/'
+    #      directory that is a sibling of the '--vault' wiki directory.
+    #   3. sourceCount counts ingested SOURCES, not wiki pages. Node count and source count are
+    #      deliberately different figures in the footer — one source fans out into several pages.
+    #   4. A 'raw/' sibling is a convention of this project's vaults, NOT a requirement this tool
+    #      places on the vaults it renders. The tool is generic by design (Product Vision §5 —
+    #      zero tool-code changes per vault), so the absence of 'raw/' is an ordinary case, not an
+    #      error: see TOR-01-gi1qoBS (no directory) and TOR-01-gYbfrvE (empty directory).
+    #
+    Given a vault whose wiki directory is 'public-vault/wiki' and whose sibling 'public-vault/raw' directory contains 40 Markdown files
+    When the Tool is Run with '--vault public-vault/wiki'
+    Then graph-data.json should contain a top-level 'meta' object
+    And 'meta.sourceCount' should equal 40
+
+Scenario: [TOR-01-gi1qoBS] The build tool shall emit meta.sourceCount as null and continue the build when no sibling raw directory exists for the given vault path
+    #
+    # Note:
+    #   1. null means "this vault declares no provenance", which is materially different from 0,
+    #      meaning "this vault ingested zero sources" (TOR-01-gYbfrvE). Emitting 0 for both would
+    #      assert a fact the tool cannot know, and the footer would have to render a claim about a
+    #      pipeline that may not exist for this vault.
+    #   2. Consumed by TOR-08-dkecfj5, which omits the footer's provenance clause entirely rather
+    #      than rendering "Built from 0 raw sources".
+    #
+    Given a vault wiki directory with no sibling 'raw' directory
+    When the Tool is Run with '--vault <path>'
+    Then graph-data.json should contain a top-level 'meta' object
+    And 'meta.sourceCount' should be null
+    And the exit code should be 0
+
+Scenario: [TOR-01-gYbfrvE] The build tool shall emit meta.sourceCount as 0 when a sibling raw directory exists for the given vault path but contains no Markdown files
+    #
+    # Note:
+    #   1. Distinct from TOR-01-gi1qoBS: here the vault does declare a 'raw/' provenance directory,
+    #      and the honest count of what it holds is zero.
+    #
+    Given a vault wiki directory whose sibling 'raw' directory exists and contains no Markdown files
+    When the Tool is Run with '--vault <path>'
+    Then graph-data.json should contain 'meta.sourceCount' with the value 0
+    And the exit code should be 0

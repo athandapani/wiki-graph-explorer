@@ -31,12 +31,20 @@ centered/zoomed view intact throughout.
 | TOR ID | Feature File | Scenario Title |
 |--------|--------------|-----------------|
 | TOR-04-I0T4GDu | `docs/requirements/04-side-panel.feature.md` | The /graph page shall open a side panel showing page detail when a visitor clicks a node |
-| TOR-04-GOmpoij | `docs/requirements/04-side-panel.feature.md` | The side panel shall slide in without triggering a full page navigation, keeping the graph visible and in its current center/zoom state |
-| TOR-04-tgCQzbT | `docs/requirements/04-side-panel.feature.md` | The side panel shall close when the visitor explicitly dismisses it, returning full focus to the graph canvas |
+| TOR-04-GOmpoij | `docs/requirements/04-side-panel.feature.md` | The side panel shall populate with page detail without triggering a full page navigation, keeping the graph visible and in its current center/zoom state |
+| TOR-04-tgCQzbT | `docs/requirements/04-side-panel.feature.md` | The side panel shall return to its placeholder state when the visitor explicitly dismisses the selected node, returning full focus to the graph canvas |
 | TOR-04-OSiZDmK | `docs/requirements/04-side-panel.feature.md` | The side panel shall display the node's title, tags, and status dot |
 | TOR-04-p0sfy0j | `docs/requirements/04-side-panel.feature.md` | The side panel shall display a list of the node's related nodes derived from its graph edges |
 | TOR-04-JCORp98 | `docs/requirements/04-side-panel.feature.md` | The side panel shall display a "View source on GitHub" link that opens the raw Markdown file for that page in a new tab |
 | TOR-04-ldlbRRl | `docs/requirements/04-side-panel.feature.md` | The side panel shall preserve its open state and displayed content when a visitor returns to the /graph browser tab after visiting the GitHub source link in a separate tab |
+
+> **Note (2026-07-15):** `TOR-04-GOmpoij` and `TOR-04-tgCQzbT` were amended in place during epic
+> scQi8pt, when the always-visible-column panel redesign superseded this epic's original slide-in
+> overlay. The two anchor rows above were refreshed on 2026-07-15 (Cycle 2 planning) to quote the
+> current scenario titles verbatim — they had still cited the pre-amendment wording, which would
+> trip `/peak-workflow:start-epic`'s staleness guard. This is a documentation correction only:
+> this epic's shipped code already matches the amended requirements, so `status: Complete` stands.
+> See epic scQi8pt's session handoff for the cross-epic reconciliation record.
 
 ## Key Components
 

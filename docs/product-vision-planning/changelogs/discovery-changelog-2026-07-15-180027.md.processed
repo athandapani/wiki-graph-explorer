@@ -1,0 +1,61 @@
+# Discovery Changelog
+
+**Date:** 2026-07-15
+**Mode:** Brownfield (post-MVP ideation)
+**Previous Version:** product-vision.md v1.1 / concept-of-operations.md v1.1 (both 2026-07-14)
+
+## What Changed
+
+| Document | Section | Change Type | Summary |
+|----------|---------|-------------|---------|
+| product-vision.md | §5 Goals & Success Criteria | Added | "Demo-quality goals (Cycle 2)" table: onboarding, browsable panel, search-everywhere, keyboard, responsive, visual identity, guided tour, demo-scale dataset, working source links |
+| product-vision.md | §6 MVP Scope Summary | Added | "Demo-Quality Upgrade (Cycle 2)" subsection covering all issue #4 A/B items plus the demo-vault ingestion epic and repo-public step |
+| product-vision.md | §7 Out of Scope | Added | Persona multi-tours, arrow-key traversal, automated research pipeline, in-app markdown reader |
+| product-vision.md | §8 Key Business Scenarios | Modified | Scenarios 2 and 3 amended (search in both modes + result count; clickable chips + descriptions + working source link) |
+| product-vision.md | §8 Key Business Scenarios | Added | Scenario 8 (cold-visitor onboarding), 9 (guided tour), 10 (demo-vault research ingestion) |
+| product-vision.md | §9 Design Direction | Added | Visual-identity bullets: Geist typography, palette/accent system, full pill labels, tinted lanes, header search, hover/focus states, onboarding surfaces |
+| product-vision.md | §10 Data Strategy | Modified | Cycle 2 additions: per-page `description` in graph-data.json; deep-research-MD ingestion source; repo-public precondition |
+| product-vision.md | §11 Backlog | Added | Persona tours, keyboard graph traversal, tour analytics, in-app markdown reader |
+| concept-of-operations.md | §2 Current State | Added | Cycle 2 As-Is table capturing all issue #4 findings (A1–A9, B1–B11) as current-state gaps |
+| concept-of-operations.md | §3 Proposed System | Added | Cycle 2 demo-quality upgrade paragraph |
+| concept-of-operations.md | §5 Scenarios 2, 3, 7 | Modified | Search in both modes + count + Ctrl+K; rich panel with folder badge/description/clickable chips + centered zoom with selection feedback + resolving source link; full pill labels + "+N more" affordance + camera re-fit on mode switch |
+| concept-of-operations.md | §5 Scenarios 8–12 | Added | Cold-visitor onboarding; guided tour; mobile visit (390px, bottom sheet); keyboard interaction (Esc de-escalation, Ctrl+K); demo-vault research ingestion |
+| concept-of-operations.md | §6 Interfaces & Data Flows | Modified | `description` field on nodes; deep-research MD input; tour definition asset; source-link path verification |
+| concept-of-operations.md | §7 Functional Summary | Modified | All areas updated; new "Onboarding & identity", "Keyboard", and "Demo vault" rows |
+| concept-of-operations.md | §8 Constraints | Modified | Two open risks marked resolved (query embedding — TBZJM0j; swim-lane renderer — scQi8pt); added repo-visibility precondition (history audit), hand-curated tour content, manual research input, 390px responsive floor |
+| concept-of-operations.md | §9 Glossary | Added | Hero row, start-anywhere panel, legend, stats footer, description, connected-page chip, guided tour, bottom sheet, "+N more" affordance, deep-research MD |
+
+## New Capabilities Identified
+
+- **Onboarding surface set** — hero/tagline row, "start anywhere" side-panel empty state with folder + status legends and starting-point suggestions, stats footer (`N nodes · M connections · built from K sources` + "Esc to reset" hint).
+- **Rich, browsable detail panel** — colored folder badge, per-page description (frontmatter `description:` with first-body-paragraph fallback, emitted by `build-graph` into `graph-data.json`), connected pages grouped by folder as clickable chips that select the target node.
+- **Search everywhere** — semantic search wired to swim-lane mode (fixes A1), promoted to an always-visible header slot with a result count and Ctrl+K / `/` focus affordance.
+- **Keyboard support** — Esc de-escalation chain (tour → popover → search → selection); footer hint matches behavior (fixes A4).
+- **Responsive layout** — 390px floor; side panel as bottom sheet/overlay on small viewports (fixes A5).
+- **Visual identity pass** — Geist fonts actually applied (fixes A9), deliberate surface palette + folder-accent system, full-text pill labels (B5), tinted descriptor-labeled lane containers (B6), hover/focus states, type hierarchy (B10).
+- **Guided tour** — single hand-curated "Take a tour" path through 4–5 linked nodes with captions and progress indicator, driven by a static tour definition.
+- **Force-directed demo-worthiness** — camera re-fit on layout switch + reset-view control (A2); centered click-zoom landing with selection ring, connection highlighting, dimming, theme-aware link colors, label decluttering (A6).
+- **Swim-lane transparency** — "+N more" affordance for zero/low-degree nodes instead of silent dropping (A7); explainer copy corrected to match per-mode UI (A8).
+- **Working source links** — path-join fix in `lib/github-source-link.ts` + repo made public after a git-history privacy audit (A3).
+- **Demo-vault research ingestion (dedicated epic)** — author supplies a deep-research Markdown file (~40 source links, AI adoption in medium-sized enterprises, e.g. Perplexity export); Karpathy-pattern ingestion creates `raw/` entries and interlinked `wiki/` pages, potentially fanning out to a few hundred pages/connections, replacing the 2-page placeholder vault (B11).
+
+## Priority Signal
+
+Issue #4's own suggested loop ordering, confirmed by the user's framing:
+
+1. Core broken interactions: search in default view (A1) + clickable Related/descriptions (B4).
+2. Biggest visible polish per hour: full pill labels (B5), stats footer (B7), legend + start-anywhere panel (B3/B2).
+3. Force-directed framing + focus mode (A2/A6).
+4. Design-sense layer: hero (B1), fonts (A9), palette (B10).
+5. Demo vault (B11) — prerequisite for the deployed page being impressive; user wants this as its own research+ingestion epic and will supply the deep-research MD input.
+6. Remainder: A3 (with repo-public decision), A4, A5, A7, A8, B6, B8 (single tour), B9.
+
+User decisions this cycle: single tour (not persona tours); descriptions from frontmatter with first-paragraph fallback; repo goes public after a history audit; demo vault ~40 ingested sources fanning out to potentially a few hundred wiki pages, as a separate epic fed by a user-provided Perplexity deep-research MD.
+
+## Deferred Items
+
+- Persona-based multi-tours ("I'm new here" / "I build things" / "I run a business")
+- Arrow-key node-to-node keyboard graph traversal
+- Automated research pipeline (deep-research input stays manual/user-provided)
+- In-app raw-markdown reader
+- Analytics on node/query/tour engagement

@@ -1,7 +1,7 @@
 {
   "feature_id": "04",
   "feature_file": "04-side-panel.feature.md",
-  "generated": "2026-07-13",
+  "generated": "2026-07-15",
   "generator": "haiku-sub-agent via /peak-workflow:capture-requirements",
   "requirements": [
     {
@@ -155,6 +155,119 @@
             "scenario": "S3",
             "step": 7,
             "paraphrase": "After visiting the GitHub source link in a new tab and returning to the graph tab, the side panel remains open showing the same node's detail."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-04-iI9aJNn",
+      "title": "The side panel shall display a folder badge for the selected node, colored to match that folder's color in the graph",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "The browsable detail panel includes a colored folder badge to ground the node in its taxonomy and reinforce visual connections to the graph."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S3",
+            "step": 3,
+            "paraphrase": "The side panel displays a folder badge colored to match the node's folder/taxonomy cluster, making the node's content category immediately clear."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-04-0igGafN",
+      "title": "The side panel shall display the selected node's description from graph-data.json",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "The browsable detail panel displays the per-page description (frontmatter or first-paragraph fallback) to provide quick context without visiting the source."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S3",
+            "step": 3,
+            "paraphrase": "When the side panel opens, it displays the node's description field, giving the visitor a 1–3 sentence summary of the page's content."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-04-olJvPNV",
+      "title": "The side panel shall omit the description area entirely, without rendering an empty gap or placeholder, when the selected node's description is empty",
+      "traces_to": {
+        "vision": [],
+        "conops": [
+          {
+            "scenario": "S3",
+            "step": 3,
+            "paraphrase": "When a node has no description, the side panel omits the description area cleanly without rendering empty space, keeping the layout tight."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-04-xeqtJpo",
+      "title": "The side panel shall render the selected node's connected pages as clickable chips grouped under their folder/taxonomy headings",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "The browsable detail panel's connected-page chips enable navigation by making related nodes immediately clickable, turning the panel into an active exploration surface."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S3",
+            "step": 4,
+            "paraphrase": "The side panel lists connected pages as clickable chips grouped by their folder/taxonomy, allowing easy navigation to related content."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-04-1iMsnYq",
+      "title": "The side panel shall select the target node, updating both the graph focus and the panel content, when a visitor clicks a connected-page chip",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "Connected-page chips are not just labels but navigable elements; clicking a chip selects that node and updates the panel, making the side panel an active navigation tool."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S3",
+            "step": 5,
+            "paraphrase": "When a visitor clicks a connected-page chip, that node becomes selected; the graph focuses on it (center/zoom or connector animation per mode) and the panel updates to show its detail."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-04-Pc0DlQe",
+      "title": "The side panel's \"View source on GitHub\" link shall resolve to an existing file for every node in the deployed public vault build",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Demo-quality goals)",
+            "paraphrase": "Source transparency actually works when source links resolve; fixing issue #4 finding A3 ensures every node's GitHub link leads to a real page."
+          },
+          {
+            "section": "§6 — MVP Scope Summary (Demo-Quality Upgrade)",
+            "paraphrase": "The repo goes public (after a history audit) so source links resolve for anonymous visitors, closing the loop on the transparency promise."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S3",
+            "step": 8,
+            "paraphrase": "When a visitor clicks the GitHub source link, the URL resolves to the actual raw .md file in the public repository (contingent on the repo being public per TOR-10-vaZLdHp)."
           }
         ]
       }
