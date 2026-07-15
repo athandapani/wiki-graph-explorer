@@ -64,4 +64,11 @@ describe("components/graph/SidePanel.tsx", () => {
   it("shows a placeholder prompt instead of collapsing when no node is selected", () => {
     expect(source).toContain("Select a node to see its details");
   });
+
+  it("TOR-05-EmhMDFS: renders the full, untruncated related-node list so a visitor can observe sparse connections directly", () => {
+    expect(source).not.toMatch(/relatedNodes\.slice/);
+    expect(source).not.toMatch(/relatedNodes\.filter\([^)]*index/);
+    expect(source).toContain("relatedNodes.map((related) => (");
+    expect(source).toContain("No related pages.");
+  });
 });

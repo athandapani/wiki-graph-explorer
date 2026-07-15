@@ -32,7 +32,8 @@ describe("components/graph/SwimLaneCanvas.tsx", () => {
   });
 
   it("TOR-06-Zk8pLwR: pulls a low-connection related node into its lane and connects it with a dashed line when revealed by a click", () => {
-    expect(source).toContain("getRelatedNodeIds(activeNodeId, edges)\n      .filter((id) => revealableIds.has(id))");
+    expect(source).toContain("getRelatedNodeIds(activeNodeId, edges)");
+    expect(source).toContain(".filter((id) => revealableIds.has(id))");
     expect(source).toContain('strokeDasharray="3 3"');
   });
 
@@ -74,5 +75,16 @@ describe("components/graph/SwimLaneCanvas.tsx", () => {
 
   it("colors each connector line by its destination node's folder color", () => {
     expect(source).toContain("getFolderColor(targetNode.folder, isDark)");
+  });
+
+  it("dims nodes that are not the active node and not directly connected to it", () => {
+    expect(source).toContain(
+      "new Set([activeNodeId, ...getRelatedNodeIds(activeNodeId, edges)])",
+    );
+    expect(source).toContain("isDimmed={highlightedIds != null && !highlightedIds.has(node.id)}");
+  });
+
+  it("renders the connector-line svg behind the pill nodes (negative z-index)", () => {
+    expect(source).toContain('className="pointer-events-none absolute inset-0 -z-10 h-full w-full"');
   });
 });

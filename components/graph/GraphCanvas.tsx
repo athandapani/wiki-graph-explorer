@@ -25,11 +25,13 @@ interface GraphCanvasProps {
   searchScores?: Map<string, number> | null;
   relevanceThreshold?: number;
   isDark?: boolean;
+  filteredOutNodeIds?: Set<string> | null;
+  radiusScaleByNodeId?: Map<string, number> | null;
 }
 
 const NODE_RADIUS = 5;
 const LABEL_FONT_SIZE = 3.4;
-const LABEL_OFFSET = NODE_RADIUS + 1.5;
+const LABEL_GAP = 1.5;
 const CLICK_ZOOM_LEVEL = 6;
 const CLICK_ZOOM_DURATION_MS = 900;
 const INITIAL_FIT_DURATION_MS = 400;
@@ -55,6 +57,8 @@ export default function GraphCanvas({
   searchScores,
   relevanceThreshold = 0,
   isDark = false,
+  filteredOutNodeIds,
+  radiusScaleByNodeId,
 }: GraphCanvasProps) {
   const graphRef = useRef<ForceGraphMethods<GraphNode, GraphEdge> | undefined>(undefined);
 
@@ -74,11 +78,16 @@ export default function GraphCanvas({
         const x = node.x ?? 0;
         const y = node.y ?? 0;
 
-        const dimmed = searchScores != null && (searchScores.get(node.id) ?? 0) < relevanceThreshold;
+        const searchDimmed =
+          searchScores != null && (searchScores.get(node.id) ?? 0) < relevanceThreshold;
+        const filterDimmed = filteredOutNodeIds?.has(node.id) ?? false;
+        const dimmed = searchDimmed || filterDimmed;
         ctx.globalAlpha = dimmed ? DIMMED_OPACITY : 1;
 
+        const radius = NODE_RADIUS * (radiusScaleByNodeId?.get(node.id) ?? 1);
+
         ctx.beginPath();
-        ctx.arc(x, y, NODE_RADIUS, 0, 2 * Math.PI);
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
         ctx.fillStyle = getFolderColor(node.folder, isDark);
         ctx.fill();
 
@@ -86,16 +95,17 @@ export default function GraphCanvas({
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
         ctx.fillStyle = isDark ? "#ededed" : "#171717";
-        ctx.fillText(node.title, x, y + LABEL_OFFSET);
+        ctx.fillText(node.title, x, y + radius + LABEL_GAP);
 
         ctx.globalAlpha = 1;
       }}
       nodePointerAreaPaint={(node: NodeObject<GraphNode>, color: string, ctx: CanvasRenderingContext2D) => {
         const x = node.x ?? 0;
         const y = node.y ?? 0;
+        const radius = NODE_RADIUS * (radiusScaleByNodeId?.get(node.id) ?? 1);
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(x, y, NODE_RADIUS, 0, 2 * Math.PI);
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
         ctx.fill();
       }}
       onNodeClick={(node: NodeObject<GraphNode>) => {

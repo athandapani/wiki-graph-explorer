@@ -271,25 +271,30 @@ during exploration; the sidebar layout avoids this and scales well to larger vau
 
 **Decision:** The swim-lane layout is implemented via a custom React component (`SwimLaneCanvas.tsx`)
 using real DOM text for pill titles (not canvas-based rendering), CSS flexbox for lane layout, and
-standard SVG `<path>` elements for connector lines. No use of `react-force-graph-2d` in fixed-position
-or constrained-layout mode.
+standard SVG `<path>` elements for connector lines. Connector-line SVG is positioned absolutely with
+`-z-10` (negative z-index) so lines render behind pill buttons and their text labels, preventing
+visual obscuring of node titles. No use of `react-force-graph-2d` in fixed-position or
+constrained-layout mode.
 
 **Rationale:** `react-force-graph-2d` is designed for physics-based force-directed layouts, not for
 static, tiered swimlanes. Building a swim-lane mode on top of `react-force-graph-2d` would require
 fighting the library's simulation engine to suppress physics, resulting in fragile, unmaintainable
 code. A custom renderer using native web APIs (DOM flexbox, SVG paths, CSS animations) is simpler,
 more performant for static layouts, and provides exact control over interaction and rendering (e.g.,
-the 950ms curved connector-line animation). No pan/zoom is needed in swim-lane mode (fixed layout),
-so the move away from `react-force-graph-2d` carries no UX cost and gains clarity.
+the 950ms curved connector-line animation, and z-index layering to keep lines non-occluding).
+No pan/zoom is needed in swim-lane mode (fixed layout), so the move away from `react-force-graph-2d`
+carries no UX cost and gains clarity.
 
 ---
 
-## 23. Low-Connectivity Nodes: Hidden by Default, Revealed on Click
+## 23. Low-Connectivity Nodes: Hidden by Default, Revealed on Click (Swim-Lane Mode)
 
 **Decision:** In swim-lane mode, nodes are categorized by connectivity degree:
 - **0 edges:** Permanently hidden (these nodes have no connections and are never discovered)
 - **1 edge:** Hidden by default; revealed with a dashed pill border when clicked from their single neighbor
 - **2+ edges:** Always visible
+
+Revealed low-connectivity nodes render with their `isDimmed` prop set to false; non-revealed low-connectivity nodes are excluded from the board entirely. When a visitor clicks a node with multiple edges, any of its neighbors that are low-connectivity (degree ≤ 1) are pulled into the board temporarily and rendered with a dashed border and full opacity (not dimmed) to emphasize their exception status.
 
 **Rationale:** Real vaults often have many peripheral nodes (single-link or isolated content) that
 would clutter the board if displayed at default zoom. Hiding them by default keeps large vaults
@@ -353,6 +358,22 @@ accumulating multiple connector sets.
 
 ---
 
+## 28. Filter Controls: Dynamic Dataset-Derived Dropdowns (Force-Directed Mode)
+
+**Decision:** The force-directed graph canvas includes two filter dropdowns (`FilterControls.tsx`): one for "Status" and one for "Folder" (taxonomy). Filter options are derived live from the loaded dataset (`graph-data.json`'s node records), not hardcoded. Selecting a filter value immediately dims all non-matching nodes via `ctx.globalAlpha` in the canvas. The filters apply only to force-directed mode; swim-lane mode does not filter.
+
+**Rationale:** Dynamic filtering helps visitors isolate and explore a subset of the graph (e.g., only "current" status pages, only pages in a specific folder). Computing options from the live dataset ensures the UI never offers a filter value that doesn't exist in the vault, and supports vaults of any folder taxonomy without code changes. Force-directed-only scope reflects the existing precedent of search-filtering being force-directed-only (design-notes.md §27); swim-lane filtering is documented as a deferred enhancement. See Epic IbQ9Rr1 for implementation details.
+
+---
+
+## 29. Edge-Count Indicator: Visual Radius Scaling by Degree
+
+**Decision:** Nodes in the force-directed graph are visually scaled by their connectivity within their own folder cluster. `edgeCountIndicator.ts` computes each node's degree (number of directly connected related nodes) and scales its visual radius between 0.5× and 1.0× relative to the cluster's highest-degree peer. Hub nodes (most connected) render at 1.0× radius; under-connected nodes render smaller (down to 0.5×), making them visually distinct. This scaling applies only to the force-directed canvas; swim-lane mode does not scale.
+
+**Rationale:** Identifying missing links is a core use case (Product Vision §2, ConOps Scenario 5). A visual indicator (radius scaling) helps visitors quickly spot under-connected nodes within a cluster without requiring clicks or hovers. The TOR's wording ("relative to their cluster peers") motivated continuous scaling (not binary flagging) and per-folder scope (not global), allowing visitors to compare degree visually across the cluster. See Epic IbQ9Rr1 for implementation details and TOR-05-02VIaa3.
+
+---
+
 ## 27. Known Issues and Deferred Work
 
 - **Error handling for query embedding failure:** `useSearchRanking.ts` has no error boundary for
@@ -380,7 +401,8 @@ accumulating multiple connector sets.
   follow-up `/peak-workflow:capture-requirements` brownfield pass should correct the requirements
   baseline to prevent future confusion.
 
-- **Search filtering in swim-lane mode:** Epic TBZJM0j's semantic search implementation works on the
-  force-directed canvas via node dimming. The swim-lane canvas does not yet support search-based
-  filtering or dimming; search remains a force-directed mode feature for now. Adding swim-lane search
-  support is deferred to a future UX enhancement.
+- **Search filtering and filtering UI in swim-lane mode:** Epic TBZJM0j's semantic search implementation
+  works on the force-directed canvas via node dimming. Epic IbQ9Rr1 added status/folder filter dropdowns
+  and the edge-count radius indicator to force-directed mode. Both filtering features (search + status/folder
+  filters + edge-count indicator) remain force-directed-only; swim-lane mode does not support filtering or
+  radius scaling. Adding swim-lane support for search and filter controls is deferred to a future UX enhancement.

@@ -18,4 +18,9 @@ describe("components/graph/PillNode.tsx", () => {
     expect(source).toContain("getFolderColor(node.folder, isDark)");
     expect(source).toContain("<StatusDot");
   });
+
+  it("dims the pill via reduced opacity when isDimmed is true", () => {
+    expect(source).toContain("isDimmed?: boolean");
+    expect(source).toContain('isDimmed ? "opacity-30" : ""');
+  });
 });

@@ -85,4 +85,13 @@ describe("app/graph/page.tsx", () => {
     expect(source).toContain("<SwimLaneCanvas");
     expect(source.indexOf("<SwimLaneCanvas")).toBeLessThan(source.indexOf("<SidePanel"));
   });
+
+  it("TOR-05-G72S3H4: renders ExplainerSection below the graph so a visitor can scroll to it", () => {
+    expect(source).toContain("<ExplainerSection");
+    // Outer wrapper scrolls; inner graph section keeps the original fixed-height class (proven
+    // to size GraphCanvas/SwimLaneCanvas correctly) plus shrink-0 so flexbox can't compress it
+    // to fit the scrollable outer container.
+    expect(source).toContain('className="flex h-full flex-col overflow-y-auto"');
+    expect(source).toContain('className="flex h-full shrink-0 flex-col overflow-hidden"');
+  });
 });
