@@ -8,7 +8,7 @@ describe("components/graph/Header.tsx", () => {
     "utf-8",
   );
 
-  it("renders the Logo and the product title, linking back to the home page", () => {
+  it("TOR-07-Ht6rMqL: renders the Logo and the product title, linking back to the home page", () => {
     expect(source).toContain("<Logo");
     expect(source).toContain("Wiki Graph Explorer");
     expect(source).toContain('href="/"');

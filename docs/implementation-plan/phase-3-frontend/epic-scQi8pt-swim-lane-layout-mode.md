@@ -42,7 +42,7 @@ vault is still seed/placeholder content).
 
 | TOR ID | Feature File | Scenario Title |
 |--------|--------------|-----------------|
-| TOR-06-DRtjcOk | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall display a layout-mode toggle control that switches between force-directed and swim-lane rendering modes |
+| TOR-06-DRtjcOk | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall provide a persistent control for switching between force-directed and swim-lane rendering modes _(amended 2026-07-15 — see Note below)_ |
 | TOR-06-mvJp8Oa | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall switch between layout modes without making a new network request for graph-data.json or vector-index.json |
 | TOR-06-AFMTHM6 | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall restore the force-directed view's prior pan/zoom state when a visitor toggles from swim-lane mode back to force-directed mode |
 | TOR-06-6dbr9Jn | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall render nodes in swim-lane mode grouped into horizontal lanes by folder/taxonomy value, with at most 4 lanes visible |
@@ -56,6 +56,23 @@ vault is still seed/placeholder content).
 | TOR-06-n4fJkbK | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall open a side panel displaying the clicked node's page detail and a "View source on GitHub" link when a node is clicked in swim-lane mode |
 | TOR-06-NJmtnhV | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall remain interactive (clickable) in swim-lane mode when rendering a graph of at least 40 nodes |
 | TOR-06-M0SNN90 | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall render swim-lane mode correctly with an empty graph (zero nodes), displaying an empty-state message instead of a blank canvas |
+| TOR-06-nQ4vXsD | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall hide zero-degree nodes from the swim-lane board by default |
+| TOR-06-Zk8pLwR | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall reveal low-connectivity nodes in swim-lane mode when a connected node is clicked, rendered with a dashed style |
+| TOR-07-Wb3kNfT | `docs/requirements/07-product-shell-and-theming.feature.md` | The site shall render in dark theme by default, with a control to switch to light theme that persists the visitor's choice |
+| TOR-07-Ht6rMqL | `docs/requirements/07-product-shell-and-theming.feature.md` | The / and /graph pages shall display a header with the product logo and title, and the browser tab title shall reflect the product |
+| TOR-07-Yp2cVxJ | `docs/requirements/07-product-shell-and-theming.feature.md` | The / page shall present a product introduction and call-to-action into /graph instead of the default Next.js starter content |
+
+> **Note (2026-07-15):** Post-implementation live UX feedback drove a redesign beyond the
+> original 14 TORs above: a dark-theme-by-default shell, the swim-lane board rebuilt as
+> full-width horizontal bands, zero/low-connectivity node hiding with dashed-line reveal
+> (TOR-06-nQ4vXsD, TOR-06-Zk8pLwR, new above), an always-visible side panel, and a new
+> Header/home page (TOR-07-Wb3kNfT, TOR-07-Ht6rMqL, TOR-07-Yp2cVxJ, new above). TOR-06-DRtjcOk
+> was amended in place to describe the shipped Options-panel-mediated toggle. The
+> always-visible side panel redesign also required a **cross-epic amendment** to two TORs
+> owned by epic V3PlLFL (already `status: Complete`): `TOR-04-GOmpoij` and `TOR-04-tgCQzbT`
+> in `docs/requirements/04-side-panel.feature.md`, updated to describe an always-visible
+> column rather than a slide-in/closeable overlay. See this epic's implemented handoff for
+> the full reconciliation record and Spec Deviations table.
 
 ## Key Components
 

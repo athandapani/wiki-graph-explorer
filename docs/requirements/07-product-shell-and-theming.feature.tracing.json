@@ -1,0 +1,63 @@
+{
+  "feature_id": "07",
+  "feature_file": "07-product-shell-and-theming.feature.md",
+  "generated": "2026-07-15",
+  "generator": "main-agent retroactive capture during /peak-workflow:start-epic scQi8pt",
+  "requirements": [
+    {
+      "id": "TOR-07-Wb3kNfT",
+      "title": "The site shall render in dark theme by default, with a control to switch to light theme that persists the visitor's choice",
+      "captured_retroactively": {
+        "date": "2026-07-15",
+        "epic": "scQi8pt",
+        "reason": "Implemented and live-tested against the real second-brain vault during the epic's UX redesign before it had formal TOR coverage; captured now as part of requirements reconciliation."
+      },
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "A dark-first visual presentation with an available light alternative better suits a data-dense graph visualization tool and a job-seeking portfolio site."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-07-Ht6rMqL",
+      "title": "The / and /graph pages shall display a header with the product logo and title, and the browser tab title shall reflect the product",
+      "captured_retroactively": {
+        "date": "2026-07-15",
+        "epic": "scQi8pt",
+        "reason": "Implemented and live-tested during the epic's UX redesign before it had formal TOR coverage; captured now as part of requirements reconciliation."
+      },
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "Consistent product branding (logo, title, tab title) across pages signals a finished product rather than an unedited framework scaffold."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-07-Yp2cVxJ",
+      "title": "The / page shall present a product introduction and call-to-action into /graph instead of the default Next.js starter content",
+      "captured_retroactively": {
+        "date": "2026-07-15",
+        "epic": "scQi8pt",
+        "reason": "Implemented and live-tested during the epic's UX redesign before it had formal TOR coverage; captured now as part of requirements reconciliation."
+      },
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§2 — Problem Statement",
+            "paraphrase": "A visitor landing on the site should immediately understand what the tool does and how to explore it, rather than encountering unedited framework boilerplate."
+          }
+        ],
+        "conops": []
+      }
+    }
+  ],
+  "coverage_gaps": []
+}

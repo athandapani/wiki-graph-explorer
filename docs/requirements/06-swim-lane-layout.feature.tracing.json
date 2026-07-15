@@ -6,23 +6,28 @@
   "requirements": [
     {
       "id": "TOR-06-DRtjcOk",
-      "title": "The /graph page shall display a layout-mode toggle control that switches between force-directed and swim-lane rendering modes",
+      "title": "The /graph page shall provide a persistent control for switching between force-directed and swim-lane rendering modes",
+      "amended": {
+        "date": "2026-07-15",
+        "epic": "scQi8pt",
+        "reason": "Originally specified as a directly-visible toggle. The shipped design instead uses a persistent \"Options & help\" button (always visible) that opens a panel containing the layout-mode toggle. This was an explicit, live product decision made during epic scQi8pt, not a silent implementation drift."
+      },
       "traces_to": {
         "vision": [
           {
             "section": "§6 — MVP Scope Summary",
-            "paraphrase": "The graph view provides two selectable layout modes accessible via a visible toggle to let users switch between force-directed and swim-lane presentations."
+            "paraphrase": "The graph view provides two selectable layout modes accessible via a persistent control to let users switch between force-directed and swim-lane presentations."
           },
           {
             "section": "§9 — Design Direction",
-            "paraphrase": "The mode toggle is a prominent, persistent control on the interface that enables instant switching between the two layout presentations."
+            "paraphrase": "The mode toggle is reachable via a prominent, persistent control on the interface that enables switching between the two layout presentations."
           }
         ],
         "conops": [
           {
             "scenario": "S7",
             "step": 2,
-            "paraphrase": "When a visitor clicks the layout-mode toggle, the interface responds by switching the board rendering between force-directed and swim-lane modes."
+            "paraphrase": "When a visitor opens the persistent options control and activates the layout-mode toggle, the interface responds by switching the board rendering between force-directed and swim-lane modes."
           }
         ]
       }
@@ -264,6 +269,42 @@
             "paraphrase": "PM-derived edge case: swim-lane mode is a new rendering path independent of force-directed mode's canvas code, so it can fail differently on the same zero-node input; parallels the existing force-directed empty-state requirement (TOR-02-mqgZkBc) to keep the two modes' failure behavior consistent."
           }
         ]
+      }
+    },
+    {
+      "id": "TOR-06-nQ4vXsD",
+      "title": "The /graph page shall hide zero-degree nodes from the swim-lane board by default",
+      "captured_retroactively": {
+        "date": "2026-07-15",
+        "epic": "scQi8pt",
+        "reason": "Implemented and live-tested against the real second-brain vault during the epic's UX redesign before it had formal TOR coverage; captured now as part of requirements reconciliation."
+      },
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "A large, sparsely-connected vault should still fit legibly within the fixed 4-lane, no-scrollbar swim-lane board; nodes with no connections at all add visual noise without navigational value."
+          }
+        ],
+        "conops": []
+      }
+    },
+    {
+      "id": "TOR-06-Zk8pLwR",
+      "title": "The /graph page shall reveal low-connectivity nodes in swim-lane mode when a connected node is clicked, rendered with a dashed style",
+      "captured_retroactively": {
+        "date": "2026-07-15",
+        "epic": "scQi8pt",
+        "reason": "Implemented and live-tested against the real second-brain vault during the epic's UX redesign before it had formal TOR coverage; captured now as part of requirements reconciliation."
+      },
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§9 — Design Direction",
+            "paraphrase": "Peripheral, low-connectivity pages should still be reachable through the graph's click-to-reveal interaction rather than being permanently invisible, distinguished visually (dashed styling) from always-visible nodes."
+          }
+        ],
+        "conops": []
       }
     }
   ],

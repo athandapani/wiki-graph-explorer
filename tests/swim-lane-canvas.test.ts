@@ -21,7 +21,7 @@ describe("components/graph/SwimLaneCanvas.tsx", () => {
     expect(source).not.toContain("overflow-x-auto");
   });
 
-  it("hides zero-connection nodes from the board and reduces low-connection nodes to click-revealable", () => {
+  it("TOR-06-nQ4vXsD: hides zero-connection nodes from the board and reduces low-connection nodes to click-revealable", () => {
     expect(source).toContain("if (degree === 0) continue;");
     expect(source).toContain("degree <= LOW_DEGREE_THRESHOLD");
     expect(source).toContain("revealable.add(node.id)");
@@ -31,7 +31,7 @@ describe("components/graph/SwimLaneCanvas.tsx", () => {
     expect(source).toContain("if (base.length === 0)");
   });
 
-  it("pulls a low-connection related node into its lane and connects it with a dashed line when revealed by a click", () => {
+  it("TOR-06-Zk8pLwR: pulls a low-connection related node into its lane and connects it with a dashed line when revealed by a click", () => {
     expect(source).toContain("getRelatedNodeIds(activeNodeId, edges)\n      .filter((id) => revealableIds.has(id))");
     expect(source).toContain('strokeDasharray="3 3"');
   });

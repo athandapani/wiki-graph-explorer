@@ -34,31 +34,41 @@
     },
     {
       "id": "TOR-04-GOmpoij",
-      "title": "The side panel shall slide in without triggering a full page navigation, keeping the graph visible and in its current center/zoom state",
+      "title": "The side panel shall populate with page detail without triggering a full page navigation, keeping the graph visible and in its current center/zoom state",
+      "amended": {
+        "date": "2026-07-15",
+        "epic": "scQi8pt",
+        "reason": "Originally specified as a slide-in overlay panel. The shipped design instead renders the side panel as an always-visible flex column that populates with content on node click, rather than sliding in. This was an explicit, live product decision made during epic scQi8pt — a cross-epic amendment to this epic's (V3PlLFL) requirement."
+      },
       "traces_to": {
         "vision": [
           {
             "section": "§9 — Design Direction",
-            "paraphrase": "Side panel slides in without full page navigation, keeping graph context visible during exploration."
+            "paraphrase": "Side panel populates with page detail without full page navigation, keeping graph context visible during exploration."
           }
         ],
         "conops": [
           {
             "scenario": "S3",
             "step": 3,
-            "paraphrase": "The side panel slides in as an overlay while the graph remains visible in its current state."
+            "paraphrase": "The side panel populates with content while the graph remains visible in its current state."
           }
         ]
       }
     },
     {
       "id": "TOR-04-tgCQzbT",
-      "title": "The side panel shall close when the visitor explicitly dismisses it, returning full focus to the graph canvas",
+      "title": "The side panel shall return to its placeholder state when the visitor explicitly dismisses the selected node, returning full focus to the graph canvas",
+      "amended": {
+        "date": "2026-07-15",
+        "epic": "scQi8pt",
+        "reason": "Originally specified as a slide-in overlay that closes/unmounts on dismiss. The shipped design keeps the side panel permanently mounted as an always-visible column, so dismissing reverts it to its placeholder text rather than closing the panel. Cross-epic amendment to this epic's (V3PlLFL) requirement, made during epic scQi8pt."
+      },
       "traces_to": {
         "vision": [
           {
             "section": "§9 — Design Direction",
-            "paraphrase": "The panel is described as sliding in 'without a full page navigation, keeping graph context visible' — a slide-in overlay pattern implies a matching dismiss action so the visitor can return to unobstructed graph exploration."
+            "paraphrase": "The panel is described as populating 'without a full page navigation, keeping graph context visible' — a dismiss action returns the panel to its placeholder state so the visitor can return to unobstructed graph exploration."
           }
         ],
         "conops": []

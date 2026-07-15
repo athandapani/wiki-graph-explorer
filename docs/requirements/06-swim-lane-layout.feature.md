@@ -8,11 +8,18 @@ Feature: 6.0 Layout Mode Toggle & Swim-Lane Rendering
 # Layout Mode Toggle
 # --------------------------------------------------------------------------------------------------
 
-Scenario: [TOR-06-DRtjcOk] The /graph page shall display a layout-mode toggle control that switches between force-directed and swim-lane rendering modes
+Scenario: [TOR-06-DRtjcOk] The /graph page shall provide a persistent control for switching between force-directed and swim-lane rendering modes
+    #
+    # Note: amended 2026-07-15 during epic scQi8pt. Originally specified as a directly-visible
+    # toggle; the shipped design instead uses a persistent "Options & help" button (always
+    # visible on the page) that opens a panel containing the layout-mode toggle. This was an
+    # explicit, live product decision, not a silent implementation drift — see epic scQi8pt's
+    # session handoff for the reconciliation record.
+    #
     Given a visitor loads the /graph page
     When the page finishes rendering
-    Then a visible, persistent toggle control should be present on the page
-    And activating the toggle should switch the rendered graph between force-directed and swim-lane modes
+    Then a visible, persistent control for opening layout-mode options should be present on the page
+    And opening that control and activating the layout-mode toggle within it should switch the rendered graph between force-directed and swim-lane modes
 
 Scenario: [TOR-06-mvJp8Oa] The /graph page shall switch between layout modes without making a new network request for graph-data.json or vector-index.json
     Given the /graph page has already fetched graph-data.json and vector-index.json for the current session
@@ -112,3 +119,29 @@ Scenario: [TOR-06-M0SNN90] The /graph page shall render swim-lane mode correctly
     When a visitor switches to swim-lane mode
     Then the page should display an empty-state message instead of a blank/broken board
     And no unhandled error should appear in the browser console
+
+
+# --------------------------------------------------------------------------------------------------
+# Low-Connectivity Node Visibility
+# --------------------------------------------------------------------------------------------------
+#
+# Added 2026-07-15 during epic scQi8pt. This section was captured retroactively: the
+# behavior was implemented and live-tested against the real second-brain vault during the
+# epic's UX redesign, before it had formal TOR coverage.
+#
+
+Scenario: [TOR-06-nQ4vXsD] The /graph page shall hide zero-degree nodes from the swim-lane board by default
+    Given graph-data.json contains a node with zero edges
+    When a visitor views swim-lane mode
+    Then that node should not render on the board
+
+Scenario: [TOR-06-Zk8pLwR] The /graph page shall reveal low-connectivity nodes in swim-lane mode when a connected node is clicked, rendered with a dashed style
+    #
+    # Note: "low-connectivity" means exactly one edge. Such nodes are hidden from the board by
+    # default (same as zero-degree nodes) but, unlike zero-degree nodes, can be reached by a
+    # click since something does link to them.
+    #
+    Given a node has exactly one edge and is hidden from the board by default
+    When the visitor clicks the node it is connected to
+    Then the low-connectivity node should appear within its lane, rendered with a dashed pill border
+    And a dashed connector line should connect the clicked node to it
