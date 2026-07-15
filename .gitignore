@@ -18,6 +18,13 @@ build/
 /local-build/
 /.build/
 
+# Local verification screenshots — routinely captured against the private second-brain vault
+# (per CLAUDE.md, verification prefers live data), so they can contain real names, org data,
+# and page content. Never commit: the repo is slated to go public (TOR-10-VQAEhzb) and
+# scrubbing git history after the fact is far costlier than regenerating a screenshot.
+/local-*.png
+/.playwright-mcp/
+
 # Production build output generated fresh by CI into public/ — never committed
 /public/graph-data.json
 /public/vector-index.json
