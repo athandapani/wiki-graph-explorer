@@ -237,7 +237,123 @@ public `huggingface.co` CDN.
 
 ---
 
-## 20. Known Issues and Deferred Work
+## 20. Simultaneous Canvas Mounting with CSS Display Toggle
+
+**Decision:** Both the force-directed `GraphCanvas` and the swim-lane `SwimLaneCanvas` are mounted
+simultaneously in the DOM at all times. Layout mode switching toggles visibility via CSS
+`display: block | none` rather than conditional unmounting or re-rendering.
+
+**Rationale:** This approach preserves the force-directed graph's pan/zoom state and animation loop
+continuity across layout switches, satisfying TOR-06-mvJp8Oa and TOR-06-AFMTHM6 (zero refetch,
+pixel-for-pixel restoration of pan/zoom state). Unmounting and remounting would lose the layout
+state and force a recalculation; conditional rendering would require expensive state-lifting logic
+to preserve the d3-force simulation. CSS display toggle is the simplest, most efficient approach
+that naturally preserves both canvases' internal state.
+
+---
+
+## 21. Always-Visible Side Panel (Not Slide-In Overlay)
+
+**Decision:** The side panel (`SidePanel.tsx`) is rendered as an always-visible flex column in the
+right sidebar of `/graph`, appearing alongside the graph canvases at all times. It displays a
+placeholder message when no node is selected, and updates to show node details when a node is
+clicked. There is no slide-in animation or overlay behavior.
+
+**Rationale:** This keeps related-nodes and source-link information persistently discoverable
+without requiring a click-to-reveal interaction. The always-visible design supports the
+accessibility goal (visitor can verify page content sourcing at any time) and reduces
+interaction complexity. Previous designs using slide-in overlays risked obscuring the graph
+during exploration; the sidebar layout avoids this and scales well to larger vaults.
+
+---
+
+## 22. Swim-Lane Rendering: Custom SVG/CSS, Not react-force-graph-2d Fixed Mode
+
+**Decision:** The swim-lane layout is implemented via a custom React component (`SwimLaneCanvas.tsx`)
+using real DOM text for pill titles (not canvas-based rendering), CSS flexbox for lane layout, and
+standard SVG `<path>` elements for connector lines. No use of `react-force-graph-2d` in fixed-position
+or constrained-layout mode.
+
+**Rationale:** `react-force-graph-2d` is designed for physics-based force-directed layouts, not for
+static, tiered swimlanes. Building a swim-lane mode on top of `react-force-graph-2d` would require
+fighting the library's simulation engine to suppress physics, resulting in fragile, unmaintainable
+code. A custom renderer using native web APIs (DOM flexbox, SVG paths, CSS animations) is simpler,
+more performant for static layouts, and provides exact control over interaction and rendering (e.g.,
+the 950ms curved connector-line animation). No pan/zoom is needed in swim-lane mode (fixed layout),
+so the move away from `react-force-graph-2d` carries no UX cost and gains clarity.
+
+---
+
+## 23. Low-Connectivity Nodes: Hidden by Default, Revealed on Click
+
+**Decision:** In swim-lane mode, nodes are categorized by connectivity degree:
+- **0 edges:** Permanently hidden (these nodes have no connections and are never discovered)
+- **1 edge:** Hidden by default; revealed with a dashed pill border when clicked from their single neighbor
+- **2+ edges:** Always visible
+
+**Rationale:** Real vaults often have many peripheral nodes (single-link or isolated content) that
+would clutter the board if displayed at default zoom. Hiding them by default keeps large vaults
+legible on one screen without scrollbars. Nodes with exactly one connection can still be discovered
+by clicking their neighbor, accessed via the related-nodes list in the side panel, or searched for
+by name. The dashed border visually marks revealed peripheral nodes as "accessed by exception," not
+"always there," maintaining the visual hierarchy. This satisfies the "fit on one screen" requirement
+(TOR-06-DRtjcOk) while keeping all content discoverable.
+
+---
+
+## 24. Dark-Theme-By-Default with Persistent localStorage Toggle
+
+**Decision:** The application defaults to dark mode at load time (`app/layout.tsx` sets `dark` class
+on `<html>` by default). An anti-flash inline script in `<head>` runs before paint, checking
+`localStorage.getItem("theme")` and removing the `dark` class if a stored "light" preference exists.
+The `ThemeToggle` component updates the theme by mutating `document.documentElement.classList` and
+persists the choice to `localStorage` as `{ "theme": "light" | "dark" }`. The choice persists
+across browser sessions.
+
+**Rationale:** Dark mode is the portfolio-appropriate default (professional, reduces eye strain,
+aligns with modern design norms). The anti-flash pattern prevents a visible flash of light theme on
+reload for users with a light preference, which would be jarring. The `suppressHydrationWarning` on
+the `<html>` element is necessary because the anti-flash script mutates the DOM before React hydrates,
+creating an expected (intentional) client/server HTML mismatch. localStorage provides lightweight
+persistence without a backend; the pattern is robust to private-browsing modes that reject localStorage
+(theme still applies for that session, just doesn't persist).
+
+---
+
+## 25. Product Header and Home Page Redesign (Epic scQi8pt)
+
+**Decision:** Both `/` and `/graph` pages share a persistent `Header` component displaying the
+product logo and "Wiki Graph Explorer" title as a link back to `/`. The home page (`/app/page.tsx`)
+was redesigned away from `create-next-app` boilerplate to include a real product intro, a structured
+"How to use it" section explaining swim-lane mode, force-directed mode, theme/layout toggles, and
+semantic search, and a CTA button linking to `/graph`.
+
+**Rationale:** The original boilerplate home page conveyed no value; visitors had no way to understand
+what the tool does or how to use its two rendering modes. The redesigned page explicitly teaches the
+two modes and key features, reducing the barrier to first use. The shared header provides consistent
+navigation and branding across both pages. The logo link back to `/` from `/graph` allows visitors to
+easily return to the intro.
+
+---
+
+## 26. Connector Line Animation: Curved SVG Paths with 950ms Stroke-Draw
+
+**Decision:** When a user clicks a node in swim-lane mode, curved SVG `<path>` elements animate from
+the clicked node's pill to each of its neighbors over ~950ms using the `stroke-dasharray` /
+`stroke-dashoffset` technique (drawing effect). Paths are colored by the target node's folder. A
+second click on any node clears the previous node's connectors and draws new ones.
+
+**Rationale:** The curved path + stroke-draw animation provides clear visual feedback that a click
+was registered and shows which nodes are related to the selected one. The 950ms duration is slow
+enough to be visually satisfying (not jarring) and fast enough to feel responsive. Using SVG paths
+(not canvas-drawn lines) keeps the rendering simple and leverages browser compositing for smooth
+animation. The folder-colored strokes connect visually to the recipient node's color, reinforcing
+the graph structure. Clearing previous connectors on each new click keeps the board legible by not
+accumulating multiple connector sets.
+
+---
+
+## 27. Known Issues and Deferred Work
 
 - **Error handling for query embedding failure:** `useSearchRanking.ts` has no error boundary for
   `embedQuery()` rejection (offline first visit, unsupported browser). On model-load failure, the
@@ -263,3 +379,8 @@ public `huggingface.co` CDN.
   which is correct against real vault data but a deviation from the literal Gherkin wording. A
   follow-up `/peak-workflow:capture-requirements` brownfield pass should correct the requirements
   baseline to prevent future confusion.
+
+- **Search filtering in swim-lane mode:** Epic TBZJM0j's semantic search implementation works on the
+  force-directed canvas via node dimming. The swim-lane canvas does not yet support search-based
+  filtering or dimming; search remains a force-directed mode feature for now. Adding swim-lane search
+  support is deferred to a future UX enhancement.

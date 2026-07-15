@@ -91,30 +91,65 @@ Key implementation details:
 
 ## 6. Frontend Architecture
 
+### Routes and Pages
+
 | Route | Component | Behavior |
 |---|---|---|
-| `/` | `app/page.tsx` | Home/landing page (placeholder) |
-| `/graph` | `app/graph/page.tsx` | Fetches `graph-data.json` and `vector-index.json` client-side via `fetch()`. Renders interactive force-directed graph with dynamic import (`next/dynamic(..., { ssr: false })`). Branches to ErrorState, loading placeholder, EmptyState, or GraphCanvas based on fetch outcome and node count. Footer displays version sourced from `package.json`. |
+| `/` | `app/page.tsx` | Home/landing page with product intro, "How to use it" instructions (swim-lane, force-directed, theme/layout toggles, semantic search), and CTA link to `/graph`. Rewritten in Epic scQi8pt away from `create-next-app` boilerplate. |
+| `/graph` | `app/graph/page.tsx` | Main graph exploration page. Fetches `graph-data.json` and `vector-index.json` client-side via `fetch()`. Renders either a force-directed graph (via `GraphCanvas` with dynamic import `ssr: false`) or a swim-lane board (via `SwimLaneCanvas`) based on layout mode toggle. Branches to ErrorState, loading placeholder, EmptyState, or graph canvas based on fetch outcome and node count. Hosts a persistent `Header`, `OptionsPanel` (layout + theme toggles), `SearchInput` box, and an always-visible `SidePanel`. Footer displays version. Dark theme is default; theme preference persists via localStorage with anti-flash script to prevent flash of light theme on reload. |
 
 Data fetching:
 - Both JSON assets are fetched client-side on page load via `Promise.all([fetch("/graph-data.json"), fetch("/vector-index.json")])`.
 - Assets are hosted as static files in the `public/` directory after the build pipeline writes them to the Next.js output.
 - No backend API calls; all data is precomputed at build time.
 
-Graph Canvas Components:
-- `GraphCanvas.tsx` — Wrapper around `react-force-graph-2d`; renders nodes (colored by folder taxonomy via validated categorical palette) with small status dots (active/revisiting/dormant), edges, and hover tooltips showing node title and status. Click-to-center-zoom interaction animates over ~900ms; initial layout uses `zoomToFit`. Custom canvas draw callbacks (`nodeCanvasObject`, `nodePointerAreaPaint`) handle visual rendering. Exposes optional `onNodeClick` callback invoked when a node is clicked. Accepts optional `searchScores` and `relevanceThreshold` props to dim non-matching nodes via `ctx.globalAlpha` during live search.
-- `nodeColor.ts` — Maps folder names to colors using an 8-hue validated categorical palette (worst adjacent CVD ΔE 24.2). Folders beyond 8 slots receive a generated golden-angle HSL color to avoid color collisions.
-- `StatusDot.tsx` — Maps content-freshness status (active/revisiting/dormant/unknown) to colors. Deliberately does NOT reuse the dataviz skill's reserved status palette (which means health/severity), since freshness is a different semantic concept. Reusable component for future UI expansions.
+### Page Shell Components (Shared)
+
+- `Header.tsx` — Rendered at the top of both `/` and `/graph` pages. Displays logo + "Wiki Graph Explorer" text as a link back to `/`. Responsive, dark-mode-aware border and text colors.
+- `Logo.tsx` — SVG icon used inside Header.
+- `Footer.tsx` — Displays `wiki-graph-explorer v<semver>` sourced from `package.json#version`. Shared across all pages.
+
+### Graph Exploration Components (`/graph` page)
+
+**Layout Modes and Interaction:**
+
+- `OptionsPanel.tsx` — Persistent "Options & help" button (top-right corner) opening a panel that hosts the `LayoutModeToggle` and `ThemeToggle`, plus explanatory text for each mode. Dismissible via overlay click or close button. Does not navigate.
+- `LayoutModeToggle.tsx` — Selector between "force-directed" and "swim-lane" modes. Toggling switches the visible canvas via CSS `display` property (both canvases stay mounted simultaneously, no refetch, no view-state loss).
+- `ThemeToggle.tsx` — Light/dark switch. Updates `document.documentElement` class and persists preference to `localStorage` as `"theme": "light" | "dark"`.
+
+**Force-Directed Graph Mode:**
+
+- `GraphCanvas.tsx` — Wrapper around `react-force-graph-2d`; renders nodes (colored by folder taxonomy via validated categorical palette) with small status dots (active/revisiting/dormant), edges, and hover tooltips showing node title and status. Click-to-center-zoom interaction animates over ~900ms; initial layout uses `zoomToFit`. Custom canvas draw callbacks (`nodeCanvasObject`, `nodePointerAreaPaint`) handle visual rendering, with support for dark-mode-aware text/label colors (passed via `isDark` prop). Accepts optional `onNodeClick` callback and `searchScores`/`relevanceThreshold` props to dim non-matching nodes via `ctx.globalAlpha` during live search.
+  - `nodeColor.ts` — Maps folder names to colors using an 8-hue validated categorical palette (worst adjacent CVD ΔE 24.2). Folders beyond 8 slots receive a generated golden-angle HSL color to avoid color collisions. Returns theme-aware color values.
+  - `StatusDot.tsx` — Maps content-freshness status (active/revisiting/dormant/unknown) to colors. Deliberately does NOT reuse the dataviz skill's reserved status palette (which means health/severity), since freshness is a different semantic concept. Reusable component for future UI expansions.
+
+**Swim-Lane Layout Mode:**
+
+- `SwimLaneCanvas.tsx` — Custom SVG/CSS-based renderer (not `react-force-graph-2d`). Displays nodes as labeled pill buttons organized into horizontal lanes (top 4 folders by count + "Other" overflow lane). Click-to-reveal ~950ms curved connector-line animations draw from clicked node to its edges, with folder-colored strokes. Nodes with zero edges are permanently hidden; nodes with exactly one edge are hidden by default and revealed with dashed borders when their single neighbor is clicked. Supports dark-mode-aware colors. No pan/zoom (fixed layout).
+  - `PillNode.tsx` — Rounded pill-button node renderer with optional dashed border when revealed as a low-connectivity (peripheral) node. Handles click events and dark-mode text color.
+  - `lib/lane-assignment.ts` — Folder→lane bucketing logic: top 4 by node count, alphabetical tie-break, overflow → "Other" lane.
+  - `lib/connector-line-animation.ts` — SVG curved path builder and animation duration constant (`CONNECTOR_ANIMATION_DURATION_MS = 950`). Paths anchor at pill mid-points and use stroke-dasharray/dashoffset for the line-draw effect.
+
+**Search and Data Display:**
+
+- `SearchInput.tsx` — Controlled search box with live query input. Displays "No closely matching results found" when a query has no results above the relevance threshold. Wired to `useSearchRanking` hook.
+- `useSearchRanking.ts` — React hook that debounces user input (250ms), performs client-side query embedding via dynamic import, scores every page by cosine similarity against its precomputed embedding (via `lib/query-embedding.ts`), and returns scores and UI flags (isSearchActive, hasResults). Reuses the same `Xenova/all-MiniLM-L6-v2` model (384-dim) settled by build-time embeddings, guaranteeing embedding-space parity. Scores are passed to `GraphCanvas` to dim non-matching nodes; swim-lane mode does not currently filter by search (scope for future enhancement).
+- `SidePanel.tsx` — Always-visible flex column (right sidebar) that appears when a node is clicked, displaying the node's title, tags, content-freshness status dot, and list of directly connected related nodes (via `getRelatedNodeIds()` which defensively handles both string ids and d3-force-mutated node-object references). Includes a "View source on GitHub" link (built from hardcoded repo/branch/vault constants) that lets visitors verify page content is genuine and source-traced. Close button reverts panel to a placeholder state.
 - `EmptyState.tsx` — Renders a dedicated message when the graph contains zero nodes (e.g., empty vault).
 - `ErrorState.tsx` — Renders error message naming the problem and next action when JSON fetch fails.
-- `SearchInput.tsx` — Controlled search box with live query input. Displays "No closely matching results found" when a query has no results above the relevance threshold.
-- `useSearchRanking.ts` — React hook that debounces user input (250ms), performs client-side query embedding via dynamic import, scores every page by cosine similarity against its precomputed embedding, and returns scores and UI flags (isSearchActive, hasResults). Reuses the same `Xenova/all-MiniLM-L6-v2` model (384-dim) settled by the build-time embeddings step, guaranteeing embedding-space parity.
-- `SidePanel.tsx` — Slide-in panel that appears when a node is clicked, displaying the node's title, tags, content-freshness status dot, and list of directly connected related nodes. Includes a "View source on GitHub" link (built from hardcoded repo/branch/vault constants) that lets visitors verify page content is genuine and source-traced.
-- `Footer.tsx` — Displays `wiki-graph-explorer v<semver>` sourced from `package.json#version`.
 
-Design notes:
+### Shell and Theme Architecture
+
+- **Dark-theme-by-default:** `app/layout.tsx` sets `dark` class on the `<html>` root element by default, with `suppressHydrationWarning` to avoid hydration mismatch during theme restoration.
+- **Anti-flash script:** An inline script in `<head>` runs before paint, reading `localStorage.getItem("theme")` and removing the `dark` class if a stored "light" preference exists. This prevents a flash of dark theme on page load for users with a light preference saved from a prior session.
+- **Dynamic theme updates:** When the user toggles the theme, the UI updates `document.documentElement.classList.toggle("dark")` and persists the choice to localStorage.
+
+### Design Notes
+
 - `react-force-graph-2d` touches canvas and window APIs at module scope, which breaks Next.js's build-time static-export prerender pass. The dynamic import with `ssr: false` ensures the library code never runs at build time, keeping the prerender pass clean even inside a `"use client"` file.
 - Semantic search (live query embedding and cosine-similarity scoring) is implemented as of Epic TBZJM0j. Client-side query embedding delegates to the existing `computeEmbedding()` function via dynamic import, reusing the same model and configuration as build-time embeddings to guarantee embedding-space parity. See design-notes.md §19 for the resolution of this previously-open design question.
+- Swim-lane and force-directed canvases are both mounted simultaneously and toggled via CSS `display` property. This preserves pan/zoom state and avoids expensive refetches when switching modes (design-notes.md §21).
+- Side panel is always visible as a flex column, not a slide-in overlay, to keep related-nodes and source-link information persistently discoverable (design-notes.md §22).
 
 ---
 
