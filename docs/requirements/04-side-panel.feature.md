@@ -13,16 +13,30 @@ Scenario: [TOR-04-I0T4GDu] The /graph page shall open a side panel showing page 
     When the click is registered
     Then a side panel shall open displaying that node's page title
 
-Scenario: [TOR-04-GOmpoij] The side panel shall slide in without triggering a full page navigation, keeping the graph visible and in its current center/zoom state
+Scenario: [TOR-04-GOmpoij] The side panel shall populate with page detail without triggering a full page navigation, keeping the graph visible and in its current center/zoom state
+    #
+    # Note: amended 2026-07-15 during epic scQi8pt. Originally specified as a slide-in overlay
+    # panel; the shipped design instead renders the side panel as an always-visible flex column
+    # (placeholder text when no node is selected) that populates with content on node click,
+    # rather than sliding in as an overlay. This was an explicit, live product decision made
+    # during epic scQi8pt (cross-epic amendment to this epic's, V3PlLFL's, requirement) — see
+    # epic scQi8pt's session handoff for the reconciliation record.
+    #
     Given a visitor clicks a node
-    When the side panel opens
+    When the side panel populates with that node's detail
     Then the browser URL should not perform a full page navigation/reload
     And the graph canvas should remain visible showing the same centered/zoomed node
 
-Scenario: [TOR-04-tgCQzbT] The side panel shall close when the visitor explicitly dismisses it, returning full focus to the graph canvas
-    Given the side panel is open
-    When the visitor clicks a close control on the panel
-    Then the side panel should close
+Scenario: [TOR-04-tgCQzbT] The side panel shall return to its placeholder state when the visitor explicitly dismisses the selected node, returning full focus to the graph canvas
+    #
+    # Note: amended 2026-07-15 during epic scQi8pt. Originally specified as a slide-in overlay
+    # that closes/unmounts; the shipped design keeps the side panel permanently mounted as an
+    # always-visible column, so "dismissing" reverts it to its placeholder ("Select a node...")
+    # text rather than closing/hiding the panel itself.
+    #
+    Given the side panel is showing a node's detail
+    When the visitor clicks the close control on the panel
+    Then the side panel should revert to its placeholder state
     And the graph canvas should remain in its current view state
 
 

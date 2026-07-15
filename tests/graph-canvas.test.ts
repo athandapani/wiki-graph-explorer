@@ -32,10 +32,19 @@ describe("components/graph/GraphCanvas.tsx", () => {
     expect(source).toContain("CLICK_ZOOM_DURATION_MS = 900");
   });
 
-  it("wires taxonomy coloring and a status dot into the custom node draw", () => {
-    expect(source).toContain("getFolderColor(node.folder)");
-    expect(source).toContain("statusColor(node.status)");
+  it("wires theme-aware taxonomy coloring into the custom node draw, with no icon overlay", () => {
+    expect(source).toContain("getFolderColor(node.folder, isDark)");
     expect(source).toContain("nodePointerAreaPaint");
+    expect(source).not.toContain("statusColor");
+  });
+
+  it("tightens the default force layout so a sparse graph doesn't scatter across empty canvas", () => {
+    expect(source).toContain('d3Force("charge")');
+    expect(source).toContain('d3Force("link")');
+  });
+
+  it("draws each node's title as a visible label beneath it, not just in the hover tooltip", () => {
+    expect(source).toContain("ctx.fillText(node.title, x, y + LABEL_OFFSET)");
   });
 
   it("TOR-02-pRzSHQL: fits the view to the graph once the layout engine settles", () => {

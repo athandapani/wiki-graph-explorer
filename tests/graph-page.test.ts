@@ -60,4 +60,29 @@ describe("app/graph/page.tsx", () => {
     expect(source).toContain("isActive={isSearchActive}");
     expect(source).toContain("hasResults={hasResults}");
   });
+
+  it("TOR-06-DRtjcOk: renders a persistent OptionsPanel wired to layoutMode state, defaulting to swim-lane", () => {
+    expect(source).toContain("<OptionsPanel");
+    expect(source).toContain('useState<LayoutMode>("swim-lane")');
+    expect(source).toContain("layoutMode={layoutMode}");
+    expect(source).toContain("onLayoutModeChange={setLayoutMode}");
+  });
+
+  it("TOR-06-mvJp8Oa: fetches graph-data.json and vector-index.json exactly once, never inside the toggle path", () => {
+    const graphDataFetches = source.match(/fetch\("\/graph-data\.json"\)/g) ?? [];
+    const vectorIndexFetches = source.match(/fetch\("\/vector-index\.json"\)/g) ?? [];
+    expect(graphDataFetches).toHaveLength(1);
+    expect(vectorIndexFetches).toHaveLength(1);
+    expect(source).toMatch(/useEffect\(\(\) => \{[\s\S]*?\}, \[\]\);/);
+  });
+
+  it("TOR-06-AFMTHM6: keeps both canvases mounted, toggling visibility via CSS display instead of unmounting", () => {
+    expect(source).toContain('display: layoutMode === "force-directed" ? "block" : "none"');
+    expect(source).toContain('display: layoutMode === "swim-lane" ? "block" : "none"');
+  });
+
+  it("TOR-06-n4fJkbK: wires SwimLaneCanvas node clicks into the same selected-node state as SidePanel", () => {
+    expect(source).toContain("<SwimLaneCanvas");
+    expect(source.indexOf("<SwimLaneCanvas")).toBeLessThan(source.indexOf("<SidePanel"));
+  });
 });

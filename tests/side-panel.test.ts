@@ -53,4 +53,15 @@ describe("components/graph/SidePanel.tsx", () => {
     expect(source).toContain('target="_blank"');
     expect(source).toContain("View source on GitHub");
   });
+
+  it("takes up real layout space instead of overlaying/blocking content, and stays visible at all times", () => {
+    expect(source).not.toContain("fixed top-0 right-0");
+    expect(source).not.toContain("translate-x");
+    expect(source).toContain('className="h-full w-80 shrink-0');
+    expect(source).not.toContain('"w-80" : "w-0"');
+  });
+
+  it("shows a placeholder prompt instead of collapsing when no node is selected", () => {
+    expect(source).toContain("Select a node to see its details");
+  });
 });

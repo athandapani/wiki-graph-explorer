@@ -6,8 +6,12 @@ import { EmptyState } from "@/components/graph/EmptyState";
 import { ErrorState } from "@/components/graph/ErrorState";
 import { Footer } from "@/components/graph/Footer";
 import type { GraphEdge, GraphNode } from "@/components/graph/GraphCanvas";
+import { Header } from "@/components/graph/Header";
+import { type LayoutMode } from "@/components/graph/LayoutModeToggle";
+import { OptionsPanel } from "@/components/graph/OptionsPanel";
 import { SearchInput } from "@/components/graph/SearchInput";
 import { SidePanel } from "@/components/graph/SidePanel";
+import SwimLaneCanvas from "@/components/graph/SwimLaneCanvas";
 import { RELEVANCE_THRESHOLD, useSearchRanking } from "@/components/graph/useSearchRanking";
 import type { VectorIndexEntry } from "@/lib/embeddings";
 
@@ -25,9 +29,23 @@ export default function GraphPage() {
   const [vectorIndex, setVectorIndex] = useState<VectorIndexEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>("swim-lane");
+  const [isDark, setIsDark] = useState(() =>
+    typeof document === "undefined" ? true : document.documentElement.classList.contains("dark"),
+  );
   const { query, setQuery, scores, isSearchActive, hasResults } = useSearchRanking(
     vectorIndex ?? [],
   );
+
+  function handleThemeChange(nextIsDark: boolean): void {
+    setIsDark(nextIsDark);
+    document.documentElement.classList.toggle("dark", nextIsDark);
+    try {
+      localStorage.setItem("theme", nextIsDark ? "dark" : "light");
+    } catch {
+      // localStorage unavailable (private browsing, etc.) — theme still applies for this session
+    }
+  }
 
   useEffect(() => {
     async function load(): Promise<void> {
@@ -51,38 +69,68 @@ export default function GraphPage() {
   }, []);
 
   return (
-    <div className="flex min-h-full flex-col">
-      <div className="flex-1">
-        {error ? (
-          <ErrorState />
-        ) : !graphData ? (
-          <p>Loading graph…</p>
-        ) : graphData.nodes.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <>
-            <SearchInput
-              value={query}
-              onChange={setQuery}
-              isActive={isSearchActive}
-              hasResults={hasResults}
-            />
-            <GraphCanvas
-              nodes={graphData.nodes}
-              edges={graphData.edges}
-              onNodeClick={setSelectedNode}
-              searchScores={scores}
-              relevanceThreshold={RELEVANCE_THRESHOLD}
-            />
-          </>
-        )}
+    <div className="flex h-full flex-col overflow-hidden">
+      <Header />
+      <div className="flex flex-1 overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          {error ? (
+            <ErrorState />
+          ) : !graphData ? (
+            <p className="p-4">Loading graph…</p>
+          ) : (
+            <>
+              <div className="flex justify-end px-4 pt-3">
+                <OptionsPanel
+                  layoutMode={layoutMode}
+                  onLayoutModeChange={setLayoutMode}
+                  isDark={isDark}
+                  onThemeChange={handleThemeChange}
+                />
+              </div>
+              <SearchInput
+                value={query}
+                onChange={setQuery}
+                isActive={isSearchActive}
+                hasResults={hasResults}
+              />
+              <div
+                className="min-h-0 flex-1"
+                style={{ display: layoutMode === "force-directed" ? "block" : "none" }}
+              >
+                {graphData.nodes.length === 0 ? (
+                  <EmptyState />
+                ) : (
+                  <GraphCanvas
+                    nodes={graphData.nodes}
+                    edges={graphData.edges}
+                    onNodeClick={setSelectedNode}
+                    searchScores={scores}
+                    relevanceThreshold={RELEVANCE_THRESHOLD}
+                    isDark={isDark}
+                  />
+                )}
+              </div>
+              <div
+                className="min-h-0 flex-1"
+                style={{ display: layoutMode === "swim-lane" ? "block" : "none" }}
+              >
+                <SwimLaneCanvas
+                  nodes={graphData.nodes}
+                  edges={graphData.edges}
+                  onNodeClick={setSelectedNode}
+                  isDark={isDark}
+                />
+              </div>
+            </>
+          )}
+        </div>
+        <SidePanel
+          node={selectedNode}
+          edges={graphData?.edges ?? []}
+          allNodes={graphData?.nodes ?? []}
+          onClose={() => setSelectedNode(null)}
+        />
       </div>
-      <SidePanel
-        node={selectedNode}
-        edges={graphData?.edges ?? []}
-        allNodes={graphData?.nodes ?? []}
-        onClose={() => setSelectedNode(null)}
-      />
       <Footer />
     </div>
   );
