@@ -44,7 +44,7 @@ describe("components/graph/GraphCanvas.tsx", () => {
   });
 
   it("draws each node's title as a visible label beneath it, not just in the hover tooltip", () => {
-    expect(source).toContain("ctx.fillText(node.title, x, y + LABEL_OFFSET)");
+    expect(source).toContain("ctx.fillText(node.title, x, y + radius + LABEL_GAP)");
   });
 
   it("TOR-02-pRzSHQL: fits the view to the graph once the layout engine settles", () => {
@@ -60,13 +60,26 @@ describe("components/graph/GraphCanvas.tsx", () => {
   it("TOR-03-UH4yx26: dims nodes below the relevance threshold via ctx.globalAlpha", () => {
     expect(source).toContain("searchScores?: Map<string, number> | null");
     expect(source).toContain("relevanceThreshold?: number");
+    expect(source).toContain("const searchDimmed =");
     expect(source).toContain(
-      "const dimmed = searchScores != null && (searchScores.get(node.id) ?? 0) < relevanceThreshold;",
+      "searchScores != null && (searchScores.get(node.id) ?? 0) < relevanceThreshold;",
     );
     expect(source).toContain("ctx.globalAlpha = dimmed ? DIMMED_OPACITY : 1");
   });
 
   it("TOR-03-e3TJKQb: restores full opacity for every node when searchScores is null/unset", () => {
     expect(source).toContain("ctx.globalAlpha = 1");
+  });
+
+  it("TOR-05-dfhLAbM / TOR-05-UPr1Am6: dims nodes excluded by the status/folder filter alongside search dimming", () => {
+    expect(source).toContain("filteredOutNodeIds?: Set<string> | null");
+    expect(source).toContain("filteredOutNodeIds?.has(node.id) ?? false");
+    expect(source).toContain("const dimmed = searchDimmed || filterDimmed;");
+  });
+
+  it("TOR-05-02VIaa3: scales node radius (and its click hit-area) by radiusScaleByNodeId", () => {
+    expect(source).toContain("radiusScaleByNodeId?: Map<string, number> | null");
+    expect(source.match(/const radius = NODE_RADIUS \* \(radiusScaleByNodeId\?\.get\(node\.id\) \?\? 1\);/g)?.length).toBe(2);
+    expect(source).toContain("ctx.arc(x, y, radius, 0, 2 * Math.PI);");
   });
 });

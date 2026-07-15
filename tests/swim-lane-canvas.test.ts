@@ -32,7 +32,8 @@ describe("components/graph/SwimLaneCanvas.tsx", () => {
   });
 
   it("TOR-06-Zk8pLwR: pulls a low-connection related node into its lane and connects it with a dashed line when revealed by a click", () => {
-    expect(source).toContain("getRelatedNodeIds(activeNodeId, edges)\n      .filter((id) => revealableIds.has(id))");
+    expect(source).toContain("getRelatedNodeIds(activeNodeId, edges)");
+    expect(source).toContain(".filter((id) => revealableIds.has(id))");
     expect(source).toContain('strokeDasharray="3 3"');
   });
 
