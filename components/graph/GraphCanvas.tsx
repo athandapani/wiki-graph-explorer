@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import ForceGraph2D, { type ForceGraphMethods, type NodeObject } from "react-force-graph-2d";
 import { getFolderColor } from "./nodeColor";
+import { computeSearchDimmedNodeIds } from "./useSearchRanking";
 
 export interface GraphNode {
   id: string;
@@ -62,6 +63,11 @@ export default function GraphCanvas({
 }: GraphCanvasProps) {
   const graphRef = useRef<ForceGraphMethods<GraphNode, GraphEdge> | undefined>(undefined);
 
+  const searchDimmedNodeIds = useMemo(
+    () => computeSearchDimmedNodeIds(nodes, searchScores ?? null, relevanceThreshold),
+    [nodes, searchScores, relevanceThreshold],
+  );
+
   useEffect(() => {
     (graphRef.current?.d3Force("charge") as StrengthForce | undefined)?.strength(
       CHARGE_STRENGTH,
@@ -78,8 +84,7 @@ export default function GraphCanvas({
         const x = node.x ?? 0;
         const y = node.y ?? 0;
 
-        const searchDimmed =
-          searchScores != null && (searchScores.get(node.id) ?? 0) < relevanceThreshold;
+        const searchDimmed = searchDimmedNodeIds.has(node.id);
         const filterDimmed = filteredOutNodeIds?.has(node.id) ?? false;
         const dimmed = searchDimmed || filterDimmed;
         ctx.globalAlpha = dimmed ? DIMMED_OPACITY : 1;

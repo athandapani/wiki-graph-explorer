@@ -58,12 +58,14 @@ describe("components/graph/GraphCanvas.tsx", () => {
   });
 
   it("TOR-03-UH4yx26: dims nodes below the relevance threshold via ctx.globalAlpha", () => {
+    // The below-threshold decision itself moved into computeSearchDimmedNodeIds so that this
+    // canvas and the swim-lane board cannot drift apart (TOR-03-Z3ApPfB requires they dim
+    // identically). That function's behavior is tested directly in tests/use-search-ranking.test.ts;
+    // what matters here is that this canvas routes its dimming through it and applies the result.
     expect(source).toContain("searchScores?: Map<string, number> | null");
     expect(source).toContain("relevanceThreshold?: number");
-    expect(source).toContain("const searchDimmed =");
-    expect(source).toContain(
-      "searchScores != null && (searchScores.get(node.id) ?? 0) < relevanceThreshold;",
-    );
+    expect(source).toContain("computeSearchDimmedNodeIds(nodes, searchScores ?? null, relevanceThreshold)");
+    expect(source).toContain("const searchDimmed = searchDimmedNodeIds.has(node.id);");
     expect(source).toContain("ctx.globalAlpha = dimmed ? DIMMED_OPACITY : 1");
   });
 

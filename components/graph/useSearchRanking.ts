@@ -17,12 +17,53 @@ export function rankBySimilarity(
   }));
 }
 
+// Both canvases resolve "is this node dimmed by the current query?" through this one function
+// rather than each deciding for itself — the force-directed and swim-lane boards are required to
+// dim identically (TOR-03-Z3ApPfB), and duplicated logic is exactly how the swim-lane board ended
+// up ignoring search entirely (issue #4 finding A1).
+export function computeSearchDimmedNodeIds(
+  nodes: Array<{ id: string }>,
+  scores: Map<string, number> | null,
+  threshold: number,
+): Set<string> {
+  const dimmed = new Set<string>();
+  if (scores == null) {
+    return dimmed;
+  }
+  for (const node of nodes) {
+    if ((scores.get(node.id) ?? 0) < threshold) {
+      dimmed.add(node.id);
+    }
+  }
+  return dimmed;
+}
+
+// Returns null rather than 0 while no ranking exists yet, so the UI can distinguish "still
+// computing" from "genuinely nothing matched" and avoid flashing a count that is about to be
+// contradicted.
+export function computeMatchCount(
+  scores: Map<string, number> | null,
+  threshold: number,
+): number | null {
+  if (scores == null) {
+    return null;
+  }
+  let count = 0;
+  for (const score of scores.values()) {
+    if (score >= threshold) {
+      count++;
+    }
+  }
+  return count;
+}
+
 interface UseSearchRankingResult {
   query: string;
   setQuery: (query: string) => void;
   scores: Map<string, number> | null;
   isSearchActive: boolean;
   hasResults: boolean;
+  matchCount: number | null;
 }
 
 export function useSearchRanking(vectorIndex: VectorIndexEntry[]): UseSearchRankingResult {
@@ -63,6 +104,7 @@ export function useSearchRanking(vectorIndex: VectorIndexEntry[]): UseSearchRank
   // While isSearchActive but effectiveScores is still null (debounce/embedding in flight), treat
   // as "has results" so the no-results message doesn't flash before the first ranking resolves.
   const hasResults = !isSearchActive || effectiveScores === null || maxScore >= RELEVANCE_THRESHOLD;
+  const matchCount = computeMatchCount(effectiveScores, RELEVANCE_THRESHOLD);
 
-  return { query, setQuery, scores: effectiveScores, isSearchActive, hasResults };
+  return { query, setQuery, scores: effectiveScores, isSearchActive, hasResults, matchCount };
 }

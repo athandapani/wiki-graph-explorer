@@ -13,12 +13,15 @@ import type { GraphEdge, GraphNode } from "./GraphCanvas";
 import { getFolderColor } from "./nodeColor";
 import { PillNode } from "./PillNode";
 import { getRelatedNodeIds } from "./SidePanel";
+import { computeSearchDimmedNodeIds } from "./useSearchRanking";
 
 interface SwimLaneCanvasProps {
   nodes: GraphNode[];
   edges: GraphEdge[];
   isDark: boolean;
   onNodeClick?: (node: GraphNode) => void;
+  searchScores?: Map<string, number> | null;
+  relevanceThreshold?: number;
 }
 
 interface ConnectorPathData {
@@ -82,7 +85,14 @@ function anchorPoint(rect: DOMRect, edge: ConnectorAnchorEdge, boardRect: DOMRec
   };
 }
 
-export default function SwimLaneCanvas({ nodes, edges, isDark, onNodeClick }: SwimLaneCanvasProps) {
+export default function SwimLaneCanvas({
+  nodes,
+  edges,
+  isDark,
+  onNodeClick,
+  searchScores,
+  relevanceThreshold = 0,
+}: SwimLaneCanvasProps) {
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
   const [connectorPaths, setConnectorPaths] = useState<ConnectorPathData[]>([]);
   const boardRef = useRef<HTMLDivElement | null>(null);
@@ -126,6 +136,27 @@ export default function SwimLaneCanvas({ nodes, edges, isDark, onNodeClick }: Sw
       .filter((candidate): candidate is GraphNode => candidate !== undefined);
   }, [activeNodeId, edges, revealableIds, nodesById]);
 
+  const searchDimmedIds = useMemo(
+    () => computeSearchDimmedNodeIds(nodes, searchScores ?? null, relevanceThreshold),
+    [nodes, searchScores, relevanceThreshold],
+  );
+
+  // A query can match a page that has no pill — the board hides zero-degree nodes outright and
+  // degree-1 nodes until something links to them. Leaving those matches invisible would put the
+  // result count at odds with the board and repeat the silent-omission problem the "+N more"
+  // work exists to fix, so a match earns its way onto the board regardless of degree. Rendered
+  // dashed, like click-reveals, to read as peripheral rather than as a normal board node.
+  const searchRevealedNodes = useMemo(() => {
+    if (searchScores == null) return [];
+    const onBoard = new Set(baseNodes.map((node) => node.id));
+    return nodes.filter((node) => !onBoard.has(node.id) && !searchDimmedIds.has(node.id));
+  }, [nodes, baseNodes, searchScores, searchDimmedIds]);
+
+  const searchRevealedIds = useMemo(
+    () => new Set(searchRevealedNodes.map((node) => node.id)),
+    [searchRevealedNodes],
+  );
+
   // Nodes that stay fully visible (not dimmed) when a node is active: the active node itself
   // plus everything it's directly connected to. Everything else in the board dims out so the
   // active node's connections stand out.
@@ -134,10 +165,18 @@ export default function SwimLaneCanvas({ nodes, edges, isDark, onNodeClick }: Sw
     return new Set([activeNodeId, ...getRelatedNodeIds(activeNodeId, edges)]);
   }, [activeNodeId, edges]);
 
-  const laneNodes = useMemo(
-    () => [...baseNodes, ...revealedNodes],
-    [baseNodes, revealedNodes],
-  );
+  // Deduped: a node can be both click-revealed and search-revealed at once, and assignLanes
+  // would otherwise place it in its lane twice.
+  const laneNodes = useMemo(() => {
+    const seen = new Set<string>();
+    const combined: GraphNode[] = [];
+    for (const node of [...baseNodes, ...revealedNodes, ...searchRevealedNodes]) {
+      if (seen.has(node.id)) continue;
+      seen.add(node.id);
+      combined.push(node);
+    }
+    return combined;
+  }, [baseNodes, revealedNodes, searchRevealedNodes]);
   const lanes = useMemo(() => assignLanes(laneNodes), [laneNodes]);
 
   useLayoutEffect(() => {
@@ -220,8 +259,11 @@ export default function SwimLaneCanvas({ nodes, edges, isDark, onNodeClick }: Sw
                   node={node}
                   isActive={node.id === activeNodeId}
                   isDark={isDark}
-                  isRevealed={revealableIds.has(node.id)}
-                  isDimmed={highlightedIds != null && !highlightedIds.has(node.id)}
+                  isRevealed={revealableIds.has(node.id) || searchRevealedIds.has(node.id)}
+                  isDimmed={
+                    (highlightedIds != null && !highlightedIds.has(node.id)) ||
+                    searchDimmedIds.has(node.id)
+                  }
                   onClick={handlePillClick}
                   pillRef={(el) => {
                     if (el) {

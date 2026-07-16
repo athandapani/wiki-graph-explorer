@@ -39,9 +39,19 @@ describe("app/graph/page.tsx", () => {
     expect(source).toContain("onNodeClick={setSelectedNode}");
   });
 
-  it("TOR-03-TOtRRhr: renders SearchInput above GraphCanvas", () => {
+  it("TOR-03-TOtRRhr / TOR-03-LgIpadO: renders SearchInput in the persistent Header, above both canvases", () => {
+    // Re-pointed 2026-07-15 (epic W677sOY). This previously asserted <SearchInput> appeared in
+    // this file before <GraphCanvas> — an implementation detail rather than the requirement.
+    // TOR-03-TOtRRhr ("a visible search input above the graph canvas") is still satisfied: the
+    // input now lives in the Header slot, which renders above both canvases and stays visible
+    // without scrolling in either layout mode (TOR-03-LgIpadO).
     expect(source).toContain("<SearchInput");
-    expect(source).toContain("<GraphCanvas");
+    expect(source).toContain("<Header");
+    expect(source).toContain("search={");
+    expect(source.indexOf("<Header")).toBeLessThan(source.indexOf("<GraphCanvas"));
+    expect(source.indexOf("<Header")).toBeLessThan(source.indexOf("<SwimLaneCanvas"));
+    // The search input must be inside the Header's slot, not stranded back in the page body.
+    expect(source.indexOf("<SearchInput")).toBeGreaterThan(source.indexOf("<Header"));
     expect(source.indexOf("<SearchInput")).toBeLessThan(source.indexOf("<GraphCanvas"));
   });
 
@@ -56,6 +66,19 @@ describe("app/graph/page.tsx", () => {
     expect(source).toContain("relevanceThreshold={RELEVANCE_THRESHOLD}");
   });
 
+  it("TOR-03-Z3ApPfB: wires the same live scores into SwimLaneCanvas, not just GraphCanvas", () => {
+    // Issue #4 finding A1: the assertion above passed while search was dead on the default view,
+    // because `searchScores={scores}` appeared exactly once — on GraphCanvas. Both canvases must
+    // receive the ranking. SwimLaneCanvas's own dimming behavior is covered for real in
+    // tests/swim-lane-canvas.test.tsx; this guards the wiring that test cannot see.
+    const swimLaneProps = source.slice(
+      source.indexOf("<SwimLaneCanvas"),
+      source.indexOf("/>", source.indexOf("<SwimLaneCanvas")),
+    );
+    expect(swimLaneProps).toContain("searchScores={scores}");
+    expect(swimLaneProps).toContain("relevanceThreshold={RELEVANCE_THRESHOLD}");
+  });
+
   it("TOR-03-HjJLHTr: wires isSearchActive/hasResults into SearchInput", () => {
     expect(source).toContain("isActive={isSearchActive}");
     expect(source).toContain("hasResults={hasResults}");
@@ -66,6 +89,21 @@ describe("app/graph/page.tsx", () => {
     expect(source).toContain('useState<LayoutMode>("swim-lane")');
     expect(source).toContain("layoutMode={layoutMode}");
     expect(source).toContain("onLayoutModeChange={setLayoutMode}");
+  });
+
+  it("TOR-03-PzdJnrT: calls useSearchRanking exactly once, above both layout-mode branches, so an active query survives switching layouts", () => {
+    // Given a query is actively filtering one layout mode, When the visitor switches to the
+    // other, Then the same query/scores must still apply — which only holds if there is a
+    // single useSearchRanking call shared by both canvases rather than one instantiated per
+    // layout branch (which would reset on switch). TOR-06-AFMTHM6 above already guards the other
+    // half of this: both canvases stay mounted (not unmounted/remounted) across the switch.
+    const rankingCalls = source.match(/useSearchRanking\(/g) ?? [];
+    expect(rankingCalls).toHaveLength(1);
+    const rankingCallIndex = source.indexOf("useSearchRanking(");
+    const forceDirectedBranchIndex = source.indexOf('layoutMode === "force-directed"');
+    const swimLaneBranchIndex = source.indexOf('layoutMode === "swim-lane"');
+    expect(rankingCallIndex).toBeLessThan(forceDirectedBranchIndex);
+    expect(rankingCallIndex).toBeLessThan(swimLaneBranchIndex);
   });
 
   it("TOR-06-mvJp8Oa: fetches graph-data.json and vector-index.json exactly once, never inside the toggle path", () => {
