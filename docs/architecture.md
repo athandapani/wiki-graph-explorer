@@ -70,14 +70,14 @@ The build-time pipeline is a Node.js CLI tool that walks a vault directory, pars
 |---|---|
 | `lib/cli.ts` | Parses `process.argv`, validates `--version` / `--vault` / `--out` flags, returns `ParsedArgs` union (one of: version request, error with exit code, run request with vault/output paths). |
 | `lib/logger.ts` | Stderr-only structured logger with four levels (DEBUG, INFO, WARN, ERROR), emitting format `[LEVEL] message`. All non-stdout output routes here. |
-| `lib/vault-walker.ts` | Recursive `.md` file discovery under `--vault` path, skips dotfiles/hidden dirs. |
-| `lib/frontmatter-parser.ts` | YAML frontmatter parsing (using `gray-matter`) + body-section wikilink extraction from `## Related` / `## Referenced By` H2 sections containing `[[slug\|Title]]` wikilinks. |
-| `lib/graph-builder.ts` | Constructs node records (id, title, tags, status, folder), extracts directional links, collapses into deduplicated undirected edges, returns page texts for embedding. |
-| `lib/graph-data-writer.ts` | Serializes graph nodes/edges to `graph-data.json` (full overwrite). |
+| `lib/vault-walker.ts` | Recursive `.md` file discovery under `--vault` path, skips dotfiles/hidden dirs. Exports `walkVault()` for vault traversal and `countRawSources(vaultPath)` (locates sibling `raw/` directory and counts its `.md` files; returns `null` if no sibling exists). |
+| `lib/frontmatter-parser.ts` | YAML frontmatter parsing (using `gray-matter`) + body-section wikilink extraction from `## Related` / `## Referenced By` H2 sections containing `[[slug\|Title]]` wikilinks. Exports `parseFrontmatter()` (returns `ParsedFrontmatter` with title, tags, status, description, body), `extractWikilinks()`, `extractFirstBodyParagraph()` (first contiguous prose block after frontmatter, excluding headings and bare-wikilink bullets, with inline Markdown stripped via `stripInlineMarkdown()` helper), and supporting utilities. |
+| `lib/graph-builder.ts` | Constructs node records (id, title, tags, status, description, folder, path), extracts directional links, collapses into deduplicated undirected edges, returns page texts for embedding. `NodeRecord.description` is resolved as frontmatter value or first-body-paragraph fallback; `path` is vault-relative filepath (used for GitHub source links). |
+| `lib/graph-data-writer.ts` | Serializes graph nodes/edges to `graph-data.json` with top-level `meta: { sourceCount }` object (full overwrite). Takes 4 arguments: `outputDir`, `nodes`, `edges`, `sourceCount` (number or null). |
 | `lib/embeddings.ts` | `computeEmbedding()` — generates 384-dim vector via `@huggingface/transformers` and `Xenova/all-MiniLM-L6-v2` model; supports `WGE_FAKE_EMBEDDINGS=1` test seam for fast testing. |
 | `lib/vector-index-writer.ts` | Serializes vector entries to `vector-index.json` (full overwrite). |
 | `lib/second-brain-path-check.ts` | Detects hardcoded `../second-brain` path references in committed source (safety boundary). |
-| `scripts/build-graph.ts` | Main entrypoint. Reads version from `package.json`, parses args, emits startup log, validates vault path, orchestrates vault walk → graph build → embedding computation → JSON writes, emits summary line to stdout, exits 0/1/2. |
+| `scripts/build-graph.ts` | Main entrypoint. Reads version from `package.json`, parses args, emits startup log, validates vault path, orchestrates vault walk → graph build → embedding computation → raw source counting → JSON writes, emits summary line to stdout, exits 0/1/2. |
 | `scripts/check-no-second-brain-path.ts` | Runs `git ls-files` and scans for second-brain path violations; used in CI/CD. |
 
 Key implementation details:

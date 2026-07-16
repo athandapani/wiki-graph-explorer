@@ -5,7 +5,7 @@ import { computeVectorIndexEntries } from "../lib/embeddings";
 import { buildGraph } from "../lib/graph-builder";
 import { writeGraphData } from "../lib/graph-data-writer";
 import * as logger from "../lib/logger";
-import { walkVault } from "../lib/vault-walker";
+import { countRawSources, walkVault } from "../lib/vault-walker";
 import { writeVectorIndex } from "../lib/vector-index-writer";
 
 function readVersion(): string {
@@ -42,9 +42,10 @@ async function main(): Promise<void> {
   const filePaths = walkVault(vaultPath);
   const { nodes, edges, pageTexts } = buildGraph(vaultPath, filePaths, logger.warn);
   const entries = await computeVectorIndexEntries(pageTexts);
+  const sourceCount = countRawSources(vaultPath);
 
   const outputDir = path.resolve(process.cwd(), result.outDir);
-  writeGraphData(outputDir, nodes, edges);
+  writeGraphData(outputDir, nodes, edges, sourceCount);
   writeVectorIndex(outputDir, entries);
 
   process.stdout.write(`Wrote graph-data.json (${nodes.length} nodes, ${edges.length} edges)\n`);

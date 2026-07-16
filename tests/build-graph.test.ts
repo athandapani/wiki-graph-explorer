@@ -24,24 +24,30 @@ function runCli(args: string[]): { stdout: string; stderr: string; exitCode: num
 function writePage(
   vaultDir: string,
   relPath: string,
-  frontmatter: { title: string; tags: string[]; status: string },
+  frontmatter: { title: string; tags: string[]; status: string; description?: string },
   body: string,
 ): void {
   const fullPath = path.join(vaultDir, relPath);
   fs.mkdirSync(path.dirname(fullPath), { recursive: true });
   const tagsYaml = `[${frontmatter.tags.join(", ")}]`;
+  const descriptionLine =
+    frontmatter.description !== undefined ? `description: ${frontmatter.description}\n` : "";
   const content = `---
 title: ${frontmatter.title}
 tags: ${tagsYaml}
 status: ${frontmatter.status}
----
+${descriptionLine}---
 
 ${body}
 `;
   fs.writeFileSync(fullPath, content);
 }
 
-function readGraphData(): { nodes: Array<Record<string, unknown>>; edges: Array<Record<string, unknown>> } {
+function readGraphData(): {
+  nodes: Array<Record<string, unknown>>;
+  edges: Array<Record<string, unknown>>;
+  meta: { sourceCount: number | null };
+} {
   const outputFile = path.join(repoRoot, "local-build", "graph-data.json");
   return JSON.parse(fs.readFileSync(outputFile, "utf-8"));
 }
@@ -133,6 +139,59 @@ describe("build-graph CLI", () => {
     });
   });
 
+  it("TOR-01-FQuBqe1: given a vault page with a frontmatter description, when run, then graph-data.json's node has that description", () => {
+    writePage(
+      tmpVaultDir,
+      "example.md",
+      {
+        title: "Example Page",
+        tags: [],
+        status: "current",
+        description: "A short summary of this page.",
+      },
+      "## Body\ncontent",
+    );
+
+    const { exitCode } = runCli(["--vault", tmpVaultDir]);
+    expect(exitCode).toBe(0);
+
+    const graphData = readGraphData();
+    expect(graphData.nodes[0].description).toBe("A short summary of this page.");
+  });
+
+  it("TOR-01-r0LGd50: given a page with no frontmatter description and a body paragraph, when run, then the node's description is that paragraph", () => {
+    writePage(
+      tmpVaultDir,
+      "change-management.md",
+      { title: "Change Management", tags: [], status: "current" },
+      "# Change Management\n\nAdoption stalls when process change outpaces training. This page collects\nevidence on sequencing the two.\n\n## Related\n- [[training-programs]]\n",
+    );
+
+    const { exitCode } = runCli(["--vault", tmpVaultDir]);
+    expect(exitCode).toBe(0);
+
+    const graphData = readGraphData();
+    expect(graphData.nodes[0].description).toBe(
+      "Adoption stalls when process change outpaces training. This page collects evidence on sequencing the two.",
+    );
+  });
+
+  it("TOR-01-l3K1BGM: given a page with no description and a body of only headings/wikilinks, when run, then the node's description is empty and the node is still present, exit code 0", () => {
+    writePage(
+      tmpVaultDir,
+      "example.md",
+      { title: "Example Page", tags: [], status: "current" },
+      "# Title\n\n## Related\n- [[foo|Foo]]\n",
+    );
+
+    const { exitCode } = runCli(["--vault", tmpVaultDir]);
+    expect(exitCode).toBe(0);
+
+    const graphData = readGraphData();
+    expect(graphData.nodes).toHaveLength(1);
+    expect(graphData.nodes[0].description).toBe("");
+  });
+
   it("TOR-01-IBry2Oi: given page A Related->B and page B Referenced By->A, when run, then graph-data.json has exactly one edge connecting them", () => {
     writePage(tmpVaultDir, "page-a.md", { title: "Page A", tags: [], status: "current" }, "## Related\n- [[page-b|Page B]]\n");
     writePage(tmpVaultDir, "page-b.md", { title: "Page B", tags: [], status: "current" }, "## Referenced By\n- [[page-a|Page A]]\n");
@@ -193,6 +252,50 @@ describe("build-graph CLI", () => {
     const parsed = JSON.parse(raw);
     expect(Array.isArray(parsed.nodes)).toBe(true);
     expect(Array.isArray(parsed.edges)).toBe(true);
+    expect(typeof parsed.meta).toBe("object");
+  });
+
+  it("TOR-01-vhBOpOz: given a sibling raw/ directory with 40 Markdown files, when run, then meta.sourceCount is 40", () => {
+    const wikiDir = path.join(tmpVaultDir, "wiki");
+    const rawDir = path.join(tmpVaultDir, "raw");
+    fs.mkdirSync(wikiDir);
+    fs.mkdirSync(rawDir);
+    writePage(wikiDir, "example.md", { title: "Example", tags: [], status: "current" }, "## Body\ncontent");
+    for (let i = 0; i < 40; i++) {
+      fs.writeFileSync(path.join(rawDir, `source-${i}.md`), `source ${i}`);
+    }
+
+    const { exitCode } = runCli(["--vault", wikiDir]);
+    expect(exitCode).toBe(0);
+
+    const graphData = readGraphData();
+    expect(graphData.meta.sourceCount).toBe(40);
+  });
+
+  it("TOR-01-gi1qoBS: given no sibling raw/ directory, when run, then meta.sourceCount is null and exit code 0", () => {
+    const wikiDir = path.join(tmpVaultDir, "wiki");
+    fs.mkdirSync(wikiDir);
+    writePage(wikiDir, "example.md", { title: "Example", tags: [], status: "current" }, "## Body\ncontent");
+
+    const { exitCode } = runCli(["--vault", wikiDir]);
+    expect(exitCode).toBe(0);
+
+    const graphData = readGraphData();
+    expect(graphData.meta.sourceCount).toBeNull();
+  });
+
+  it("TOR-01-gYbfrvE: given a sibling raw/ directory that exists but contains no Markdown files, when run, then meta.sourceCount is 0 and exit code 0", () => {
+    const wikiDir = path.join(tmpVaultDir, "wiki");
+    const rawDir = path.join(tmpVaultDir, "raw");
+    fs.mkdirSync(wikiDir);
+    fs.mkdirSync(rawDir);
+    writePage(wikiDir, "example.md", { title: "Example", tags: [], status: "current" }, "## Body\ncontent");
+
+    const { exitCode } = runCli(["--vault", wikiDir]);
+    expect(exitCode).toBe(0);
+
+    const graphData = readGraphData();
+    expect(graphData.meta.sourceCount).toBe(0);
   });
 
   it("TOR-01-FFu6OJ3: given a previous run against a 3-page vault, when the vault changes and the tool runs again, then graph-data.json reflects only the current contents", () => {
