@@ -433,6 +433,25 @@ not literal syntax. Implemented in `lib/frontmatter-parser.ts` (Epic Dj3m8aH).
 
 ## 33. Known Issues and Deferred Work
 
+- **Force-directed layout settle time:** Against the real `second-brain` vault (47 nodes, 96 edges),
+  the physics simulation continues redistributing node positions for ~9–10 seconds after
+  initialization. The chase-fit mechanism (§35) progressively refines the viewport during this
+  period; the final fit is stable, but intermediate frames improve gradually rather than jumping.
+  A future epic could investigate tuning `CHARGE_STRENGTH` and `LINK_DISTANCE` constants to
+  settle faster, but that refinement was out of scope for Epic niaTair.
+
+- **Node label text overflow at frame edges:** Occasional minor label-text overflow past the
+  viewport edge for long page titles positioned near the frame boundary (the node positions
+  themselves stay within bounds; only label text can extend past it). The TOR constrains node
+  positions, not label text, so this is not a requirements violation, but a future UX refinement
+  if the overflow proves distracting in practice.
+
+- **Label collision suppression greediness:** The per-frame collision gate (§36) uses a greedy,
+  first-come (array-order) algorithm, not spatial-priority sorting. In the densest sub-clusters,
+  a few labels may still read as slightly crowded rather than perfectly clean, though nowhere
+  near the original "wall of overlapping text" bug. A future epic could add spatial draw-order
+  priority (e.g., by node degree or distance from focus) if the density proves distracting.
+
 - **Error handling for query embedding failure:** `useSearchRanking.ts` has no error boundary for
   `embedQuery()` rejection (offline first visit, unsupported browser). On model-load failure, the
   UI silently stalls in "still searching" state rather than surfacing a visible error. No TOR
@@ -445,10 +464,6 @@ not literal syntax. Implemented in `lib/frontmatter-parser.ts` (Epic Dj3m8aH).
 - **Graph legend / "Other" folder grouping:** Vaults with more than 8 distinct folders see
   golden-angle-generated colors for overflow folders (§13). A proper UI legend and possible
   "Other" category grouping for overflow remain out of scope for current epics.
-
-- **GitHub Actions deployment workflow:** `.github/workflows/deploy.yml` is implemented and
-  tested. Manual one-time setup required: Settings → Pages → Source: GitHub Actions must be
-  enabled in the GitHub repo settings before the first deployment can publish to GitHub Pages.
 
 - **Requirements baseline misalignment (follow-up action):** The original TOR requirements
   (TOR-01-NTPrx23, TOR-01-IBry2Oi in `docs/requirements/01-build-pipeline.feature.md`) describe
@@ -482,4 +497,69 @@ avoid an extra cascading render and satisfy the `react-hooks/set-state-in-effect
 The swim-lane sync is deliberately one-way and non-null-only: dismissing the panel
 (setting `focusedNodeId` to null) does not clear the board's active highlight, preserving
 the existing behavior that closing the panel leaves the graph view intact.
+
+---
+
+## 35. Chase-Fit Mechanism: Converging on Settling Layout Bounds
+
+**Decision:** The force-directed graph's `fitView()` function does not execute once at mount or
+on `onEngineStop`; instead, it "chases" the settling layout by re-fitting every
+`FIT_CHASE_INTERVAL_MS` milliseconds for a total duration of `FIT_CHASE_DURATION_MS` (both
+defined as constants in `GraphCanvas.tsx`). This repeating fit converges on the correct final
+viewport bounds regardless of exact physics-simulation settle timing.
+
+**Rationale:** Live-verified against the real `second-brain` vault (47 nodes, 96 edges), the
+force-directed physics simulation (tuned with `CHARGE_STRENGTH = -6`, `LINK_DISTANCE = 16`)
+continues visibly redistributing node positions for ~10 seconds after initialization, rather
+than settling within a shorter window. A single `zoomToFit()` call taken too early freezes the
+camera on a still-expanding layout, so nodes drift off-screen as the simulation continues
+redistributing positions (the inverse of the corner-clump bug, which freezes on a too-tight
+early frame). The chase approach repeatedly captures new bounds on an interval, progressively
+refining the viewport until the physics settle dominates and the bounds stabilize. This is an
+elaboration of TOR-02-lcYAVDz and TOR-06-AFMTHM6 (both already specified); the Given/When/Then
+text remains satisfied. See Epic niaTair handoff for full live-verification detail.
+
+---
+
+## 36. Node Label Sizing and Collision Suppression: Constant Screen Space + Per-Frame Gate
+
+**Decision:** Node labels in the force-directed graph are sized at a constant on-screen pixel size
+(`LABEL_SCREEN_SIZE_PX`, currently 11px, divided by `globalScale` to convert to world units), not
+world-space units, so they remain legible at any zoom level. Label visibility is gated by a
+per-frame collision check: on each canvas render frame, labels are attempted in array order; a
+label is skipped if its bounding box would overlap a label already drawn that frame (tracked
+via `drawnLabelRectsRef`, reset at frame start in `onRenderFramePre`). This per-frame collision
+check is the sole visibility gate — no zoom threshold, no async "settled zoom" capture.
+
+**Rationale:** Real vaults with far-flung disconnected nodes can force a `fitView()` zoom well
+under 1 (e.g., ~1.1 on a 47-node vault), where a world-space font would rasterize to illegible
+pixels. A zoom-threshold gate (the original approach, checking `globalScale >= 2`) would blank
+all labels at such wide-fit zoom levels (TOR-02-3eqveD9 failed outright in live verification).
+A second attempted fix tied the threshold to a captured "settled" zoom, but this raced against
+the physics simulation's continued settling — the live camera zoom drifted below the captured
+threshold, transiently blanking all labels mid-exploration. The per-frame collision gate has no
+dependency on "the" settled zoom, so it can't race. It naturally satisfies both TOR-02-3eqveD9
+(labels legible at initial settle) and TOR-02-NyPLTRl (tight clusters show non-overlapping
+labels regardless of zoom). The greedy, first-come algorithm (array-order priority, not
+spatial priority) is acceptable for now; future refinement (e.g., spatial draw-order by node
+degree) can improve density if needed. See Epic niaTair handoff for implementation details and
+live-verification results.
+
+---
+
+## 37. GitHub Pages Deployment: Manual Settings Enablement Required
+
+**Decision:** The GitHub Actions workflow (`.github/workflows/deploy.yml`) is created and
+configured to deploy to GitHub Pages on push to `master`, uploading the static `out/`
+directory. However, the workflow requires a one-time manual repository settings enablement
+before the first deployment can publish: **Settings → Pages → Source: GitHub Actions** must be
+toggled in the GitHub UI (this permission cannot be set programmatically from the workflow).
+
+**Rationale:** GitHub Pages deployments require this one-time opt-in at the repo level for
+security — it prevents an attacker from using GitHub Actions to force a deployment without
+explicit repo-owner consent. The workflow itself is complete and tested (per Epic cxjcyqx);
+the Settings → Pages → Source step is a one-time post-merge ceremony that must be completed
+after the workflow lands in the repo.
+
+---
 
