@@ -81,7 +81,14 @@ describe("components/graph/SwimLaneCanvas.tsx", () => {
     expect(source).toContain(
       "new Set([activeNodeId, ...getRelatedNodeIds(activeNodeId, edges)])",
     );
-    expect(source).toContain("isDimmed={highlightedIds != null && !highlightedIds.has(node.id)}");
+    expect(source).toContain("highlightedIds != null && !highlightedIds.has(node.id)");
+  });
+
+  it("TOR-03-Z3ApPfB: dims by search score as well as by selection, without either erasing the other", () => {
+    // Both dimming sources OR together — a search-dimmed pill must stay dimmed while a node is
+    // selected, and vice versa. Behavior is covered for real in tests/swim-lane-canvas.test.tsx.
+    expect(source).toContain("computeSearchDimmedNodeIds(nodes, searchScores ?? null, relevanceThreshold)");
+    expect(source).toMatch(/isDimmed=\{[\s\S]*?highlightedIds[\s\S]*?\|\|[\s\S]*?searchDimmedIds\.has\(node\.id\)[\s\S]*?\}/);
   });
 
   it("renders the connector-line svg behind the pill nodes (negative z-index)", () => {

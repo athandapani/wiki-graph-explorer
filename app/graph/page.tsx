@@ -38,7 +38,7 @@ export default function GraphPage() {
   const [isDark, setIsDark] = useState(() =>
     typeof document === "undefined" ? true : document.documentElement.classList.contains("dark"),
   );
-  const { query, setQuery, scores, isSearchActive, hasResults } = useSearchRanking(
+  const { query, setQuery, scores, isSearchActive, hasResults, matchCount } = useSearchRanking(
     vectorIndex ?? [],
   );
 
@@ -76,7 +76,17 @@ export default function GraphPage() {
   return (
     <div className="flex h-full flex-col overflow-y-auto">
       <div className="flex h-full shrink-0 flex-col overflow-hidden">
-        <Header />
+        <Header
+          search={
+            <SearchInput
+              value={query}
+              onChange={setQuery}
+              isActive={isSearchActive}
+              hasResults={hasResults}
+              matchCount={matchCount}
+            />
+          }
+        />
         <div className="flex flex-1 overflow-hidden">
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
             {error ? (
@@ -93,12 +103,6 @@ export default function GraphPage() {
                     onThemeChange={handleThemeChange}
                   />
                 </div>
-                <SearchInput
-                  value={query}
-                  onChange={setQuery}
-                  isActive={isSearchActive}
-                  hasResults={hasResults}
-                />
                 {layoutMode === "force-directed" && (
                   <FilterControls
                     nodes={graphData.nodes}
@@ -140,6 +144,8 @@ export default function GraphPage() {
                     edges={graphData.edges}
                     onNodeClick={setSelectedNode}
                     isDark={isDark}
+                    searchScores={scores}
+                    relevanceThreshold={RELEVANCE_THRESHOLD}
                   />
                 </div>
               </>

@@ -2,7 +2,11 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { describe, expect, it } from "vitest";
 import type { VectorIndexEntry } from "../lib/embeddings";
-import { rankBySimilarity } from "../components/graph/useSearchRanking";
+import {
+  computeMatchCount,
+  computeSearchDimmedNodeIds,
+  rankBySimilarity,
+} from "../components/graph/useSearchRanking";
 
 describe("rankBySimilarity", () => {
   it("TOR-03-C1lczJo: returns one score per vector-index entry", () => {
@@ -30,6 +34,54 @@ describe("rankBySimilarity", () => {
     const ranked = rankBySimilarity(queryEmbedding, entries).sort((a, b) => b.score - a.score);
 
     expect(ranked[0].id).toBe("conceptually-related-page");
+  });
+});
+
+describe("computeSearchDimmedNodeIds", () => {
+  const nodes = [{ id: "above" }, { id: "at-threshold" }, { id: "below" }];
+
+  it("TOR-03-Z3ApPfB: dims only the nodes scoring below the relevance threshold", () => {
+    const scores = new Map([
+      ["above", 0.8],
+      ["at-threshold", 0.3],
+      ["below", 0.1],
+    ]);
+
+    const dimmed = computeSearchDimmedNodeIds(nodes, scores, 0.3);
+
+    expect(dimmed.has("below")).toBe(true);
+    expect(dimmed.has("above")).toBe(false);
+    // At exactly the threshold counts as a match — the requirement dims what scores *below* it.
+    expect(dimmed.has("at-threshold")).toBe(false);
+  });
+
+  it("TOR-03-Z3ApPfB: dims nothing when the query is cleared (null scores)", () => {
+    expect(computeSearchDimmedNodeIds(nodes, null, 0.3).size).toBe(0);
+  });
+
+  it("dims a node the ranking has no score for, rather than treating it as a match", () => {
+    const dimmed = computeSearchDimmedNodeIds([{ id: "unscored" }], new Map(), 0.3);
+    expect(dimmed.has("unscored")).toBe(true);
+  });
+});
+
+describe("computeMatchCount", () => {
+  it("TOR-03-1LlqKF1: counts exactly the pages scoring at or above the threshold", () => {
+    const scores = new Map(
+      Array.from({ length: 10 }, (_, i) => [`page-${i}`, i < 7 ? 0.9 : 0.1] as const),
+    );
+
+    expect(computeMatchCount(scores, 0.3)).toBe(7);
+  });
+
+  it("TOR-03-1LlqKF1: returns null while no ranking exists, so the UI shows no count", () => {
+    // Distinct from 0 ("nothing matched") — a 0 rendered during the debounce would be a claim
+    // the very next frame contradicts.
+    expect(computeMatchCount(null, 0.3)).toBeNull();
+  });
+
+  it("TOR-03-1LlqKF1: returns 0 when a ranking exists but nothing clears the threshold", () => {
+    expect(computeMatchCount(new Map([["a", 0.05]]), 0.3)).toBe(0);
   });
 });
 

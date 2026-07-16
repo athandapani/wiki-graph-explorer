@@ -13,4 +13,12 @@ describe("components/graph/Header.tsx", () => {
     expect(source).toContain("Wiki Graph Explorer");
     expect(source).toContain('href="/"');
   });
+
+  it("TOR-03-LgIpadO: exposes an optional search slot and renders it, staying shrink-0 so it never scrolls away", () => {
+    // Optional rather than built-in: the home page renders this same header (app/page.tsx) and
+    // has no vector index behind it, so only /graph fills the slot.
+    expect(source).toContain("search?: ReactNode");
+    expect(source).toContain("{search}");
+    expect(source).toContain("shrink-0");
+  });
 });

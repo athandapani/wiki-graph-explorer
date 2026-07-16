@@ -358,11 +358,19 @@ accumulating multiple connector sets.
 
 ---
 
+## 27. Swim-Lane Search Implementation: Shared Dimming Logic
+
+**Decision:** Semantic search is now implemented for swim-lane mode using the same `computeSearchDimmedNodeIds()` function that force-directed mode uses. A search query dims/highlights pills identically across both layout modes. Matches that would be hidden by the swim-lane board's low-degree filtering (degree ≤ 1) are force-revealed with a dashed pill border (same visual language as click-reveals) rather than remaining invisible — ensuring the search result count and the visible board never disagree.
+
+**Rationale:** Epic W677sOY resolved the long-standing limitation where swim-lane search support was deferred. Duplicating per-canvas dimming logic was exactly how the original bug (issue #4 finding A1) existed in the first place — swim-lane simply wasn't respecting search at all. By extracting the decision into one shared `computeSearchDimmedNodeIds()` function exported from `useSearchRanking.ts` and consumed by both `GraphCanvas.tsx` and `SwimLaneCanvas.tsx`, we guarantee identical behavior across layouts and prevent future divergence. Force-reveal of low-degree matches (via dashed styling) ensures a visitor searching for a page name sees that page on the board even if it has only one connection, maintaining the principle that "real matches are always visible."
+
+---
+
 ## 28. Filter Controls: Dynamic Dataset-Derived Dropdowns (Force-Directed Mode)
 
 **Decision:** The force-directed graph canvas includes two filter dropdowns (`FilterControls.tsx`): one for "Status" and one for "Folder" (taxonomy). Filter options are derived live from the loaded dataset (`graph-data.json`'s node records), not hardcoded. Selecting a filter value immediately dims all non-matching nodes via `ctx.globalAlpha` in the canvas. The filters apply only to force-directed mode; swim-lane mode does not filter.
 
-**Rationale:** Dynamic filtering helps visitors isolate and explore a subset of the graph (e.g., only "current" status pages, only pages in a specific folder). Computing options from the live dataset ensures the UI never offers a filter value that doesn't exist in the vault, and supports vaults of any folder taxonomy without code changes. Force-directed-only scope reflects the existing precedent of search-filtering being force-directed-only (design-notes.md §27); swim-lane filtering is documented as a deferred enhancement. See Epic IbQ9Rr1 for implementation details.
+**Rationale:** Dynamic filtering helps visitors isolate and explore a subset of the graph (e.g., only "current" status pages, only pages in a specific folder). Computing options from the live dataset ensures the UI never offers a filter value that doesn't exist in the vault, and supports vaults of any folder taxonomy without code changes. Force-directed-only scope is distinct from the new swim-lane search implementation (design-notes.md §27); swim-lane filtering (independent of search) remains a deferred enhancement. See Epic IbQ9Rr1 for implementation details.
 
 ---
 
@@ -374,7 +382,7 @@ accumulating multiple connector sets.
 
 ---
 
-## 27. Known Issues and Deferred Work
+## 30. Known Issues and Deferred Work
 
 - **Error handling for query embedding failure:** `useSearchRanking.ts` has no error boundary for
   `embedQuery()` rejection (offline first visit, unsupported browser). On model-load failure, the
@@ -401,8 +409,3 @@ accumulating multiple connector sets.
   follow-up `/peak-workflow:capture-requirements` brownfield pass should correct the requirements
   baseline to prevent future confusion.
 
-- **Search filtering and filtering UI in swim-lane mode:** Epic TBZJM0j's semantic search implementation
-  works on the force-directed canvas via node dimming. Epic IbQ9Rr1 added status/folder filter dropdowns
-  and the edge-count radius indicator to force-directed mode. Both filtering features (search + status/folder
-  filters + edge-count indicator) remain force-directed-only; swim-lane mode does not support filtering or
-  radius scaling. Adding swim-lane support for search and filter controls is deferred to a future UX enhancement.
