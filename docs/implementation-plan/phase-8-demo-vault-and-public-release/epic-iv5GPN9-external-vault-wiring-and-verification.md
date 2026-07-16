@@ -20,12 +20,13 @@ a repo that no longer holds the pages; fixing the A3 path join alone would not h
 at the wrong repository.
 
 This epic verifies rather than authors the vault: `ai-adoption-wiki` owns its own content. But the
-build hard-depends on that content's shape — `description:` frontmatter and `## Related` /
-`## Referenced By` wikilinks — so a malformed vault must fail loudly here rather than surface as blank
-panels and a sparse board in production. **TOR-01-5d0lrAs is re-verified**, not newly implemented: it
-was satisfied by Epic cxjcyqx against the very `deploy.yml` line this epic rewrites, so its evidence
-goes stale the moment the vault path changes. The no-override property must still hold in the new
-cross-repo topology.
+build hard-depends on that content's shape — `description:` frontmatter, `## Related` /
+`## Referenced By` wikilinks, and a `raw/` directory holding one entry per ingested source — so a
+malformed vault must fail loudly here rather than surface as blank panels, a sparse board, or a
+provenance sentence with a source count nobody can trust in production. **TOR-01-5d0lrAs is
+re-verified**, not newly implemented: it was satisfied by Epic cxjcyqx against the very `deploy.yml`
+line this epic rewrites, so its evidence goes stale the moment the vault path changes. The
+no-override property must still hold in the new cross-repo topology.
 
 ## Requirements Anchors
 
@@ -39,6 +40,7 @@ cross-repo topology.
 
 | TOR ID | Feature File | Scenario Title |
 |--------|--------------|-----------------|
+| TOR-10-RJsxsqn | `docs/requirements/10-demo-vault.feature.md` | The demo-vault ingestion shall produce one raw entry in the public vault's raw directory for each source link in the author-provided deep-research Markdown file |
 | TOR-10-sFT4xQU | `docs/requirements/10-demo-vault.feature.md` | The public vault shall build into a graph whose node and edge counts demonstrate demo-scale density rather than the placeholder vault's near-empty board |
 | TOR-10-WYqcBSs | `docs/requirements/10-demo-vault.feature.md` | The demo-vault ingestion shall produce interlinked wiki pages carrying title, tags, status, and description frontmatter with Related and Referenced By wikilink sections |
 | TOR-10-pNUhGW1 | `docs/requirements/10-demo-vault.feature.md` | The public vault shall contain only original research content, with no confidential organizational, family, or health material from the private second-brain vault |
@@ -52,4 +54,4 @@ cross-repo topology.
 - `lib/github-source-link.ts` — retarget `GITHUB_REPO` / `VAULT_SUBPATH` at the vault repo; fix the A3 path join so no duplicated `wiki/wiki` segment is produced
 - `scripts/check-no-second-brain-path.ts` — confirm the safety check still covers the new vault wiring
 - `public-vault/` — retire the 2-page in-repo placeholder once the external vault is wired
-- `npm run build:graph -- --vault ../ai-adoption-wiki/wiki` — verify node/edge counts, that every node carries a non-empty description, and that `meta.sourceCount` reads from `../ai-adoption-wiki/raw`
+- `npm run build:graph -- --vault ../ai-adoption-wiki/wiki` — verify node/edge counts, that every node carries a non-empty description, that `meta.sourceCount` reads from `../ai-adoption-wiki/raw`, and that `../ai-adoption-wiki/raw`'s entry count matches the number of distinct source links in the author-provided deep-research file (TOR-10-RJsxsqn)
