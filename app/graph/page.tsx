@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EmptyState } from "@/components/graph/EmptyState";
 import { ErrorState } from "@/components/graph/ErrorState";
 import { ExplainerSection } from "@/components/graph/ExplainerSection";
@@ -41,6 +41,7 @@ export default function GraphPage() {
   const { query, setQuery, scores, isSearchActive, hasResults, matchCount } = useSearchRanking(
     vectorIndex ?? [],
   );
+  const resetViewRef = useRef<(() => void) | null>(null);
 
   function handleThemeChange(nextIsDark: boolean): void {
     setIsDark(nextIsDark);
@@ -73,6 +74,17 @@ export default function GraphPage() {
     void load();
   }, []);
 
+  // Re-fits the force-directed camera whenever it becomes the visible mode — both the first
+  // time a visitor switches into it (default layoutMode is swim-lane) and every subsequent
+  // toggle back from swim-lane (TOR-06-AFMTHM6, amended). GraphCanvas is always mounted
+  // (design-notes.md §20), so triggering the fit here, at the moment the canvas actually
+  // becomes visible, is what fixes the display:none-during-fit clump bug.
+  useEffect(() => {
+    if (layoutMode === "force-directed") {
+      resetViewRef.current?.();
+    }
+  }, [layoutMode]);
+
   return (
     <div className="flex h-full flex-col overflow-y-auto">
       <div className="flex h-full shrink-0 flex-col overflow-hidden">
@@ -101,6 +113,7 @@ export default function GraphPage() {
                     onLayoutModeChange={setLayoutMode}
                     isDark={isDark}
                     onThemeChange={handleThemeChange}
+                    onResetView={() => resetViewRef.current?.()}
                   />
                 </div>
                 {layoutMode === "force-directed" && (
@@ -133,6 +146,9 @@ export default function GraphPage() {
                       )}
                       radiusScaleByNodeId={computeRadiusScale(graphData.nodes, graphData.edges)}
                       focusedNodeId={selectedNode?.id ?? null}
+                      onResetViewReady={(fn) => {
+                        resetViewRef.current = fn;
+                      }}
                     />
                   )}
                 </div>

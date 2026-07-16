@@ -133,9 +133,39 @@ describe("app/graph/page.tsx", () => {
     expect(source).toMatch(/useEffect\(\(\) => \{[\s\S]*?\}, \[\]\);/);
   });
 
-  it("TOR-06-AFMTHM6: keeps both canvases mounted, toggling visibility via CSS display instead of unmounting", () => {
+  it("keeps both canvases mounted, toggling visibility via CSS display instead of unmounting", () => {
+    // This is a supporting implementation detail, not itself the TOR-06-AFMTHM6 requirement:
+    // staying mounted is what necessitates the explicit re-fit below (a canvas that were
+    // unmounted/remounted would lose its stale camera state for free). See the dedicated
+    // TOR-06-AFMTHM6 test for the actual amended re-fit behavior.
     expect(source).toContain('display: layoutMode === "force-directed" ? "block" : "none"');
     expect(source).toContain('display: layoutMode === "swim-lane" ? "block" : "none"');
+  });
+
+  it("TOR-06-AFMTHM6 / TOR-02-lcYAVDz: re-fits the force-directed camera via resetViewRef whenever layoutMode becomes force-directed", () => {
+    // Amended 2026-07-15 (Cycle 2): re-implemented by epic niaTair. The pre-amendment reading
+    // (passively "restore" the prior pan/zoom by never unmounting) is exactly what produced the
+    // off-screen clump issue #4 finding A2 reported — this now requires an active re-fit on
+    // every transition into force-directed mode, including the first one (default layoutMode is
+    // swim-lane, so a visitor's first view of force-directed is always such a transition).
+    expect(source).toContain("const resetViewRef = useRef<(() => void) | null>(null);");
+    expect(source).toMatch(
+      /useEffect\(\(\) => \{\s*if \(layoutMode === "force-directed"\) \{\s*resetViewRef\.current\?\.\(\);\s*\}\s*\}, \[layoutMode\]\);/,
+    );
+  });
+
+  it("TOR-02-lcYAVDz / TOR-02-IrF7v8x: wires GraphCanvas's fit function into resetViewRef, and resetViewRef into OptionsPanel's reset control", () => {
+    const graphCanvasProps = source.slice(
+      source.indexOf("<GraphCanvas"),
+      source.indexOf("/>", source.indexOf("<GraphCanvas")),
+    );
+    const optionsPanelProps = source.slice(
+      source.indexOf("<OptionsPanel"),
+      source.indexOf("/>", source.indexOf("<OptionsPanel")),
+    );
+    expect(graphCanvasProps).toContain("onResetViewReady={(fn) => {");
+    expect(graphCanvasProps).toContain("resetViewRef.current = fn;");
+    expect(optionsPanelProps).toContain("onResetView={() => resetViewRef.current?.()}");
   });
 
   it("TOR-06-n4fJkbK: wires SwimLaneCanvas node clicks into the same selected-node state as SidePanel", () => {
