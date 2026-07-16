@@ -39,6 +39,25 @@ describe("app/graph/page.tsx", () => {
     expect(source).toContain("onNodeClick={setSelectedNode}");
   });
 
+  it("TOR-04-1iMsnYq: passes the selected node's id as focusedNodeId to both canvases, and wires SidePanel's chip clicks back into the same selection state", () => {
+    const graphCanvasProps = source.slice(
+      source.indexOf("<GraphCanvas"),
+      source.indexOf("/>", source.indexOf("<GraphCanvas")),
+    );
+    const swimLaneProps = source.slice(
+      source.indexOf("<SwimLaneCanvas"),
+      source.indexOf("/>", source.indexOf("<SwimLaneCanvas")),
+    );
+    const sidePanelProps = source.slice(
+      source.indexOf("<SidePanel"),
+      source.indexOf("/>", source.indexOf("<SidePanel")),
+    );
+    expect(graphCanvasProps).toContain("focusedNodeId={selectedNode?.id ?? null}");
+    expect(swimLaneProps).toContain("focusedNodeId={selectedNode?.id ?? null}");
+    expect(sidePanelProps).toContain("isDark={isDark}");
+    expect(sidePanelProps).toContain("onSelectNode={setSelectedNode}");
+  });
+
   it("TOR-03-TOtRRhr / TOR-03-LgIpadO: renders SearchInput in the persistent Header, above both canvases", () => {
     // Re-pointed 2026-07-15 (epic W677sOY). This previously asserted <SearchInput> appeared in
     // this file before <GraphCanvas> — an implementation detail rather than the requirement.

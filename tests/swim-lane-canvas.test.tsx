@@ -12,7 +12,15 @@ import SwimLaneCanvas from "../components/graph/SwimLaneCanvas";
 const THRESHOLD = 0.3;
 
 function node(id: string, folder = "concepts"): GraphNode {
-  return { id, title: `Title ${id}`, tags: [], status: "active", folder, path: `${id}.md` };
+  return {
+    id,
+    title: `Title ${id}`,
+    tags: [],
+    status: "active",
+    description: "",
+    folder,
+    path: `${id}.md`,
+  };
 }
 
 // Degree 2+ keeps a node on the board by default; the board hides degree 0 and degree 1.
@@ -138,5 +146,33 @@ describe("SwimLaneCanvas search integration", () => {
     );
 
     expect(screen.queryByText("Title lonely")).toBeNull();
+  });
+});
+
+describe("SwimLaneCanvas external focus sync", () => {
+  it("TOR-04-1iMsnYq: applies the same active-node highlight/connector treatment as a direct click when focusedNodeId is set externally, with no prior click", () => {
+    const nodes = [node("hub"), node("peer")];
+    const edges = wellConnected(["hub", "peer"]);
+
+    render(<SwimLaneCanvas nodes={nodes} edges={edges} isDark focusedNodeId="hub" />);
+
+    // "hub" gets the active pill's pressed state, same as clicking it directly would.
+    expect(pill("Title hub").getAttribute("aria-pressed")).toBe("true");
+    // Nodes not connected to "hub" dim; "hub" itself and its direct connections do not.
+    expect(pill("Title hub").className).not.toContain(DIM_CLASS);
+  });
+
+  it("does not clear the current highlight when focusedNodeId becomes null (panel dismissal)", () => {
+    const nodes = [node("hub"), node("peer")];
+    const edges = wellConnected(["hub", "peer"]);
+
+    const { rerender } = render(
+      <SwimLaneCanvas nodes={nodes} edges={edges} isDark focusedNodeId="hub" />,
+    );
+    expect(pill("Title hub").getAttribute("aria-pressed")).toBe("true");
+
+    rerender(<SwimLaneCanvas nodes={nodes} edges={edges} isDark focusedNodeId={null} />);
+
+    expect(pill("Title hub").getAttribute("aria-pressed")).toBe("true");
   });
 });

@@ -22,6 +22,7 @@ interface SwimLaneCanvasProps {
   onNodeClick?: (node: GraphNode) => void;
   searchScores?: Map<string, number> | null;
   relevanceThreshold?: number;
+  focusedNodeId?: string | null;
 }
 
 interface ConnectorPathData {
@@ -92,8 +93,25 @@ export default function SwimLaneCanvas({
   onNodeClick,
   searchScores,
   relevanceThreshold = 0,
+  focusedNodeId,
 }: SwimLaneCanvasProps) {
-  const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
+  const [activeNodeId, setActiveNodeId] = useState<string | null>(focusedNodeId ?? null);
+
+  // Lets an externally driven selection (e.g. a chip clicked in SidePanel) apply the same
+  // active-node highlight/connector-line treatment a direct pill click already applies via
+  // handlePillClick below. Adjusted during render (React's documented pattern for syncing state
+  // from props: https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes),
+  // not inside a useEffect, so it applies synchronously in the same render rather than causing an
+  // extra cascading render. Deliberately one-way and non-null-only: syncing on null (panel
+  // dismissal sets this to null) would clear the board's highlight, breaking the existing
+  // requirement that the board keeps its current view state when the panel closes.
+  const [prevFocusedNodeId, setPrevFocusedNodeId] = useState(focusedNodeId);
+  if (focusedNodeId !== prevFocusedNodeId) {
+    setPrevFocusedNodeId(focusedNodeId);
+    if (focusedNodeId != null) {
+      setActiveNodeId(focusedNodeId);
+    }
+  }
   const [connectorPaths, setConnectorPaths] = useState<ConnectorPathData[]>([]);
   const boardRef = useRef<HTMLDivElement | null>(null);
   const pillRefs = useRef<Map<string, HTMLButtonElement>>(new Map());

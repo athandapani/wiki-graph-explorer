@@ -458,3 +458,28 @@ not literal syntax. Implemented in `lib/frontmatter-parser.ts` (Epic Dj3m8aH).
   follow-up `/peak-workflow:capture-requirements` brownfield pass should correct the requirements
   baseline to prevent future confusion.
 
+---
+
+## 34. Externally-Driven Node Focus: `focusedNodeId` Prop on Both Canvases
+
+**Decision:** Both `GraphCanvas.tsx` and `SwimLaneCanvas.tsx` accept an optional `focusedNodeId`
+prop (string or null). When this prop changes to a non-null value, the component applies the
+same focus treatment that a direct user click would trigger: in force-directed mode,
+`centerAt`/`zoom` animates the canvas to center on and zoom into the target node; in
+swim-lane mode, the render-phase state update sets `activeNodeId` and triggers connector-line
+and highlight rendering. This enables the side panel's chip-click handler to drive the same
+UX as a direct graph interaction without duplicating focus logic.
+
+**Rationale:** Epic nQJ8Ofz added clickable chips in the side panel's "Connected pages" section.
+Clicking a chip should feel identical to clicking the node directly in the graph — same
+zoom/pan in force-directed mode, same highlight and connector lines in swim-lane mode.
+Rather than duplicating the focus mechanics in the side panel component, the `focusedNodeId`
+prop extends the existing canvas components' responsibilities to handle external triggers
+(not just user clicks). The prop is optional (`undefined` or `null` clears focus) and flows
+from `app/graph/page.tsx`'s `selectedNode` state. The implementation uses `useEffect` in
+GraphCanvas (which centers/zooms) and React's render-phase pattern in SwimLaneCanvas (to
+avoid an extra cascading render and satisfy the `react-hooks/set-state-in-effect` lint rule).
+The swim-lane sync is deliberately one-way and non-null-only: dismissing the panel
+(setting `focusedNodeId` to null) does not clear the board's active highlight, preserving
+the existing behavior that closing the panel leaves the graph view intact.
+
