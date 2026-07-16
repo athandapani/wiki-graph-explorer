@@ -1,12 +1,13 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { extractWikilinks, parseFrontmatter } from "./frontmatter-parser";
+import { extractFirstBodyParagraph, extractWikilinks, parseFrontmatter } from "./frontmatter-parser";
 
 export interface NodeRecord {
   id: string;
   title: string;
   tags: string[];
   status: string;
+  description: string;
   folder: string;
   path: string;
 }
@@ -48,12 +49,14 @@ export function buildGraph(
     const id = path.basename(filePath, ".md");
     const dir = path.dirname(relPath);
     const folder = dir === "." ? "" : dir;
+    const description = parsed.description || extractFirstBodyParagraph(parsed.body);
 
     nodes.push({
       id,
       title: parsed.title,
       tags: parsed.tags,
       status: parsed.status,
+      description,
       folder,
       path: relPath,
     });

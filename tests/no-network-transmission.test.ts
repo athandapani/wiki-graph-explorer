@@ -65,7 +65,7 @@ describe("no network transmission of vault content", () => {
     const filePaths = walkVault(vaultDir);
     const { nodes, edges, pageTexts } = buildGraph(vaultDir, filePaths, () => {});
     const entries = await computeVectorIndexEntries(pageTexts);
-    writeGraphData(outputDir, nodes, edges);
+    writeGraphData(outputDir, nodes, edges, null);
     writeVectorIndex(outputDir, entries);
 
     expect(fetchSpy).not.toHaveBeenCalled();
