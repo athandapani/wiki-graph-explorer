@@ -382,7 +382,87 @@ accumulating multiple connector sets.
 
 ---
 
-## 30. Known Issues and Deferred Work
+## 30. Node Description Field: Frontmatter or First Paragraph Fallback
+
+**Decision:** Every node in `graph-data.json` includes a `description: string` field resolved via a
+two-tier strategy: if the page's YAML frontmatter declares a `description:` key, use that value
+(trimmed); otherwise, extract the first contiguous block of prose from the Markdown body (after
+frontmatter, excluding headings and bare-wikilink-bullet lines, with inline Markdown syntax
+stripped). If neither exists, the field is an empty string.
+
+**Rationale:** A 1–2 sentence description enables richer side-panel summaries and future UI
+features without requiring every author to declare a frontmatter field. The first-paragraph
+fallback surfaces page intent from the body content itself. Bare-wikilink-bullet lines (the shape
+of every `## Related`/`## Referenced By` bullet in this project's vaults) are structural,
+cross-reference metadata, not prose — explicitly excluded from detection to prevent sections like
+`## Related\n- [[foo|Foo Bar]]` from leaking `"- Foo Bar"` into the description. See implementation
+in `lib/frontmatter-parser.ts#extractFirstBodyParagraph()` (Epic Dj3m8aH).
+
+---
+
+## 31. Build-Time Source-Count Metadata: Raw Sibling Directory
+
+**Decision:** The build tool detects and counts a sibling `raw/` directory (e.g., the `raw/`
+alongside a `wiki/` vault directory). The count is emitted as a top-level `meta: { sourceCount }`
+object in `graph-data.json` (`null` if no sibling exists, `0` if empty, `N` otherwise).
+
+**Rationale:** Future UI features (side-panel provenance statements, footer stats) need to know
+how many source documents were ingested. The `raw/` sibling is a convention of this project's own
+vaults (Product Vision §5), not a constraint imposed on vaults being rendered, so its absence
+(returning `null`) is distinct from an empty-but-present directory (returning `0`). Reusing the
+existing `walkVault()` recursive traversal (rather than a separate counting routine) keeps the
+dotdir-skipping and `.md`-discovery logic from drifting apart across the two code paths. See
+`lib/vault-walker.ts#countRawSources()` (Epic Dj3m8aH).
+
+---
+
+## 32. Inline Markdown Stripping: Self-Contained Regex Helper
+
+**Decision:** When extracting the first-body-paragraph description fallback, inline Markdown
+syntax (wikilinks `[[slug|title]]`, standard links `[text](url)`, bold `**text**`, italic
+`*text*`) is stripped via a small, self-contained regex-based helper function
+(`stripInlineMarkdown()`) rather than a full Markdown AST library.
+
+**Rationale:** A small focused helper keeps the build tool's dependency footprint minimal,
+consistent with the project's existing philosophy. The regex patterns are straightforward and
+capture the subset of Markdown actually used in vault pages; parsing a full AST would be
+overkill. Inline stripping ensures the side panel and future descriptions render clean prose,
+not literal syntax. Implemented in `lib/frontmatter-parser.ts` (Epic Dj3m8aH).
+
+---
+
+## 33. Swim-Lane Search Dimming: Centralized Shared Logic
+
+**Decision:** A single exported pure function `computeSearchDimmedNodeIds()` (in
+`components/graph/useSearchRanking.ts`) is the authoritative decision point for dimming
+non-matching nodes. Both `GraphCanvas` (force-directed) and `SwimLaneCanvas` (swim-lane) import
+and call the same function, guaranteeing identical search-filtering behavior across layout modes.
+
+**Rationale:** Early swim-lane implementation silently omitted search dimming entirely (issue #4,
+finding A1) because the logic existed only inside `GraphCanvas`. Centralizing and exporting the
+decision ensures it's applied identically to both canvases and prevents future divergence. The
+function signature is stable and pure (no side effects), making it easy for either canvas to call
+it independently. Implemented in Epic W677sOY.
+
+---
+
+## 34. Search-Match Visibility in Swim-Lane: Force-Reveal with Dashed Styling
+
+**Decision:** When a semantic search query matches a page that the swim-lane board would normally
+hide (due to zero-degree connectivity), the matched node is force-revealed on the board with a
+dashed pill border, ensuring the visible match count and the rendered board can't contradict each
+other.
+
+**Rationale:** The swim-lane board hides zero-degree and low-degree (≤1) nodes by default
+(design-notes.md §23) to keep large vaults legible on one screen. Hiding a genuine search match
+would put the match-count UI (e.g., "12 matching pages") at odds with what's actually on screen,
+recreating the silent-omission failure mode this epic exists to fix, just relocated to search.
+Dashed styling (reusing the visual language of click-to-reveal) indicates the node is peripheral,
+not a "normal" board resident. Implemented in Epic W677sOY.
+
+---
+
+## 35. Known Issues and Deferred Work
 
 - **Error handling for query embedding failure:** `useSearchRanking.ts` has no error boundary for
   `embedQuery()` rejection (offline first visit, unsupported browser). On model-load failure, the
