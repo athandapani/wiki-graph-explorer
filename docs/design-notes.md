@@ -431,38 +431,7 @@ not literal syntax. Implemented in `lib/frontmatter-parser.ts` (Epic Dj3m8aH).
 
 ---
 
-## 33. Swim-Lane Search Dimming: Centralized Shared Logic
-
-**Decision:** A single exported pure function `computeSearchDimmedNodeIds()` (in
-`components/graph/useSearchRanking.ts`) is the authoritative decision point for dimming
-non-matching nodes. Both `GraphCanvas` (force-directed) and `SwimLaneCanvas` (swim-lane) import
-and call the same function, guaranteeing identical search-filtering behavior across layout modes.
-
-**Rationale:** Early swim-lane implementation silently omitted search dimming entirely (issue #4,
-finding A1) because the logic existed only inside `GraphCanvas`. Centralizing and exporting the
-decision ensures it's applied identically to both canvases and prevents future divergence. The
-function signature is stable and pure (no side effects), making it easy for either canvas to call
-it independently. Implemented in Epic W677sOY.
-
----
-
-## 34. Search-Match Visibility in Swim-Lane: Force-Reveal with Dashed Styling
-
-**Decision:** When a semantic search query matches a page that the swim-lane board would normally
-hide (due to zero-degree connectivity), the matched node is force-revealed on the board with a
-dashed pill border, ensuring the visible match count and the rendered board can't contradict each
-other.
-
-**Rationale:** The swim-lane board hides zero-degree and low-degree (≤1) nodes by default
-(design-notes.md §23) to keep large vaults legible on one screen. Hiding a genuine search match
-would put the match-count UI (e.g., "12 matching pages") at odds with what's actually on screen,
-recreating the silent-omission failure mode this epic exists to fix, just relocated to search.
-Dashed styling (reusing the visual language of click-to-reveal) indicates the node is peripheral,
-not a "normal" board resident. Implemented in Epic W677sOY.
-
----
-
-## 35. Known Issues and Deferred Work
+## 33. Known Issues and Deferred Work
 
 - **Error handling for query embedding failure:** `useSearchRanking.ts` has no error boundary for
   `embedQuery()` rejection (offline first visit, unsupported browser). On model-load failure, the
