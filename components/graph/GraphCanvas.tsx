@@ -66,9 +66,13 @@ function getRelatedIds(nodeId: string, edges: GraphEdge[]): string[] {
   return related;
 }
 
-const NODE_RADIUS = 5;
-const LABEL_FONT_SIZE = 3.4;
-const LABEL_GAP = 1.5;
+const NODE_RADIUS = 2.5;
+// Constant on-screen pixel size (not world-space units) so a label is legible whenever it's
+// shown, regardless of what zoom level the current fit happens to land on — a real vault
+// with far-flung disconnected nodes can force a fit zoom well under 1, where a world-space
+// font would rasterize at a couple of illegible pixels.
+const LABEL_SCREEN_SIZE_PX = 11;
+const LABEL_SCREEN_GAP_PX = 6;
 const CLICK_ZOOM_LEVEL = 6;
 const CLICK_ZOOM_DURATION_MS = 900;
 const INITIAL_FIT_DURATION_MS = 400;
@@ -98,9 +102,6 @@ const FIT_CHASE_INTERVAL_MS = 300;
 // so a shorter chase window converges on a partial, still-expanding layout and clips nodes that
 // settle into place afterward.
 const FIT_CHASE_DURATION_MS = 9000;
-// Below this react-force-graph-2d zoom level, node labels overlap into unreadable text at
-// real vault scale — hidden below the threshold, restored above it.
-const LABEL_ZOOM_THRESHOLD = 2;
 const SELECTION_RING_OFFSET = 2;
 const SELECTION_RING_WIDTH = 1.5;
 // Shared accent for "this is the focused/emphasized thing" — matches the existing blue
@@ -146,6 +147,16 @@ export default function GraphCanvas({
   );
 
   const chaseIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Reset every frame via onRenderFramePre; accumulates each drawn label's bounding box so a
+  // later node in this same frame can skip its own label if it would overlap one already
+  // drawn. This is the sole mechanism gating label visibility (no separate zoom threshold):
+  // it naturally hides labels when nodes are packed too closely on-screen to read — whether
+  // that's the pre-fit chaos before layout settles, a tightly-linked sub-cluster still
+  // cramped at whatever zoom a real vault's fit lands on, or a visitor deliberately zooming
+  // out — and lets them reappear as soon as zooming in gives them room, all driven by actual
+  // on-screen crowding rather than a fragile snapshot of "the zoom a fit settled at" (which a
+  // still-expanding physics simulation or a re-triggered chase can invalidate moments later).
+  const drawnLabelRectsRef = useRef<{ x1: number; y1: number; x2: number; y2: number }[]>([]);
 
   // Re-fits repeatedly for FIT_CHASE_DURATION_MS after being triggered, rather than a single
   // snapshot-in-time zoomToFit call — see FIT_CHASE_INTERVAL_MS above for why. A new trigger
@@ -211,6 +222,9 @@ export default function GraphCanvas({
     <ForceGraph2D
       ref={graphRef}
       graphData={{ nodes, links: edges }}
+      onRenderFramePre={() => {
+        drawnLabelRectsRef.current = [];
+      }}
       nodeLabel={(node: NodeObject<GraphNode>) => `${node.title} · ${node.status}`}
       linkColor={(link: GraphEdge) => {
         if (!focusedNodeId) {
@@ -248,12 +262,32 @@ export default function GraphCanvas({
           ctx.stroke();
         }
 
-        if (globalScale >= LABEL_ZOOM_THRESHOLD) {
-          ctx.font = `${LABEL_FONT_SIZE}px sans-serif`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "top";
-          ctx.fillStyle = isDark ? "#ededed" : "#171717";
-          ctx.fillText(node.title, x, y + radius + LABEL_GAP);
+        {
+          // Sized/offset in screen pixels rather than world units, so the label is a constant,
+          // legible size regardless of the current zoom level.
+          const fontSize = LABEL_SCREEN_SIZE_PX / globalScale;
+          ctx.font = `${fontSize}px sans-serif`;
+          const textWidth = ctx.measureText(node.title).width;
+          const labelTop = y + radius + LABEL_SCREEN_GAP_PX / globalScale;
+          const rect = {
+            x1: x - textWidth / 2,
+            y1: labelTop,
+            x2: x + textWidth / 2,
+            y2: labelTop + fontSize,
+          };
+          // Skip a label that would overlap one already drawn this frame, rather than let them
+          // stack into unreadable text — this is the sole gate on label visibility (see
+          // drawnLabelRectsRef above for why there's no separate zoom threshold).
+          const overlapsDrawnLabel = drawnLabelRectsRef.current.some(
+            (drawn) => rect.x1 < drawn.x2 && rect.x2 > drawn.x1 && rect.y1 < drawn.y2 && rect.y2 > drawn.y1,
+          );
+          if (!overlapsDrawnLabel) {
+            ctx.textAlign = "center";
+            ctx.textBaseline = "top";
+            ctx.fillStyle = isDark ? "#ededed" : "#171717";
+            ctx.fillText(node.title, x, labelTop);
+            drawnLabelRectsRef.current.push(rect);
+          }
         }
 
         ctx.globalAlpha = 1;
