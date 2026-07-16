@@ -84,4 +84,10 @@ describe("components/graph/GraphCanvas.tsx", () => {
     expect(source.match(/const radius = NODE_RADIUS \* \(radiusScaleByNodeId\?\.get\(node\.id\) \?\? 1\);/g)?.length).toBe(2);
     expect(source).toContain("ctx.arc(x, y, radius, 0, 2 * Math.PI);");
   });
+
+  it("TOR-04-1iMsnYq: centers/zooms to an externally focused node (e.g. a SidePanel chip click), reusing the same click-zoom constants", () => {
+    expect(source).toContain("focusedNodeId?: string | null");
+    expect(source).toMatch(/useEffect\(\(\) => \{[\s\S]*?focusedNodeId[\s\S]*?centerAt[\s\S]*?CLICK_ZOOM_DURATION_MS[\s\S]*?\}, \[focusedNodeId, nodes\]\);/);
+    expect(source).toMatch(/graphRef\.current\?\.zoom\(CLICK_ZOOM_LEVEL, CLICK_ZOOM_DURATION_MS\)/);
+  });
 });

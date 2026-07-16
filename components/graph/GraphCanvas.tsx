@@ -10,6 +10,7 @@ export interface GraphNode {
   title: string;
   tags: string[];
   status: string;
+  description: string;
   folder: string;
   path: string;
 }
@@ -28,7 +29,12 @@ interface GraphCanvasProps {
   isDark?: boolean;
   filteredOutNodeIds?: Set<string> | null;
   radiusScaleByNodeId?: Map<string, number> | null;
+  focusedNodeId?: string | null;
 }
+
+// react-force-graph-2d/d3-force mutate each node object in place to add its simulated
+// x/y position — the same mutation pattern documented for edge endpoints in SidePanel.
+type PositionedNode = GraphNode & { x?: number; y?: number };
 
 const NODE_RADIUS = 5;
 const LABEL_FONT_SIZE = 3.4;
@@ -60,6 +66,7 @@ export default function GraphCanvas({
   isDark = false,
   filteredOutNodeIds,
   radiusScaleByNodeId,
+  focusedNodeId,
 }: GraphCanvasProps) {
   const graphRef = useRef<ForceGraphMethods<GraphNode, GraphEdge> | undefined>(undefined);
 
@@ -74,6 +81,18 @@ export default function GraphCanvas({
     );
     (graphRef.current?.d3Force("link") as DistanceForce | undefined)?.distance(LINK_DISTANCE);
   }, []);
+
+  // Lets an externally driven selection (e.g. a chip clicked in SidePanel) trigger the same
+  // center/zoom treatment a direct canvas click already triggers via onNodeClick below.
+  useEffect(() => {
+    if (!focusedNodeId) return;
+    const target = nodes.find((candidate) => candidate.id === focusedNodeId) as
+      | PositionedNode
+      | undefined;
+    if (!target) return;
+    graphRef.current?.centerAt(target.x ?? 0, target.y ?? 0, CLICK_ZOOM_DURATION_MS);
+    graphRef.current?.zoom(CLICK_ZOOM_LEVEL, CLICK_ZOOM_DURATION_MS);
+  }, [focusedNodeId, nodes]);
 
   return (
     <ForceGraph2D

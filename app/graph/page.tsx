@@ -132,6 +132,7 @@ export default function GraphPage() {
                         folderFilter,
                       )}
                       radiusScaleByNodeId={computeRadiusScale(graphData.nodes, graphData.edges)}
+                      focusedNodeId={selectedNode?.id ?? null}
                     />
                   )}
                 </div>
@@ -146,6 +147,7 @@ export default function GraphPage() {
                     isDark={isDark}
                     searchScores={scores}
                     relevanceThreshold={RELEVANCE_THRESHOLD}
+                    focusedNodeId={selectedNode?.id ?? null}
                   />
                 </div>
               </>
@@ -155,7 +157,9 @@ export default function GraphPage() {
             node={selectedNode}
             edges={graphData?.edges ?? []}
             allNodes={graphData?.nodes ?? []}
+            isDark={isDark}
             onClose={() => setSelectedNode(null)}
+            onSelectNode={setSelectedNode}
           />
         </div>
       </div>

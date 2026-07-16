@@ -94,4 +94,15 @@ describe("components/graph/SwimLaneCanvas.tsx", () => {
   it("renders the connector-line svg behind the pill nodes (negative z-index)", () => {
     expect(source).toContain('className="pointer-events-none absolute inset-0 -z-10 h-full w-full"');
   });
+
+  it("TOR-04-1iMsnYq: syncs activeNodeId from an externally focused node (e.g. a SidePanel chip click), one-way and non-null-only", () => {
+    expect(source).toContain("focusedNodeId?: string | null");
+    // Adjusted during render (not inside useEffect) per React's props->state sync pattern.
+    expect(source).toContain("if (focusedNodeId !== prevFocusedNodeId)");
+    expect(source).toMatch(/if \(focusedNodeId !== prevFocusedNodeId\) \{\s*setPrevFocusedNodeId\(focusedNodeId\);\s*if \(focusedNodeId != null\) \{\s*setActiveNodeId\(focusedNodeId\);/);
+    // Regression guard: TOR-06-RlMt9hc forbids a camera/pan-zoom API in this file.
+    expect(source).not.toContain("centerAt");
+    expect(source).not.toContain("zoomToFit");
+    expect(source).not.toContain(".zoom(");
+  });
 });

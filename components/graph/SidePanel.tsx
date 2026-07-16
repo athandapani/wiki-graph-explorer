@@ -2,13 +2,17 @@
 
 import { getGithubSourceUrl } from "../../lib/github-source-link";
 import type { GraphEdge, GraphNode } from "./GraphCanvas";
+import { getFolderColor } from "./nodeColor";
+import { PillNode } from "./PillNode";
 import { StatusDot } from "./StatusDot";
 
 interface SidePanelProps {
   node: GraphNode | null;
   edges: GraphEdge[];
   allNodes: GraphNode[];
+  isDark: boolean;
   onClose: () => void;
+  onSelectNode: (node: GraphNode) => void;
 }
 
 type EdgeEndpoint = string | { id: string };
@@ -33,7 +37,20 @@ export function getRelatedNodeIds(nodeId: string, edges: GraphEdge[]): string[] 
   return relatedIds;
 }
 
-export function SidePanel({ node, edges, allNodes, onClose }: SidePanelProps) {
+export function groupNodesByFolder(nodes: GraphNode[]): { folder: string; nodes: GraphNode[] }[] {
+  const order: string[] = [];
+  const grouped = new Map<string, GraphNode[]>();
+  for (const node of nodes) {
+    if (!grouped.has(node.folder)) {
+      order.push(node.folder);
+      grouped.set(node.folder, []);
+    }
+    grouped.get(node.folder)?.push(node);
+  }
+  return order.map((folder) => ({ folder, nodes: grouped.get(folder) ?? [] }));
+}
+
+export function SidePanel({ node, edges, allNodes, isDark, onClose, onSelectNode }: SidePanelProps) {
   const relatedNodes = node
     ? getRelatedNodeIds(node.id, edges)
         .map((id) => allNodes.find((candidate) => candidate.id === id))
@@ -57,6 +74,18 @@ export function SidePanel({ node, edges, allNodes, onClose }: SidePanelProps) {
             <StatusDot status={node.status} />
             <span className="text-sm">{node.status}</span>
           </div>
+          {node.folder ? (
+            <span
+              className="mt-2 inline-block rounded-full border px-2 py-0.5 text-xs font-medium"
+              style={{
+                backgroundColor: `${getFolderColor(node.folder, isDark)}${isDark ? "33" : "1f"}`,
+                borderColor: getFolderColor(node.folder, isDark),
+                color: getFolderColor(node.folder, isDark),
+              }}
+            >
+              {node.folder}
+            </span>
+          ) : null}
           {node.tags.length > 0 && (
             <ul className="mt-2 flex flex-wrap gap-1">
               {node.tags.map((tag) => (
@@ -66,15 +95,33 @@ export function SidePanel({ node, edges, allNodes, onClose }: SidePanelProps) {
               ))}
             </ul>
           )}
-          <h3 className="mt-4 text-sm font-semibold">Related</h3>
+          {node.description ? (
+            <p className="mt-3 text-sm text-foreground/80">{node.description}</p>
+          ) : null}
+          <h3 className="mt-4 text-sm font-semibold">Connected pages</h3>
           {relatedNodes.length > 0 ? (
-            <ul className="mt-1 text-sm">
-              {relatedNodes.map((related) => (
-                <li key={related.id}>{related.title}</li>
+            <div className="mt-1 space-y-3">
+              {groupNodesByFolder(relatedNodes).map(({ folder, nodes: folderNodes }) => (
+                <div key={folder}>
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-foreground/60">
+                    {folder || "Other"}
+                  </h4>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {folderNodes.map((related) => (
+                      <PillNode
+                        key={related.id}
+                        node={related}
+                        isActive={false}
+                        isDark={isDark}
+                        onClick={onSelectNode}
+                      />
+                    ))}
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
           ) : (
-            <p className="mt-1 text-sm text-foreground/60">No related pages.</p>
+            <p className="mt-1 text-sm text-foreground/60">No connected pages.</p>
           )}
           <a
             href={getGithubSourceUrl(node.path)}
