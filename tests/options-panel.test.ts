@@ -30,4 +30,11 @@ describe("components/graph/OptionsPanel.tsx", () => {
       /\{layoutMode === "force-directed" && \(\s*<button[\s\S]*?onClick=\{onResetView\}[\s\S]*?Reset view[\s\S]*?<\/button>\s*\)\}/,
     );
   });
+
+  it("TOR-06-DRtjcOk: renders an icon-only hamburger button with an accessible label, not a text label", () => {
+    expect(source).toContain('aria-label="Options & help"');
+    expect(source).toContain("<svg");
+    expect(source.match(/<line /g)?.length).toBe(3);
+    expect(source).not.toContain("Options &amp; help");
+  });
 });

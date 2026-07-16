@@ -26,10 +26,23 @@ export function OptionsPanel({
       <button
         type="button"
         aria-expanded={isOpen}
+        aria-label="Options & help"
         onClick={() => setIsOpen((open) => !open)}
-        className="rounded border border-black/10 px-3 py-1.5 text-sm dark:border-white/10"
+        className="rounded border border-black/10 p-2 dark:border-white/10"
       >
-        Options &amp; help
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.75}
+          strokeLinecap="round"
+          className="h-5 w-5"
+          aria-hidden="true"
+        >
+          <line x1="4" y1="7" x2="20" y2="7" />
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <line x1="4" y1="17" x2="20" y2="17" />
+        </svg>
       </button>
       {isOpen && (
         <>
