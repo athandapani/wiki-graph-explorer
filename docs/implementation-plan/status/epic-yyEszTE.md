@@ -1,5 +1,5 @@
-status: Implemented
+status: Complete
 implemented: 2026-07-17
-completed: —
-handoff: session-handoffs/epic-yyEszTE-implemented.md
+completed: 2026-07-17
+handoff: session-handoffs/epic-yyEszTE-complete.md
 requirements: TOR-07-Ht6rMqL
