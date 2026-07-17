@@ -112,18 +112,22 @@ design-notes.md §19 for the implementation details of this resolution.
 
 ---
 
-## 10. GitHub Actions Deployment Safety: Hardcoded Public Vault Path
+## 10. GitHub Actions Deployment Safety: Hardcoded External Vault Path
 
-**Decision:** The GitHub Actions workflow (`.github/workflows/deploy.yml`) hardcodes the vault
-path as `--vault public-vault/wiki` with no override mechanism. The output directory is also
-hardcoded as `--out public`. These values are not configurable via secrets, environment
-variables, or workflow inputs.
+**Decision:** The GitHub Actions workflow (`.github/workflows/deploy.yml`) uses two checkout
+steps: the primary `actions/checkout@v4` for this repo, and a secondary `actions/checkout@v4`
+step that fetches `athandapani/ai-adoption-wiki` at `path: ../ai-adoption-wiki`. The build
+tool is then invoked with a hardcoded, literal vault path: `--vault ../ai-adoption-wiki/wiki`.
+The output directory is also hardcoded as `--out public`. These values are not configurable
+via secrets, environment variables, or workflow inputs.
 
 **Rationale:** Vault contents are sensitive and can contain PII. Hardcoding the public vault
-path eliminates the risk of accidentally deploying the wrong vault due to misconfigured
-secrets or environment variables. A one-time manual deployment from a different vault would
-require editing the workflow file, making the deployment decision explicit and reviewable
-before push.
+path (and the mechanism to fetch it) eliminates the risk of accidentally deploying the wrong
+vault due to misconfigured secrets or environment variables. A one-time manual deployment
+from a different vault would require editing the workflow file, making the deployment decision
+explicit and reviewable before push. The cross-repo checkout step makes the external vault a
+stable dependency of the build process, resolved at the same commit/branch as this repo's
+workflow definition.
 
 ---
 
@@ -209,9 +213,15 @@ but doesn't prevent build-time imports.
 
 ## 17. GitHub Source Link Construction: Hardcoded Repository Constants
 
-**Decision:** The `lib/github-source-link.ts` module builds GitHub "View source on GitHub" URLs by concatenating hardcoded owner, repo name, branch, and vault-subpath constants, rather than deriving them from `git remote` or environment variables at runtime.
+**Decision:** The `lib/github-source-link.ts` module builds GitHub "View source on GitHub" URLs
+by concatenating hardcoded owner, repo name, branch, and vault-subpath constants, rather than
+deriving them from `git remote` or environment variables at runtime. Current values:
+- `GITHUB_OWNER = "athandapani"`
+- `GITHUB_REPO = "ai-adoption-wiki"` (the external public demo vault repo)
+- `GITHUB_BRANCH = "master"`
+- `VAULT_SUBPATH = "wiki"` (the vault root directory within the repo)
 
-**Rationale:** The application is a static export with no server runtime in production (design-notes.md §2). Reading `git remote` at runtime is impossible in a static HTML/CSS/JS deployment. Pre-computing and hardcoding these values is consistent with the existing precedent of hardcoding deployment-sensitive paths (the CI/CD workflow's `--vault` and `--out` flags; see design-notes.md §10). This makes the GitHub link a build-time constant, identical across all deployments of the same version.
+**Rationale:** The application is a static export with no server runtime in production (design-notes.md §2). Reading `git remote` at runtime is impossible in a static HTML/CSS/JS deployment. Pre-computing and hardcoding these values is consistent with the existing precedent of hardcoding deployment-sensitive paths (the CI/CD workflow's `--vault` and `--out` flags; see design-notes.md §10). This makes the GitHub link a build-time constant, identical across all deployments of the same version. The constants must remain in sync with the cross-repo checkout step in `.github/workflows/deploy.yml` — changes to either the vault repository or its subpath structure require coordinated updates to both files.
 
 ---
 
