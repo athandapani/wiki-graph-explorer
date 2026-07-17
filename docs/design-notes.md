@@ -255,19 +255,47 @@ that naturally preserves both canvases' internal state.
 ## 21. Always-Visible Side Panel (Not Slide-In Overlay)
 
 **Decision:** The side panel (`SidePanel.tsx`) is rendered as an always-visible flex column in the
-right sidebar of `/graph`, appearing alongside the graph canvases at all times. It displays a
-placeholder message when no node is selected, and updates to show node details when a node is
-clicked. There is no slide-in animation or overlay behavior.
+right sidebar of `/graph`, appearing alongside the graph canvases at all times. When no node is
+selected, it displays a "Start anywhere" onboarding card: a title, a built-from line naming the
+page/folder count (e.g., "This map is built from 47 interlinked wiki pages across 5 folders"), a
+folder legend (colored to match the graph taxonomy) plus a status legend (active/revisiting/dormant
+visual indicators via `StatusDot` components), both managed by the new `Legend.tsx` component, and
+a concrete first-move suggestion ("Not sure where to start? Try clicking a brightly-colored,
+well-connected node, or search for a topic above."). When a node is clicked, the panel updates to
+show the node's details (title, status, folder badge, tags, description) and a "Connected pages"
+section listing directly related nodes as clickable chips grouped by folder. There is no
+slide-in animation or overlay behavior.
 
 **Rationale:** This keeps related-nodes and source-link information persistently discoverable
 without requiring a click-to-reveal interaction. The always-visible design supports the
 accessibility goal (visitor can verify page content sourcing at any time) and reduces
 interaction complexity. Previous designs using slide-in overlays risked obscuring the graph
-during exploration; the sidebar layout avoids this and scales well to larger vaults.
+during exploration; the sidebar layout avoids this and scales well to larger vaults. The
+"Start anywhere" onboarding card (replacing a blank placeholder) surfaces the graph's scale and
+structure at first glance, guiding new visitors on how to begin exploring without requiring
+external instructions or clicks (Epic TakRqyO).
 
 ---
 
-## 24. Swim-Lane Rendering: Custom SVG/CSS, Not react-force-graph-2d Fixed Mode
+## 22. Footer Provenance Sentence and Esc-Hint (Graph Page Only)
+
+**Decision:** The `Footer.tsx` component accepts optional `nodeCount`, `edgeCount`, and `sourceCount`
+props. When these props are present (as on the `/graph` page), the footer renders a provenance
+sentence: "Built from K raw sources → Y wiki pages and Z connections" when `sourceCount` is truthy,
+or "Y wiki pages · Z connections" when `sourceCount` is null/0. Below the provenance sentence, it
+renders an "Esc to reset" hint explaining the behavior (clears search, closes menus, deselects
+current node). The version string (`wiki-graph-explorer v<semver>`) always appears. When the props
+are omitted (as on the home page `/`), the footer renders only the version string, keeping the home
+page's footer minimal and uncluttered.
+
+**Rationale:** The `/graph` page's provenance sentence explicitly names the vault's scale and source
+count, helping visitors understand what they're exploring at a glance (Epic TakRqyO). The "Esc to
+reset" hint surfaces a keyboard shortcut that many visitors might not discover otherwise, improving
+discoverability of the reset functionality (which clears active search highlights, closes the Options
+panel, and deselects any focused node). Gating both the provenance sentence and Esc hint behind
+optional props allows the home page to remain visually simple (version only) without coupling its
+design to graph-specific features. The single-source-of-truth version is always present, enabling
+portfolio-visibility tracking across the entire site.
 
 **Decision:** The swim-lane layout is implemented via a custom React component (`SwimLaneCanvas.tsx`)
 using real DOM text for pill titles (not canvas-based rendering), CSS flexbox for lane layout, and
