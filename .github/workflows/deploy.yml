@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: athandapani/ai-adoption-wiki
-          path: ../ai-adoption-wiki
+          path: ai-adoption-wiki
 
       - uses: actions/setup-node@v4
         with:
@@ -35,7 +35,7 @@ jobs:
 
       - run: npm run check:vault-safety
 
-      - run: npm run build:graph -- --vault ../ai-adoption-wiki/wiki --out public
+      - run: npm run build:graph -- --vault ai-adoption-wiki/wiki --out public
 
       - run: npm run build
 
