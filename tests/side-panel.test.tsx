@@ -172,3 +172,95 @@ describe("SidePanel connected pages", () => {
     expect(screen.getByText("No connected pages.")).toBeTruthy();
   });
 });
+
+describe("SidePanel start-anywhere card", () => {
+  it("TOR-08-LuQzsEi, TOR-08-xZxrwfj: displays the start-anywhere card with a folder legend spanning every distinct folder, when no node is selected", () => {
+    const allNodes = [
+      node({ id: "a", folder: "concepts" }),
+      node({ id: "b", folder: "sources" }),
+      node({ id: "c", folder: "entities" }),
+      node({ id: "d", folder: "synthesis" }),
+    ];
+
+    render(
+      <SidePanel
+        node={null}
+        edges={[]}
+        allNodes={allNodes}
+        isDark={false}
+        onClose={() => {}}
+        onSelectNode={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("Start anywhere")).toBeTruthy();
+    expect(screen.getByText("concepts")).toBeTruthy();
+    expect(screen.getByText("sources")).toBeTruthy();
+    expect(screen.getByText("entities")).toBeTruthy();
+    expect(screen.getByText("synthesis")).toBeTruthy();
+  });
+
+  it("TOR-08-hTq5dSY: displays the status legend on the start-anywhere card", () => {
+    render(
+      <SidePanel
+        node={null}
+        edges={[]}
+        allNodes={[node({ id: "a" })]}
+        isDark={false}
+        onClose={() => {}}
+        onSelectNode={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("active")).toBeTruthy();
+    expect(screen.getByText("revisiting")).toBeTruthy();
+    expect(screen.getByText("dormant")).toBeTruthy();
+  });
+
+  it("TOR-08-zwMqZzr: replaces the start-anywhere card with node detail once a node is selected", () => {
+    const selected = node({ id: "a", title: "Selected Page" });
+
+    render(
+      <SidePanel
+        node={selected}
+        edges={[]}
+        allNodes={[selected]}
+        isDark={false}
+        onClose={() => {}}
+        onSelectNode={() => {}}
+      />,
+    );
+
+    expect(screen.queryByText("Start anywhere")).toBeNull();
+    expect(screen.getByText("Selected Page")).toBeTruthy();
+  });
+
+  it("TOR-08-r0Nam2Q: restores the start-anywhere card when the selection is cleared", () => {
+    const allNodes = [node({ id: "a" })];
+    const { rerender } = render(
+      <SidePanel
+        node={allNodes[0]}
+        edges={[]}
+        allNodes={allNodes}
+        isDark={false}
+        onClose={() => {}}
+        onSelectNode={() => {}}
+      />,
+    );
+
+    expect(screen.queryByText("Start anywhere")).toBeNull();
+
+    rerender(
+      <SidePanel
+        node={null}
+        edges={[]}
+        allNodes={allNodes}
+        isDark={false}
+        onClose={() => {}}
+        onSelectNode={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("Start anywhere")).toBeTruthy();
+  });
+});

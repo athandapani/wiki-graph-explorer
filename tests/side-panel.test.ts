@@ -126,7 +126,17 @@ describe("components/graph/SidePanel.tsx", () => {
   });
 
   it("shows a placeholder prompt instead of collapsing when no node is selected", () => {
-    expect(source).toContain("Select a node to see its details");
+    expect(source).toContain("Start anywhere");
+  });
+
+  it("TOR-08-LuQzsEi: displays a 'Start anywhere' card naming what the map is built from, whenever no node is selected", () => {
+    expect(source).toContain("Start anywhere");
+    expect(source).toContain("This map is built from {allNodes.length}");
+    expect(source).toContain("<Legend");
+  });
+
+  it("TOR-08-Z2By5L0: displays a concrete first-move suggestion", () => {
+    expect(source).toContain("Not sure where to start?");
   });
 
   it("TOR-05-EmhMDFS: renders the full, untruncated related-node list so a visitor can observe sparse connections directly", () => {

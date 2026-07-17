@@ -2,6 +2,7 @@
 
 import { getGithubSourceUrl } from "../../lib/github-source-link";
 import type { GraphEdge, GraphNode } from "./GraphCanvas";
+import { Legend } from "./Legend";
 import { getFolderColor } from "./nodeColor";
 import { PillNode } from "./PillNode";
 import { StatusDot } from "./StatusDot";
@@ -133,9 +134,21 @@ export function SidePanel({ node, edges, allNodes, isDark, onClose, onSelectNode
           </a>
         </>
       ) : (
-        <p className="text-sm text-foreground/60">
-          Select a node to see its details, tags, and related pages here.
-        </p>
+        <div>
+          <h2 className="text-lg font-semibold">Start anywhere</h2>
+          <p className="mt-1 text-sm text-foreground/70">
+            This map is built from {allNodes.length} interlinked wiki pages across{" "}
+            {groupNodesByFolder(allNodes).length} folders — click any node to see its detail and
+            connections.
+          </p>
+          <div className="mt-3">
+            <Legend folders={groupNodesByFolder(allNodes).map((group) => group.folder)} isDark={isDark} />
+          </div>
+          <p className="mt-3 text-sm text-foreground/70">
+            Not sure where to start? Try clicking a brightly-colored, well-connected node, or
+            search for a topic above.
+          </p>
+        </div>
       )}
     </aside>
   );
