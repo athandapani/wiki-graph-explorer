@@ -44,7 +44,7 @@ describe("components/graph/GraphCanvas.tsx", () => {
   });
 
   it("draws each node's title as a visible label beneath it, not just in the hover tooltip", () => {
-    expect(source).toContain("ctx.fillText(node.title, x, y + radius + LABEL_GAP)");
+    expect(source).toContain("ctx.fillText(node.title, x, labelTop);");
   });
 
   it("TOR-02-pRzSHQL: fits the view to the graph once the layout engine settles", () => {
@@ -159,12 +159,43 @@ describe("components/graph/GraphCanvas.tsx", () => {
     expect(source).toContain("if (connected) return EMPHASIZED_COLOR;");
   });
 
-  it("TOR-02-NyPLTRl / TOR-02-3eqveD9: gates the node-title label draw on a minimum zoom (globalScale) threshold", () => {
+  it("TOR-02-3eqveD9: sizes labels in constant screen pixels so they're legible regardless of the current zoom level", () => {
+    // A real vault's fit-to-bounds zoom (dictated by how far outlier/disconnected nodes sit
+    // from the main cluster) can land well under 1 — live verification against second-brain
+    // (47 nodes) measured a settled fit zoom of ~1.1. A world-space font sized for legibility
+    // at typical click-zoom levels would rasterize at only a few pixels there; sizing/offsetting
+    // in screen pixels (dividing by globalScale) keeps the label a constant, legible size no
+    // matter what zoom the fit lands on.
     expect(source).toContain(
       "nodeCanvasObject={(node: NodeObject<GraphNode>, ctx: CanvasRenderingContext2D, globalScale: number) => {",
     );
+    expect(source).toContain("const fontSize = LABEL_SCREEN_SIZE_PX / globalScale;");
+    expect(source).toContain("ctx.font = `${fontSize}px sans-serif`;");
+    expect(source).toContain(
+      "const labelTop = y + radius + LABEL_SCREEN_GAP_PX / globalScale;",
+    );
+    expect(source).toContain("ctx.fillText(node.title, x, labelTop);");
+  });
+
+  it("TOR-02-NyPLTRl: skips a label that would overlap one already drawn this frame, rather than letting a tightly-linked sub-cluster's labels stack unreadably", () => {
+    // No separate zoom threshold: a real vault's fit zoom is set by how far outlier nodes sit
+    // from the main cluster, so a tightly-linked sub-cluster (nodes only LINK_DISTANCE apart)
+    // can still be too cramped for every label to render without colliding at that same zoom,
+    // and a fixed zoom constant can't tell the two situations apart. Per-frame collision
+    // suppression is the sole gate — it hides labels exactly where they'd overlap (the
+    // pre-fit chaos, a cramped sub-cluster, or a visitor zoomed out) and lets them back in
+    // once zooming in gives them room, without depending on any particular zoom number.
+    expect(source).toContain(
+      "const drawnLabelRectsRef = useRef<{ x1: number; y1: number; x2: number; y2: number }[]>([]);",
+    );
     expect(source).toMatch(
-      /if \(globalScale >= LABEL_ZOOM_THRESHOLD\) \{\s*ctx\.font = `\$\{LABEL_FONT_SIZE\}px sans-serif`;/,
+      /onRenderFramePre=\{\(\) => \{\s*drawnLabelRectsRef\.current = \[\];\s*\}\}/,
+    );
+    expect(source).toMatch(
+      /const overlapsDrawnLabel = drawnLabelRectsRef\.current\.some\(\s*\(drawn\) => rect\.x1 < drawn\.x2 && rect\.x2 > drawn\.x1 && rect\.y1 < drawn\.y2 && rect\.y2 > drawn\.y1,\s*\);/,
+    );
+    expect(source).toMatch(
+      /if \(!overlapsDrawnLabel\) \{\s*ctx\.textAlign = "center";[\s\S]*?drawnLabelRectsRef\.current\.push\(rect\);\s*\}/,
     );
   });
 });
