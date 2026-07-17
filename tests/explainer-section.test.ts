@@ -14,4 +14,10 @@ describe("components/graph/ExplainerSection.tsx", () => {
     expect(source).toMatch(/dynamic context|dynamic, relevant context|relevant context/i);
     expect(source).toMatch(/missing link|content gap|isolated/i);
   });
+
+  it("TOR-05-OMWVZWL: names force-directed mode as where the filter and node-sizing affordances live", () => {
+    expect(source).toContain("force-directed");
+    expect(source).toContain("Options &amp; help");
+    expect(source).toMatch(/force-directed[\s\S]*status\s+and\s+folder\s+filters/);
+  });
 });

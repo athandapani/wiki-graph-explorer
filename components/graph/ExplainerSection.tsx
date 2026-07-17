@@ -21,10 +21,11 @@ export function ExplainerSection() {
         Try it yourself
       </h3>
       <p className="mt-2 text-foreground/70">
-        Use the status and folder filters above the graph to isolate a cluster, then look for a
-        node that&apos;s visibly smaller than its neighbors — that&apos;s a page with markedly
-        fewer connections than its peers. Click it and check the side panel&apos;s related-pages
-        list: a short list on a page that reads like it should connect to more of the wiki is a
+        In <strong>force-directed</strong> mode (switch via Options &amp; help), use the status
+        and folder filters above the graph to isolate a cluster, then look for a node
+        that&apos;s visibly smaller than its neighbors — that&apos;s a page with markedly fewer
+        connections than its peers. Click it and check the side panel&apos;s related-pages list:
+        a short list on a page that reads like it should connect to more of the wiki is a
         missing link made concrete, not just a claim.
       </p>
     </section>

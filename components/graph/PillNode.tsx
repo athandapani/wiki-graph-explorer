@@ -31,7 +31,7 @@ export function PillNode({
       type="button"
       onClick={() => onClick(node)}
       aria-pressed={isActive}
-      className={`flex max-w-[150px] shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-all ${
+      className={`flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium transition-all ${
         isRevealed ? "border-dashed" : ""
       } ${isDimmed ? "opacity-30" : ""}`}
       style={{
@@ -41,7 +41,7 @@ export function PillNode({
       }}
     >
       <StatusDot status={node.status} />
-      <span className="truncate">{node.title}</span>
+      <span>{node.title}</span>
     </button>
   );
 }
