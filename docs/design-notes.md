@@ -542,7 +542,7 @@ not literal syntax. Implemented in `lib/frontmatter-parser.ts` (Epic Dj3m8aH).
 
 ## 45. Hamburger Icon Button for Options Menu (No Text Label)
 
-**Decision:** The "Options & help" button in the top-right corner of the graph page is rendered as an icon-only control: three horizontal lines SVG (styled with `currentColor` for automatic dark/light theme adaptation, `strokeWidth=1.75`, `strokeLinecap="round"`, matching the project's Logo.tsx SVG convention), with no visible text label. The button retains its accessible name via `aria-label="Options & help"` for screen readers and accessibility tools, ensuring no loss of clarity for assistive tech.
+**Decision:** The "Options & help" button in the top-right corner of the graph page is rendered as an icon-only control: three horizontal lines SVG (styled with `currentColor` for automatic dark/light theme adaptation, `strokeWidth=1.75`, `strokeLinecap="round"`), with no visible text label. The button retains its accessible name via `aria-label="Options & help"` for screen readers and accessibility tools, ensuring no loss of clarity for assistive tech.
 
 **Rationale:** Icon-only hamburger buttons are the modern UI convention for collapsible menus (popularized by mobile and responsive design standards). A text label takes up precious header space on both desktop and mobile; an icon is universally recognized and scales well across viewports. The `aria-label` ensures the button's purpose remains clear to assistive tech users, satisfying WCAG accessibility requirements. This satisfies TOR-06-DRtjcOk (Epic vH3Ls3h).
 
