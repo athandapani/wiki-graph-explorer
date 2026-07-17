@@ -95,7 +95,7 @@ Key implementation details:
 
 | Route | Component | Behavior |
 |---|---|---|
-| `/` | `app/page.tsx` | Home/landing page with product intro, "How to use it" instructions (swim-lane, force-directed, theme/layout toggles, semantic search), and CTA link to `/graph`. Rewritten in Epic scQi8pt away from `create-next-app` boilerplate. |
+| `/` | `app/page.tsx` | Home/landing page with product intro, "How to use it" instructions (swim-lane, force-directed, theme/layout toggles, semantic search), and CTA link to `/graph`. Desktop layout uses `lg:grid-cols-2` with text content in left column and a decorative, non-interactive `HomeHeroGraphic` SVG (abstract nodes/edges with staggered opacity-pulse animation) in right column; below `lg:` breakpoint, single column with teaser hidden (mobile-responsive polish deferred per Epic hxffZxb handoff). Originally rewritten in Epic scQi8pt away from boilerplate; hero layout added in Epic hxffZxb. |
 | `/graph` | `app/graph/page.tsx` | Main graph exploration page. Fetches `graph-data.json` and `vector-index.json` client-side via `fetch()`. Renders either a force-directed graph (via `GraphCanvas` with dynamic import `ssr: false`) or a swim-lane board (via `SwimLaneCanvas`) based on layout mode toggle. Branches to ErrorState, loading placeholder, EmptyState, or graph canvas based on fetch outcome and node count. Hosts a persistent `Header`, `OptionsPanel` (layout + theme toggles), `SearchInput` box, and an always-visible `SidePanel`. Footer displays version. Dark theme is default; theme preference persists via localStorage with anti-flash script to prevent flash of light theme on reload. |
 
 Data fetching:

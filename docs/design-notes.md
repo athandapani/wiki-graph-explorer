@@ -431,6 +431,14 @@ not literal syntax. Implemented in `lib/frontmatter-parser.ts` (Epic Dj3m8aH).
 
 ---
 
+## 38. Home Page Hero Layout: Two-Column Desktop with Decorative SVG Graphic (Epic hxffZxb)
+
+**Decision:** The home page (`app/page.tsx`) uses a two-column layout on desktop (via `lg:grid-cols-2`), with the existing product description, "How to use it" content, and CTA in the left column. A new local `HomeHeroGraphic` component renders a decorative, non-interactive SVG graphic (abstract nodes/edges representing the wiki→graph transformation) in the right column. The component is marked `aria-hidden="true"`, uses the existing `text-blue-500` accent with `currentColor` theming, and animates via a new `hero-pulse` `@keyframes` (staggered opacity pulses). Below the `lg:` breakpoint, the layout reverts to single column with the teaser hidden (`hidden lg:block`).
+
+**Rationale:** The original single-column home page layout left the right side of desktop viewports visibly empty, representing wasted vertical-screen real estate flagged in a design-flair review. A decorative, non-interactive teaser (not a functional graph preview, per Epic hxffZxb's scoped constraints) fills that space with visual interest, evoking the product's core value proposition (converting wiki backlinks into a graph). The design is intentionally low-fidelity (abstract node positions, not a real graph render) and purely decorative (`aria-hidden`) to avoid creating a false expectation that the teaser is interactive. Mobile and tablet layouts are unchanged (single column); full responsive polish beyond the mobile/desktop split is deferred per Epic hxffZxb's scope limits and covered by future Epic nB4iwQu (Responsive Layout).
+
+---
+
 ## 33. Known Issues and Deferred Work
 
 - **Force-directed layout settle time:** Against the real `second-brain` vault (47 nodes, 96 edges),
