@@ -25,6 +25,7 @@ const GraphCanvas = dynamic(() => import("@/components/graph/GraphCanvas"), { ss
 interface GraphData {
   nodes: GraphNode[];
   edges: GraphEdge[];
+  meta: { sourceCount: number | null };
 }
 
 export default function GraphPage() {
@@ -181,7 +182,15 @@ export default function GraphPage() {
         </div>
       </div>
       <ExplainerSection />
-      <Footer />
+      {graphData ? (
+        <Footer
+          nodeCount={graphData.nodes.length}
+          edgeCount={graphData.edges.length}
+          sourceCount={graphData.meta.sourceCount}
+        />
+      ) : (
+        <Footer />
+      )}
     </div>
   );
 }

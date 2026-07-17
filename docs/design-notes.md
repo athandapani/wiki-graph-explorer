@@ -266,16 +266,22 @@ that naturally preserves both canvases' internal state.
 
 **Decision:** The side panel (`SidePanel.tsx`) layout is responsive:
 - **Desktop (`md:` / 768px and above):** Rendered as an always-visible flex column in the right
-  sidebar, appearing alongside the graph canvases at all times. Displays a placeholder message
-  when no node is selected, updates to show node details when a node is clicked.
+  sidebar, appearing alongside the graph canvases at all times.
 - **Mobile (below `md:` / 768px):** Hidden by default. When a node is selected, the panel appears
   as a `position: fixed` bottom-sheet overlay (max-height: 70vh, `overflow-y: auto`) anchored to
   the bottom of the viewport. Dismissible via its existing close control. Related-nodes chips
   remain clickable to re-target the sheet to a different node.
 
-Both breakpoints share the same render logic (title, tags, status dot, folder badge, description,
-GitHub source link, and connected-pages chips) — only the CSS layout (position/sizing/visibility)
-changes.
+Both breakpoints share the same render logic. When no node is selected, both display a
+"Start anywhere" onboarding card: a title, a built-from line naming the page/folder count (e.g.,
+"This map is built from 47 interlinked wiki pages across 5 folders"), a folder legend (colored to
+match the graph taxonomy) plus a status legend (active/revisiting/dormant visual indicators via
+`StatusDot` components), both managed by the `Legend.tsx` component, and a concrete first-move
+suggestion ("Not sure where to start? Try clicking a brightly-colored, well-connected node, or
+search for a topic above."). When a node is clicked, both display the node's details (title,
+status, folder badge, tags, description, GitHub source link) and a "Connected pages" section
+listing directly related nodes as clickable chips grouped by folder — only the CSS layout
+(position/sizing/visibility) differs between breakpoints.
 
 **Rationale:** Desktop layout (sidebar, always-visible) keeps related-nodes and source-link
 information persistently discoverable without requiring interaction, supporting accessibility
@@ -285,12 +291,32 @@ where a fixed 320px sidebar crushes a narrow viewport: below 768px, the bottom-s
 full board visibility while still surfacing node details on demand. The constraint is real —
 at 390px design floor (TOR-09-ULogLhW), a 320px fixed column would occupy 82% of horizontal
 space, leaving the board a 70px sliver. The bottom-sheet approach keeps both the board and
-detail information accessible without requiring horizontal scrolling or zoom. This decision was
-implemented and independently verified during Epic nB4iwQu (Responsive Layout).
+detail information accessible without requiring horizontal scrolling or zoom (Epic nB4iwQu). The
+"Start anywhere" onboarding card (replacing a blank placeholder) surfaces the graph's scale and
+structure at first glance, guiding new visitors on how to begin exploring without requiring
+external instructions or clicks (Epic TakRqyO).
 
 ---
 
-## 24. Swim-Lane Rendering: Custom SVG/CSS, Not react-force-graph-2d Fixed Mode
+## 22. Footer Provenance Sentence and Esc-Hint (Graph Page Only)
+
+**Decision:** The `Footer.tsx` component accepts optional `nodeCount`, `edgeCount`, and `sourceCount`
+props. When these props are present (as on the `/graph` page), the footer renders a provenance
+sentence: "Built from K raw sources → Y wiki pages and Z connections" when `sourceCount` is truthy,
+or "Y wiki pages · Z connections" when `sourceCount` is null/0. Below the provenance sentence, it
+renders an "Esc to reset" hint explaining the behavior (clears search, closes menus, deselects
+current node). The version string (`wiki-graph-explorer v<semver>`) always appears. When the props
+are omitted (as on the home page `/`), the footer renders only the version string, keeping the home
+page's footer minimal and uncluttered.
+
+**Rationale:** The `/graph` page's provenance sentence explicitly names the vault's scale and source
+count, helping visitors understand what they're exploring at a glance (Epic TakRqyO). The "Esc to
+reset" hint surfaces a keyboard shortcut that many visitors might not discover otherwise, improving
+discoverability of the reset functionality (which clears active search highlights, closes the Options
+panel, and deselects any focused node). Gating both the provenance sentence and Esc hint behind
+optional props allows the home page to remain visually simple (version only) without coupling its
+design to graph-specific features. The single-source-of-truth version is always present, enabling
+portfolio-visibility tracking across the entire site.
 
 **Decision:** The swim-lane layout is implemented via a custom React component (`SwimLaneCanvas.tsx`)
 using real DOM text for pill titles (not canvas-based rendering), CSS flexbox for lane layout, and

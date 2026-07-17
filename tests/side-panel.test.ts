@@ -132,9 +132,14 @@ describe("components/graph/SidePanel.tsx", () => {
     expect(source).toContain("md:shrink-0");
   });
 
-  it("TOR-09-ULogLhW: below md, the panel is hidden entirely (not a fixed-width column) when no node is selected", () => {
+  it("TOR-09-ULogLhW: below md, the panel is a fixed bottom-sheet overlay (not a fixed-width column) when no node is selected", () => {
+    // The unselected branch is deliberately never `hidden` — merging with TOR-08-LuQzsEi
+    // (start-anywhere card must render "whenever no node is selected") revealed that hiding
+    // the panel entirely on mobile made the onboarding card unreachable there. A `fixed`
+    // overlay satisfies both: it still doesn't compete with the board for horizontal width
+    // (TOR-09-ULogLhW's actual requirement), while remaining visible (TOR-08-LuQzsEi's).
     expect(source).toContain("panelClassName = node");
-    expect(source).toContain('"hidden md:flex');
+    expect(source).toContain('"fixed inset-x-0 bottom-0 z-30 max-h-[45vh]');
   });
 
   it("TOR-09-Gx908bc: below md, selecting a node turns the panel into a fixed bottom sheet overlaying the lower viewport", () => {
@@ -144,7 +149,17 @@ describe("components/graph/SidePanel.tsx", () => {
   });
 
   it("shows a placeholder prompt instead of collapsing when no node is selected", () => {
-    expect(source).toContain("Select a node to see its details");
+    expect(source).toContain("Start anywhere");
+  });
+
+  it("TOR-08-LuQzsEi: displays a 'Start anywhere' card naming what the map is built from, whenever no node is selected", () => {
+    expect(source).toContain("Start anywhere");
+    expect(source).toContain("This map is built from {allNodes.length}");
+    expect(source).toContain("<Legend");
+  });
+
+  it("TOR-08-Z2By5L0: displays a concrete first-move suggestion", () => {
+    expect(source).toContain("Not sure where to start?");
   });
 
   it("TOR-05-EmhMDFS: renders the full, untruncated related-node list so a visitor can observe sparse connections directly", () => {
