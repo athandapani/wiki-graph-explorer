@@ -176,18 +176,20 @@ None planned — rebuild-on-publish only, no dynamic backend.
 **Deployment:** GitHub Pages via GitHub Actions workflow (`.github/workflows/deploy.yml`).
 
 **Build pipeline (triggered on push to `master`)**:
-1. Checkout code
-2. Install Node.js 20 + npm dependencies
-3. Run `npm run check:vault-safety` — scans git-tracked files for hardcoded `../second-brain` path references; exits 1 if found
-4. Run `npm run build:graph -- --vault public-vault/wiki --out public` — parses public vault, generates `graph-data.json` and `vector-index.json`, writes to `public/` directory
-5. Run `npm run build` — Next.js static export; reads JSON assets from `public/`, emits static HTML/CSS/JS to `out/`
-6. Upload `out/` to GitHub Pages artifact
-7. Deploy artifact to GitHub Pages (requires manual one-time repo settings enablement: Settings → Pages → Source: GitHub Actions)
+1. Checkout code (this repo: `wiki-graph-explorer`)
+2. Checkout external public vault (secondary `actions/checkout@v4` step fetches `athandapani/ai-adoption-wiki` repo at `path: ../ai-adoption-wiki`)
+3. Install Node.js 20 + npm dependencies
+4. Run `npm run check:vault-safety` — scans git-tracked files for hardcoded `../second-brain` path references; exits 1 if found
+5. Run `npm run build:graph -- --vault ../ai-adoption-wiki/wiki --out public` — parses external vault, generates `graph-data.json` and `vector-index.json`, writes to `public/` directory
+6. Run `npm run build` — Next.js static export; reads JSON assets from `public/`, emits static HTML/CSS/JS to `out/`
+7. Upload `out/` to GitHub Pages artifact
+8. Deploy artifact to GitHub Pages (requires manual one-time repo settings enablement: Settings → Pages → Source: GitHub Actions)
 
 **Key constraints:**
-- Vault path is hardcoded in workflow (`public-vault/wiki`) with no override mechanism — prevents accidental deployment of private vault content.
+- Vault path is hardcoded in workflow (`../ai-adoption-wiki/wiki`) with no override mechanism — prevents accidental deployment of private vault content. The workflow uses a secondary `actions/checkout@v4` step to fetch the external vault at a sibling path before the build step, allowing a single literal `--vault` argument to reference it.
 - Output directory is hardcoded as `public` — becomes the fetch root for client-side JSON asset requests.
 - No container runtime in production; deployed artifact is pure static files.
+- In-repo `public-vault/` 2-page placeholder was retired in epic iv5GPN9 — all builds now target the external vault only.
 
 ---
 
