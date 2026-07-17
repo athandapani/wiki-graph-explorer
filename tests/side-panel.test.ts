@@ -118,11 +118,29 @@ describe("components/graph/SidePanel.tsx", () => {
     expect(source).toContain("View source on GitHub");
   });
 
-  it("takes up real layout space instead of overlaying/blocking content, and stays visible at all times", () => {
+  it("at desktop widths (md+), takes up real layout space instead of overlaying/blocking content, and stays visible at all times regardless of selection", () => {
+    // Updated for TOR-09-ULogLhW/TOR-09-Gx908bc (epic nB4iwQu): the panel is now genuinely
+    // `fixed` below md as a bottom sheet — that's the point of this epic, not a regression. What
+    // must still never happen, at any breakpoint, is a slide-off-screen drawer (translate-x) or a
+    // naive width-collapse toggle; and at md+ specifically, the panel must remain a real in-flow
+    // column exactly as before.
     expect(source).not.toContain("fixed top-0 right-0");
     expect(source).not.toContain("translate-x");
-    expect(source).toContain('className="h-full w-80 shrink-0');
     expect(source).not.toContain('"w-80" : "w-0"');
+    expect(source).toContain("md:static");
+    expect(source).toContain("md:w-80");
+    expect(source).toContain("md:shrink-0");
+  });
+
+  it("TOR-09-ULogLhW: below md, the panel is hidden entirely (not a fixed-width column) when no node is selected", () => {
+    expect(source).toContain("panelClassName = node");
+    expect(source).toContain('"hidden md:flex');
+  });
+
+  it("TOR-09-Gx908bc: below md, selecting a node turns the panel into a fixed bottom sheet overlaying the lower viewport", () => {
+    expect(source).toContain('"fixed inset-x-0 bottom-0');
+    expect(source).toContain("max-h-[70vh]");
+    expect(source).toContain("overflow-y-auto");
   });
 
   it("shows a placeholder prompt instead of collapsing when no node is selected", () => {

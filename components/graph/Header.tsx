@@ -16,14 +16,14 @@ interface HeaderProps {
 export function Header({ search, tagline }: HeaderProps = {}) {
   return (
     <header className="flex shrink-0 flex-col gap-1 border-b border-black/10 px-4 py-3 dark:border-white/10">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <Link href="/" className="flex shrink-0 items-center gap-2">
           <Logo className="h-6 w-6 text-[var(--accent)]" />
           <span className={tagline ? "text-xl font-bold" : "text-lg font-semibold"}>
             Wiki Graph Explorer
           </span>
         </Link>
-        {search}
+        {search ? <div className="min-w-0 flex-1">{search}</div> : null}
       </div>
       {tagline ? <p className="text-sm text-foreground/70">{tagline}</p> : null}
     </header>

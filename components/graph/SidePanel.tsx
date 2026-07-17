@@ -57,8 +57,17 @@ export function SidePanel({ node, edges, allNodes, isDark, onClose, onSelectNode
         .filter((candidate): candidate is GraphNode => candidate !== undefined)
     : [];
 
+  // Below md (768px), the panel behaves like a mobile bottom sheet instead of a side column: it
+  // takes zero space (hidden) until a node is selected, then overlays the lower portion of the
+  // viewport (fixed, capped height) — never a fixed-width column competing with the board for the
+  // 390px design floor (TOR-09-ULogLhW). At md and up, it's always a static in-flow column exactly
+  // as before, regardless of selection, so the desktop experience is unchanged.
+  const panelClassName = node
+    ? "fixed inset-x-0 bottom-0 z-30 max-h-[70vh] overflow-y-auto rounded-t-lg border-t border-black/10 bg-background p-4 text-foreground shadow-lg dark:border-white/10 md:static md:inset-auto md:z-auto md:h-full md:max-h-none md:w-80 md:shrink-0 md:rounded-none md:border-t-0 md:border-l"
+    : "hidden md:flex md:h-full md:w-80 md:shrink-0 md:flex-col md:overflow-y-auto md:border-l md:border-black/10 md:bg-background md:p-4 md:text-foreground md:shadow-lg dark:md:border-white/10";
+
   return (
-    <aside className="h-full w-80 shrink-0 overflow-y-auto border-l border-black/10 bg-background p-4 text-foreground shadow-lg dark:border-white/10">
+    <aside className={panelClassName}>
       {node ? (
         <>
           <button
