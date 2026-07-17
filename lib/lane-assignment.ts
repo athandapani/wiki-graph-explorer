@@ -4,18 +4,35 @@ const OTHER_LANE_NAME = "Other";
 export interface Lane {
   name: string;
   nodeIds: string[];
+  hiddenNodeIds: string[];
 }
 
-export function assignLanes(nodes: { id: string; folder: string }[]): Lane[] {
+function groupByFolder(nodes: { id: string; folder: string }[]): Map<string, string[]> {
   const byFolder = new Map<string, string[]>();
   for (const node of nodes) {
     const nodeIds = byFolder.get(node.folder) ?? [];
     nodeIds.push(node.id);
     byFolder.set(node.folder, nodeIds);
   }
+  return byFolder;
+}
 
-  const sortedFolders = [...byFolder.keys()].sort((a, b) => {
-    const countDiff = byFolder.get(b)!.length - byFolder.get(a)!.length;
+// hiddenNodes carries nodes the caller has decided not to render yet (e.g. low-connectivity
+// swim-lane nodes) but that still belong to a folder/taxonomy — counted toward that lane's
+// total so a lane whose members are entirely hidden still gets a lane (heading + "+N more")
+// rather than silently vanishing (TOR-06-BxA7IRn).
+export function assignLanes(
+  nodes: { id: string; folder: string }[],
+  hiddenNodes: { id: string; folder: string }[] = [],
+): Lane[] {
+  const byFolder = groupByFolder(nodes);
+  const hiddenByFolder = groupByFolder(hiddenNodes);
+  const allFolders = new Set([...byFolder.keys(), ...hiddenByFolder.keys()]);
+
+  const sortedFolders = [...allFolders].sort((a, b) => {
+    const totalA = (byFolder.get(a)?.length ?? 0) + (hiddenByFolder.get(a)?.length ?? 0);
+    const totalB = (byFolder.get(b)?.length ?? 0) + (hiddenByFolder.get(b)?.length ?? 0);
+    const countDiff = totalB - totalA;
     return countDiff !== 0 ? countDiff : a.localeCompare(b);
   });
 
@@ -24,13 +41,15 @@ export function assignLanes(nodes: { id: string; folder: string }[]): Lane[] {
 
   const lanes: Lane[] = namedFolders.map((folder) => ({
     name: folder,
-    nodeIds: byFolder.get(folder)!,
+    nodeIds: byFolder.get(folder) ?? [],
+    hiddenNodeIds: hiddenByFolder.get(folder) ?? [],
   }));
 
   if (overflowFolders.length > 0) {
     lanes.push({
       name: OTHER_LANE_NAME,
-      nodeIds: overflowFolders.flatMap((folder) => byFolder.get(folder)!),
+      nodeIds: overflowFolders.flatMap((folder) => byFolder.get(folder) ?? []),
+      hiddenNodeIds: overflowFolders.flatMap((folder) => hiddenByFolder.get(folder) ?? []),
     });
   }
 

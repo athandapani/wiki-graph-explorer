@@ -10,7 +10,7 @@ describe("components/graph/SwimLaneCanvas.tsx", () => {
 
   it("TOR-06-6dbr9Jn: is a client component that groups nodes into lanes via assignLanes", () => {
     expect(source).toContain('"use client"');
-    expect(source).toContain("assignLanes(laneNodes)");
+    expect(source).toContain("assignLanes(laneNodes, hiddenCandidateNodes)");
   });
 
   it("TOR-06-0ZRtILL: stacks lanes vertically as full-width bands, wrapping each lane's pills within the viewport with no scrollbars", () => {
@@ -104,5 +104,31 @@ describe("components/graph/SwimLaneCanvas.tsx", () => {
     expect(source).not.toContain("centerAt");
     expect(source).not.toContain("zoomToFit");
     expect(source).not.toContain(".zoom(");
+  });
+
+  it('TOR-06-BxA7IRn: computes still-hidden candidates for the per-lane "+N more" affordance from zero- and low-degree nodes not already shown', () => {
+    expect(source).toContain("const zeroDegreeIds = useMemo(");
+    expect(source).toContain("new Set([...zeroDegreeIds, ...revealableIds])");
+  });
+
+  it('TOR-06-BxA7IRn: renders a "+N more" affordance reading the lane\'s exact hidden count', () => {
+    expect(source).toMatch(/\+\{lane\.hiddenNodeIds\.length\}\s*more/);
+  });
+
+  it('TOR-06-ihpx0Ya: omits the "+N more" affordance once a lane is expanded or has no hidden nodes', () => {
+    expect(source).toContain("!isExpanded && lane.hiddenNodeIds.length > 0 &&");
+  });
+
+  it("TOR-06-YjETzyC: activating a lane's affordance renders all its hidden nodes as clickable pills", () => {
+    expect(source).toContain("setExpandedLaneNames((prev) => new Set(prev).add(laneName))");
+    expect(source).toContain(
+      "isExpanded ? [...lane.nodeIds, ...lane.hiddenNodeIds] : lane.nodeIds",
+    );
+  });
+
+  it("TOR-06-JuNSwaW: renders each lane as a tinted rounded container with a heading and a page-count descriptor", () => {
+    expect(source).toContain("rounded-lg");
+    expect(source).toContain('backgroundColor: `${accent}${isDark ? "1a" : "0f"}`');
+    expect(source).toMatch(/\{totalCount\} page\{totalCount === 1 \? "" : "s"\} total/);
   });
 });

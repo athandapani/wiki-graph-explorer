@@ -23,4 +23,10 @@ describe("components/graph/PillNode.tsx", () => {
     expect(source).toContain("isDimmed?: boolean");
     expect(source).toContain('isDimmed ? "opacity-30" : ""');
   });
+
+  it("TOR-06-cSCqVtt: sizes the pill to its full title text, with no max-width truncation", () => {
+    expect(source).not.toContain("truncate");
+    expect(source).not.toContain("max-w-[150px]");
+    expect(source).toContain("whitespace-nowrap");
+  });
 });

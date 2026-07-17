@@ -40,10 +40,11 @@ interface ConnectorPathData {
 // rather than an always-visible node.
 const LOW_DEGREE_THRESHOLD = 1;
 
-// Every lane gets this much height guaranteed (heading + one row of pills) before the
-// remaining space is distributed proportionally by node count — otherwise a lane with
-// only a few nodes gets starved down to a sliver by lanes with many more.
-const MIN_LANE_HEIGHT_PX = 52;
+// Every lane gets this much height guaranteed (heading + descriptor + one row of pills) before
+// the remaining space is distributed proportionally by node count — otherwise a lane with only a
+// few (or zero) visible nodes gets starved down to a sliver by lanes with many more, clipping its
+// own heading/descriptor or "+N more" affordance.
+const MIN_LANE_HEIGHT_PX = 84;
 
 function ConnectorPath({
   d,
@@ -96,6 +97,7 @@ export default function SwimLaneCanvas({
   focusedNodeId,
 }: SwimLaneCanvasProps) {
   const [activeNodeId, setActiveNodeId] = useState<string | null>(focusedNodeId ?? null);
+  const [expandedLaneNames, setExpandedLaneNames] = useState<Set<string>>(new Set());
 
   // Lets an externally driven selection (e.g. a chip clicked in SidePanel) apply the same
   // active-node highlight/connector-line treatment a direct pill click already applies via
@@ -125,6 +127,19 @@ export default function SwimLaneCanvas({
     }
     return degrees;
   }, [nodes, edges]);
+
+  // Tracked separately from the base/revealable split below so the "+N more" affordance can
+  // count zero-degree nodes too (TOR-06-BxA7IRn) without touching the literal
+  // `if (degree === 0) continue;` line that TOR-06-nQ4vXsD's regression test pins.
+  const zeroDegreeIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const node of nodes) {
+      if ((degreeById.get(node.id) ?? 0) === 0) {
+        ids.add(node.id);
+      }
+    }
+    return ids;
+  }, [nodes, degreeById]);
 
   const { baseNodes, revealableIds } = useMemo(() => {
     const revealable = new Set<string>();
@@ -195,7 +210,25 @@ export default function SwimLaneCanvas({
     }
     return combined;
   }, [baseNodes, revealedNodes, searchRevealedNodes]);
-  const lanes = useMemo(() => assignLanes(laneNodes), [laneNodes]);
+
+  // Still-hidden candidates for the per-lane "+N more" affordance (TOR-06-BxA7IRn): every
+  // zero-degree or low-degree node not already shown via the existing click-reveal or
+  // search-reveal mechanisms above.
+  const hiddenCandidateNodes = useMemo(() => {
+    const onBoard = new Set(laneNodes.map((node) => node.id));
+    const candidates: GraphNode[] = [];
+    for (const id of new Set([...zeroDegreeIds, ...revealableIds])) {
+      if (onBoard.has(id)) continue;
+      const node = nodesById.get(id);
+      if (node !== undefined) candidates.push(node);
+    }
+    return candidates;
+  }, [zeroDegreeIds, revealableIds, laneNodes, nodesById]);
+
+  const lanes = useMemo(
+    () => assignLanes(laneNodes, hiddenCandidateNodes),
+    [laneNodes, hiddenCandidateNodes],
+  );
 
   useLayoutEffect(() => {
     if (activeNodeId == null || boardRef.current == null) {
@@ -234,7 +267,7 @@ export default function SwimLaneCanvas({
     }
 
     setConnectorPaths(paths);
-  }, [activeNodeId, edges, nodesById, isDark, revealableIds, laneNodes]);
+  }, [activeNodeId, edges, nodesById, isDark, revealableIds, laneNodes, expandedLaneNames]);
 
   if (nodes.length === 0) {
     return <EmptyState />;
@@ -245,8 +278,12 @@ export default function SwimLaneCanvas({
     onNodeClick?.(node);
   }
 
+  function handleExpandLane(laneName: string) {
+    setExpandedLaneNames((prev) => new Set(prev).add(laneName));
+  }
+
   return (
-    <div ref={boardRef} className="relative flex h-full flex-col overflow-hidden">
+    <div ref={boardRef} className="relative flex h-full flex-col gap-2 overflow-hidden p-2">
       <svg className="pointer-events-none absolute inset-0 -z-10 h-full w-full">
         {activeNodeId != null &&
           connectorPaths.map(({ targetId, d, color, isRevealed }) => (
@@ -258,43 +295,73 @@ export default function SwimLaneCanvas({
             />
           ))}
       </svg>
-      {lanes.map((lane) => (
-        <div
-          key={lane.name}
-          className="flex min-h-0 flex-col overflow-hidden border-b border-black/10 px-2 py-2 last:border-b-0 dark:border-white/10"
-          style={{ flexGrow: lane.nodeIds.length, flexBasis: MIN_LANE_HEIGHT_PX }}
-        >
-          <h3 className="mb-1 shrink-0 text-xs font-semibold uppercase tracking-wide text-foreground/60">
-            {lane.name} ({lane.nodeIds.length})
-          </h3>
-          <div className="flex flex-1 flex-wrap content-start gap-1 overflow-hidden">
-            {lane.nodeIds
-              .map((id) => nodesById.get(id))
-              .filter((candidate): candidate is GraphNode => candidate !== undefined)
-              .map((node) => (
-                <PillNode
-                  key={node.id}
-                  node={node}
-                  isActive={node.id === activeNodeId}
-                  isDark={isDark}
-                  isRevealed={revealableIds.has(node.id) || searchRevealedIds.has(node.id)}
-                  isDimmed={
-                    (highlightedIds != null && !highlightedIds.has(node.id)) ||
-                    searchDimmedIds.has(node.id)
-                  }
-                  onClick={handlePillClick}
-                  pillRef={(el) => {
-                    if (el) {
-                      pillRefs.current.set(node.id, el);
-                    } else {
-                      pillRefs.current.delete(node.id);
+      {lanes.map((lane) => {
+        const isExpanded = expandedLaneNames.has(lane.name);
+        const visibleIds = isExpanded ? [...lane.nodeIds, ...lane.hiddenNodeIds] : lane.nodeIds;
+        const totalCount = lane.nodeIds.length + lane.hiddenNodeIds.length;
+        const accent = getFolderColor(lane.name, isDark);
+
+        return (
+          <div
+            key={lane.name}
+            className="flex min-h-0 flex-col overflow-hidden rounded-lg px-3 py-2"
+            style={{
+              flexGrow: visibleIds.length,
+              flexBasis: MIN_LANE_HEIGHT_PX,
+              backgroundColor: `${accent}${isDark ? "1a" : "0f"}`,
+            }}
+          >
+            <div className="mb-1 shrink-0">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-foreground/60">
+                {lane.name} ({visibleIds.length})
+              </h3>
+              <p className="text-[11px] text-foreground/50">
+                {totalCount} page{totalCount === 1 ? "" : "s"} total
+              </p>
+            </div>
+            <div className="flex flex-1 flex-wrap content-start gap-1 overflow-hidden">
+              {visibleIds
+                .map((id) => nodesById.get(id))
+                .filter((candidate): candidate is GraphNode => candidate !== undefined)
+                .map((node) => (
+                  <PillNode
+                    key={node.id}
+                    node={node}
+                    isActive={node.id === activeNodeId}
+                    isDark={isDark}
+                    isRevealed={
+                      revealableIds.has(node.id) ||
+                      searchRevealedIds.has(node.id) ||
+                      lane.hiddenNodeIds.includes(node.id)
                     }
-                  }}
-                />
-              ))}
+                    isDimmed={
+                      (highlightedIds != null && !highlightedIds.has(node.id)) ||
+                      searchDimmedIds.has(node.id)
+                    }
+                    onClick={handlePillClick}
+                    pillRef={(el) => {
+                      if (el) {
+                        pillRefs.current.set(node.id, el);
+                      } else {
+                        pillRefs.current.delete(node.id);
+                      }
+                    }}
+                  />
+                ))}
+              {!isExpanded && lane.hiddenNodeIds.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => handleExpandLane(lane.name)}
+                  aria-label={`Show ${lane.hiddenNodeIds.length} more nodes in ${lane.name}`}
+                  className="flex shrink-0 items-center rounded-full border border-dashed border-black/20 px-2.5 py-1 text-xs font-medium text-foreground/60 transition-colors hover:bg-black/10 dark:border-white/20 dark:hover:bg-white/10"
+                >
+                  +{lane.hiddenNodeIds.length} more
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

@@ -45,6 +45,59 @@ describe("assignLanes", () => {
     expect(otherLane.nodeIds.sort()).toEqual(["e1", "f1"]);
   });
 
+  it("TOR-06-BxA7IRn: reports each lane's hidden node ids separately from its visible ones", () => {
+    const visible = [
+      { id: "v1", folder: "concepts" },
+      { id: "v2", folder: "sources" },
+    ];
+    const hidden = [
+      { id: "h1", folder: "concepts" },
+      { id: "h2", folder: "concepts" },
+      { id: "h3", folder: "sources" },
+    ];
+
+    const lanes = assignLanes(visible, hidden);
+
+    const byName = Object.fromEntries(lanes.map((lane) => [lane.name, lane]));
+    expect(byName["concepts"].hiddenNodeIds.sort()).toEqual(["h1", "h2"]);
+    expect(byName["sources"].hiddenNodeIds).toEqual(["h3"]);
+  });
+
+  it("TOR-06-BxA7IRn: still produces a lane for a folder whose members are entirely hidden", () => {
+    const visible = [{ id: "v1", folder: "concepts" }];
+    const hidden = [{ id: "h1", folder: "archive" }];
+
+    const lanes = assignLanes(visible, hidden);
+
+    const archiveLane = lanes.find((lane) => lane.name === "archive");
+    expect(archiveLane).toBeDefined();
+    expect(archiveLane?.nodeIds).toEqual([]);
+    expect(archiveLane?.hiddenNodeIds).toEqual(["h1"]);
+  });
+
+  it("counts hidden nodes toward a folder's total when deciding the 4 named lanes vs 'Other'", () => {
+    const visible = [
+      { id: "a1", folder: "alpha" },
+      { id: "b1", folder: "bravo" },
+      { id: "c1", folder: "charlie" },
+      { id: "d1", folder: "delta" },
+      { id: "e1", folder: "echo" },
+    ];
+    // "echo" has 3 hidden nodes on top of its 1 visible node (total 4), outranking "delta"'s
+    // solo visible node (total 1) for the 4th named-lane slot.
+    const hidden = [
+      { id: "e2", folder: "echo" },
+      { id: "e3", folder: "echo" },
+      { id: "e4", folder: "echo" },
+    ];
+
+    const lanes = assignLanes(visible, hidden);
+
+    const namedLanes = lanes.slice(0, 4).map((lane) => lane.name);
+    expect(namedLanes).toContain("echo");
+    expect(namedLanes).not.toContain("delta");
+  });
+
   it("TOR-06-a3pVfbc: breaks ties for the 4th lane slot alphabetically by folder name", () => {
     const nodes = [
       { id: "a1", folder: "alpha" },

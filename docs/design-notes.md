@@ -271,19 +271,25 @@ during exploration; the sidebar layout avoids this and scales well to larger vau
 
 **Decision:** The swim-lane layout is implemented via a custom React component (`SwimLaneCanvas.tsx`)
 using real DOM text for pill titles (not canvas-based rendering), CSS flexbox for lane layout, and
-standard SVG `<path>` elements for connector lines. Connector-line SVG is positioned absolutely with
+standard SVG `<path>` elements for connector lines. Each lane is a rounded container with a folder-tinted
+background (10% opacity via `{folderColor}1a` dark or `{folderColor}0f` light), an `<h3>` folder heading
+(uppercase, smaller font), and a "{N} pages total" page-count descriptor. Minimum lane height is 84px
+to prevent clipping of headings/descriptors. Connector-line SVG is positioned absolutely with
 `-z-10` (negative z-index) so lines render behind pill buttons and their text labels, preventing
-visual obscuring of node titles. No use of `react-force-graph-2d` in fixed-position or
-constrained-layout mode.
+visual obscuring of node titles. Normal connector lines are solid (2px stroke), while connector lines to
+revealed low-connectivity nodes are dashed (1.5px stroke, visual distinction per design-notes.md §39).
+No use of `react-force-graph-2d` in fixed-position or constrained-layout mode.
 
 **Rationale:** `react-force-graph-2d` is designed for physics-based force-directed layouts, not for
 static, tiered swimlanes. Building a swim-lane mode on top of `react-force-graph-2d` would require
 fighting the library's simulation engine to suppress physics, resulting in fragile, unmaintainable
 code. A custom renderer using native web APIs (DOM flexbox, SVG paths, CSS animations) is simpler,
 more performant for static layouts, and provides exact control over interaction and rendering (e.g.,
-the 950ms curved connector-line animation, and z-index layering to keep lines non-occluding).
-No pan/zoom is needed in swim-lane mode (fixed layout), so the move away from `react-force-graph-2d`
-carries no UX cost and gains clarity.
+the 950ms curved connector-line animation, variable line styles for revealed vs. normal connectors,
+z-index layering to keep lines non-occluding, and explicit folder headings/descriptors). The tinted
+backgrounds and headings make the folder taxonomy visible at a glance, helping visitors understand
+the vault's structure without requiring clicks. No pan/zoom is needed in swim-lane mode (fixed layout),
+so the move away from `react-force-graph-2d` carries no UX cost and gains clarity and control.
 
 ---
 
@@ -296,11 +302,13 @@ carries no UX cost and gains clarity.
 
 Revealed low-connectivity nodes render with their `isDimmed` prop set to false; non-revealed low-connectivity nodes are excluded from the board entirely. When a visitor clicks a node with multiple edges, any of its neighbors that are low-connectivity (degree ≤ 1) are pulled into the board temporarily and rendered with a dashed border and full opacity (not dimmed) to emphasize their exception status.
 
+Additionally, lanes display a "+N more" affordance button (design-notes.md §39) when hidden nodes exist, making their count visible without requiring a click to a related node.
+
 **Rationale:** Real vaults often have many peripheral nodes (single-link or isolated content) that
 would clutter the board if displayed at default zoom. Hiding them by default keeps large vaults
 legible on one screen without scrollbars. Nodes with exactly one connection can still be discovered
-by clicking their neighbor, accessed via the related-nodes list in the side panel, or searched for
-by name. The dashed border visually marks revealed peripheral nodes as "accessed by exception," not
+by clicking their neighbor, accessed via the related-nodes list in the side panel, searched for
+by name, or revealed via the lane's "+N more" button. The dashed border visually marks revealed peripheral nodes as "accessed by exception," not
 "always there," maintaining the visual hierarchy. This satisfies the "fit on one screen" requirement
 (TOR-06-DRtjcOk) while keeping all content discoverable.
 
@@ -436,6 +444,30 @@ not literal syntax. Implemented in `lib/frontmatter-parser.ts` (Epic Dj3m8aH).
 **Decision:** The home page (`app/page.tsx`) uses a two-column layout on desktop (via `lg:grid-cols-2`), with the existing product description, "How to use it" content, and CTA in the left column. A new local `HomeHeroGraphic` component renders a decorative, non-interactive SVG graphic (abstract nodes/edges representing the wiki→graph transformation) in the right column. The component is marked `aria-hidden="true"`, uses the existing `text-blue-500` accent with `currentColor` theming, and animates via a new `hero-pulse` `@keyframes` (staggered opacity pulses). Below the `lg:` breakpoint, the layout reverts to single column with the teaser hidden (`hidden lg:block`).
 
 **Rationale:** The original single-column home page layout left the right side of desktop viewports visibly empty, representing wasted vertical-screen real estate flagged in a design-flair review. A decorative, non-interactive teaser (not a functional graph preview, per Epic hxffZxb's scoped constraints) fills that space with visual interest, evoking the product's core value proposition (converting wiki backlinks into a graph). The design is intentionally low-fidelity (abstract node positions, not a real graph render) and purely decorative (`aria-hidden`) to avoid creating a false expectation that the teaser is interactive. Mobile and tablet layouts are unchanged (single column); full responsive polish beyond the mobile/desktop split is deferred per Epic hxffZxb's scope limits and covered by future Epic nB4iwQu (Responsive Layout).
+
+---
+
+## 39. Per-Lane "+N More" Affordance: Surfacing Hidden Low-Connectivity Nodes
+
+**Decision:** In swim-lane mode, nodes with zero edges are permanently hidden (never discover-able via click). Nodes with exactly one edge are hidden by default. When a lane contains hidden nodes (zero-degree, single-edge, or both) that are not otherwise revealed via a click or search match, a "+N more" button appears in that lane showing the count of hidden nodes. Clicking the button expands the lane to reveal all hidden nodes as dashed-bordered pills (same visual language as click-reveals) with full opacity, making them discoverable without requiring a side-panel lookup or search. Once a lane is expanded, the "+N more" button disappears and remains absent for the lifetime of the page session (state is `expandedLaneNames`, a Set tracked per render, not persisted across navigation).
+
+**Rationale:** Real vaults often have many peripheral nodes (isolated or single-link content) that clutter the board if displayed at default zoom. The original design simply dropped these nodes from the board, which created the silent-omission problem the swim-lane mode was designed to avoid — a visitor searching for a page name that happened to be single-connected would see a "1 result" count but couldn't find it on the board. The "+N more" affordance surfaces these counts explicitly per lane, making the hidden content discoverable while keeping the board legible. The dashed styling (consistent with click-reveals) visually marks revealed peripheral nodes as "accessed by exception," not "always there," maintaining visual hierarchy. This satisfies TOR-06-BxA7IRn and TOR-06-YjETzyC (Epic H0q48k8).
+
+---
+
+## 40. Swim-Lane Container Styling: Tinted Backgrounds with Headings and Page-Count Descriptors
+
+**Decision:** Each swim-lane is rendered as a rounded container with a folder-tinted background (e.g., `{folderColor}1a` in dark theme, `0f` in light theme for 10% opacity tint). The container's header section includes an `<h3>` folder heading (uppercase, smaller font) and a descriptor line reading "{N} pages total" in a smaller, dimmed font. The container's `MIN_LANE_HEIGHT_PX` is set to 84 (raised from the original 52) to ensure the heading, descriptor, and "+N more" affordance are never clipped. Remaining vertical space is distributed proportionally to lanes by their visible node count via `flexGrow`.
+
+**Rationale:** The original design rendered lanes as unlabeled horizontal wraps of pills, which made the folder taxonomy implicit and hard to discover. Explicit headings with folder names make the taxonomy visible at a glance. The page-count descriptor ("17 pages total") helps visitors understand the scope of each folder without clicking through. The tinted background provides visual separation between lanes (especially important on large boards with many lanes) and subtly reinforces folder identity via color. The raised `MIN_LANE_HEIGHT_PX` prevents header/descriptor clipping when lanes have few visible nodes or are empty (e.g., all nodes are zero-degree and initially hidden). This satisfies TOR-06-JuNSwaW (Epic H0q48k8).
+
+---
+
+## 41. Hamburger Icon Button for Options Menu (No Text Label)
+
+**Decision:** The "Options & help" button in the top-right corner of the graph page is rendered as an icon-only control: three horizontal lines SVG (styled with `currentColor` for automatic dark/light theme adaptation, `strokeWidth=1.75`, `strokeLinecap="round"`, matching the project's Logo.tsx SVG convention), with no visible text label. The button retains its accessible name via `aria-label="Options & help"` for screen readers and accessibility tools, ensuring no loss of clarity for assistive tech.
+
+**Rationale:** Icon-only hamburger buttons are the modern UI convention for collapsible menus (popularized by mobile and responsive design standards). A text label takes up precious header space on both desktop and mobile; an icon is universally recognized and scales well across viewports. The `aria-label` ensures the button's purpose remains clear to assistive tech users, satisfying WCAG accessibility requirements. This satisfies TOR-06-DRtjcOk (Epic vH3Ls3h).
 
 ---
 
