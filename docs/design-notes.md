@@ -262,18 +262,31 @@ that naturally preserves both canvases' internal state.
 
 ---
 
-## 21. Always-Visible Side Panel (Not Slide-In Overlay)
+## 21. Side Panel: Responsive Layout (Desktop Sidebar, Mobile Bottom-Sheet Overlay)
 
-**Decision:** The side panel (`SidePanel.tsx`) is rendered as an always-visible flex column in the
-right sidebar of `/graph`, appearing alongside the graph canvases at all times. It displays a
-placeholder message when no node is selected, and updates to show node details when a node is
-clicked. There is no slide-in animation or overlay behavior.
+**Decision:** The side panel (`SidePanel.tsx`) layout is responsive:
+- **Desktop (`md:` / 768px and above):** Rendered as an always-visible flex column in the right
+  sidebar, appearing alongside the graph canvases at all times. Displays a placeholder message
+  when no node is selected, updates to show node details when a node is clicked.
+- **Mobile (below `md:` / 768px):** Hidden by default. When a node is selected, the panel appears
+  as a `position: fixed` bottom-sheet overlay (max-height: 70vh, `overflow-y: auto`) anchored to
+  the bottom of the viewport. Dismissible via its existing close control. Related-nodes chips
+  remain clickable to re-target the sheet to a different node.
 
-**Rationale:** This keeps related-nodes and source-link information persistently discoverable
-without requiring a click-to-reveal interaction. The always-visible design supports the
-accessibility goal (visitor can verify page content sourcing at any time) and reduces
-interaction complexity. Previous designs using slide-in overlays risked obscuring the graph
-during exploration; the sidebar layout avoids this and scales well to larger vaults.
+Both breakpoints share the same render logic (title, tags, status dot, folder badge, description,
+GitHub source link, and connected-pages chips) — only the CSS layout (position/sizing/visibility)
+changes.
+
+**Rationale:** Desktop layout (sidebar, always-visible) keeps related-nodes and source-link
+information persistently discoverable without requiring interaction, supporting accessibility
+(visitor can verify page content sourcing at any time) and reducing interaction complexity.
+Mobile layout (bottom-sheet overlay, hidden until selection) solves the responsive challenge
+where a fixed 320px sidebar crushes a narrow viewport: below 768px, the bottom-sheet preserves
+full board visibility while still surfacing node details on demand. The constraint is real —
+at 390px design floor (TOR-09-ULogLhW), a 320px fixed column would occupy 82% of horizontal
+space, leaving the board a 70px sliver. The bottom-sheet approach keeps both the board and
+detail information accessible without requiring horizontal scrolling or zoom. This decision was
+implemented and independently verified during Epic nB4iwQu (Responsive Layout).
 
 ---
 
