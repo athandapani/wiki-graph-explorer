@@ -112,18 +112,22 @@ design-notes.md §19 for the implementation details of this resolution.
 
 ---
 
-## 10. GitHub Actions Deployment Safety: Hardcoded Public Vault Path
+## 10. GitHub Actions Deployment Safety: Hardcoded External Vault Path
 
-**Decision:** The GitHub Actions workflow (`.github/workflows/deploy.yml`) hardcodes the vault
-path as `--vault public-vault/wiki` with no override mechanism. The output directory is also
-hardcoded as `--out public`. These values are not configurable via secrets, environment
-variables, or workflow inputs.
+**Decision:** The GitHub Actions workflow (`.github/workflows/deploy.yml`) uses two checkout
+steps: the primary `actions/checkout@v4` for this repo, and a secondary `actions/checkout@v4`
+step that fetches `athandapani/ai-adoption-wiki` at `path: ../ai-adoption-wiki`. The build
+tool is then invoked with a hardcoded, literal vault path: `--vault ../ai-adoption-wiki/wiki`.
+The output directory is also hardcoded as `--out public`. These values are not configurable
+via secrets, environment variables, or workflow inputs.
 
 **Rationale:** Vault contents are sensitive and can contain PII. Hardcoding the public vault
-path eliminates the risk of accidentally deploying the wrong vault due to misconfigured
-secrets or environment variables. A one-time manual deployment from a different vault would
-require editing the workflow file, making the deployment decision explicit and reviewable
-before push.
+path (and the mechanism to fetch it) eliminates the risk of accidentally deploying the wrong
+vault due to misconfigured secrets or environment variables. A one-time manual deployment
+from a different vault would require editing the workflow file, making the deployment decision
+explicit and reviewable before push. The cross-repo checkout step makes the external vault a
+stable dependency of the build process, resolved at the same commit/branch as this repo's
+workflow definition.
 
 ---
 
@@ -209,9 +213,15 @@ but doesn't prevent build-time imports.
 
 ## 17. GitHub Source Link Construction: Hardcoded Repository Constants
 
-**Decision:** The `lib/github-source-link.ts` module builds GitHub "View source on GitHub" URLs by concatenating hardcoded owner, repo name, branch, and vault-subpath constants, rather than deriving them from `git remote` or environment variables at runtime.
+**Decision:** The `lib/github-source-link.ts` module builds GitHub "View source on GitHub" URLs
+by concatenating hardcoded owner, repo name, branch, and vault-subpath constants, rather than
+deriving them from `git remote` or environment variables at runtime. Current values:
+- `GITHUB_OWNER = "athandapani"`
+- `GITHUB_REPO = "ai-adoption-wiki"` (the external public demo vault repo)
+- `GITHUB_BRANCH = "master"`
+- `VAULT_SUBPATH = "wiki"` (the vault root directory within the repo)
 
-**Rationale:** The application is a static export with no server runtime in production (design-notes.md §2). Reading `git remote` at runtime is impossible in a static HTML/CSS/JS deployment. Pre-computing and hardcoding these values is consistent with the existing precedent of hardcoding deployment-sensitive paths (the CI/CD workflow's `--vault` and `--out` flags; see design-notes.md §10). This makes the GitHub link a build-time constant, identical across all deployments of the same version.
+**Rationale:** The application is a static export with no server runtime in production (design-notes.md §2). Reading `git remote` at runtime is impossible in a static HTML/CSS/JS deployment. Pre-computing and hardcoding these values is consistent with the existing precedent of hardcoding deployment-sensitive paths (the CI/CD workflow's `--vault` and `--out` flags; see design-notes.md §10). This makes the GitHub link a build-time constant, identical across all deployments of the same version. The constants must remain in sync with the cross-repo checkout step in `.github/workflows/deploy.yml` — changes to either the vault repository or its subpath structure require coordinated updates to both files.
 
 ---
 
@@ -252,25 +262,36 @@ that naturally preserves both canvases' internal state.
 
 ---
 
-## 21. Always-Visible Side Panel (Not Slide-In Overlay)
+## 21. Side Panel: Responsive Layout (Desktop Sidebar, Mobile Bottom-Sheet Overlay)
 
-**Decision:** The side panel (`SidePanel.tsx`) is rendered as an always-visible flex column in the
-right sidebar of `/graph`, appearing alongside the graph canvases at all times. When no node is
-selected, it displays a "Start anywhere" onboarding card: a title, a built-from line naming the
-page/folder count (e.g., "This map is built from 47 interlinked wiki pages across 5 folders"), a
-folder legend (colored to match the graph taxonomy) plus a status legend (active/revisiting/dormant
-visual indicators via `StatusDot` components), both managed by the new `Legend.tsx` component, and
-a concrete first-move suggestion ("Not sure where to start? Try clicking a brightly-colored,
-well-connected node, or search for a topic above."). When a node is clicked, the panel updates to
-show the node's details (title, status, folder badge, tags, description) and a "Connected pages"
-section listing directly related nodes as clickable chips grouped by folder. There is no
-slide-in animation or overlay behavior.
+**Decision:** The side panel (`SidePanel.tsx`) layout is responsive:
+- **Desktop (`md:` / 768px and above):** Rendered as an always-visible flex column in the right
+  sidebar, appearing alongside the graph canvases at all times.
+- **Mobile (below `md:` / 768px):** Hidden by default. When a node is selected, the panel appears
+  as a `position: fixed` bottom-sheet overlay (max-height: 70vh, `overflow-y: auto`) anchored to
+  the bottom of the viewport. Dismissible via its existing close control. Related-nodes chips
+  remain clickable to re-target the sheet to a different node.
 
-**Rationale:** This keeps related-nodes and source-link information persistently discoverable
-without requiring a click-to-reveal interaction. The always-visible design supports the
-accessibility goal (visitor can verify page content sourcing at any time) and reduces
-interaction complexity. Previous designs using slide-in overlays risked obscuring the graph
-during exploration; the sidebar layout avoids this and scales well to larger vaults. The
+Both breakpoints share the same render logic. When no node is selected, both display a
+"Start anywhere" onboarding card: a title, a built-from line naming the page/folder count (e.g.,
+"This map is built from 47 interlinked wiki pages across 5 folders"), a folder legend (colored to
+match the graph taxonomy) plus a status legend (active/revisiting/dormant visual indicators via
+`StatusDot` components), both managed by the `Legend.tsx` component, and a concrete first-move
+suggestion ("Not sure where to start? Try clicking a brightly-colored, well-connected node, or
+search for a topic above."). When a node is clicked, both display the node's details (title,
+status, folder badge, tags, description, GitHub source link) and a "Connected pages" section
+listing directly related nodes as clickable chips grouped by folder — only the CSS layout
+(position/sizing/visibility) differs between breakpoints.
+
+**Rationale:** Desktop layout (sidebar, always-visible) keeps related-nodes and source-link
+information persistently discoverable without requiring interaction, supporting accessibility
+(visitor can verify page content sourcing at any time) and reducing interaction complexity.
+Mobile layout (bottom-sheet overlay, hidden until selection) solves the responsive challenge
+where a fixed 320px sidebar crushes a narrow viewport: below 768px, the bottom-sheet preserves
+full board visibility while still surfacing node details on demand. The constraint is real —
+at 390px design floor (TOR-09-ULogLhW), a 320px fixed column would occupy 82% of horizontal
+space, leaving the board a 70px sliver. The bottom-sheet approach keeps both the board and
+detail information accessible without requiring horizontal scrolling or zoom (Epic nB4iwQu). The
 "Start anywhere" onboarding card (replacing a blank placeholder) surfaces the graph's scale and
 structure at first glance, guiding new visitors on how to begin exploring without requiring
 external instructions or clicks (Epic TakRqyO).
@@ -560,7 +581,7 @@ not literal syntax. Implemented in `lib/frontmatter-parser.ts` (Epic Dj3m8aH).
 
 ## 45. Hamburger Icon Button for Options Menu (No Text Label)
 
-**Decision:** The "Options & help" button in the top-right corner of the graph page is rendered as an icon-only control: three horizontal lines SVG (styled with `currentColor` for automatic dark/light theme adaptation, `strokeWidth=1.75`, `strokeLinecap="round"`, matching the project's Logo.tsx SVG convention), with no visible text label. The button retains its accessible name via `aria-label="Options & help"` for screen readers and accessibility tools, ensuring no loss of clarity for assistive tech.
+**Decision:** The "Options & help" button in the top-right corner of the graph page is rendered as an icon-only control: three horizontal lines SVG (styled with `currentColor` for automatic dark/light theme adaptation, `strokeWidth=1.75`, `strokeLinecap="round"`), with no visible text label. The button retains its accessible name via `aria-label="Options & help"` for screen readers and accessibility tools, ensuring no loss of clarity for assistive tech.
 
 **Rationale:** Icon-only hamburger buttons are the modern UI convention for collapsible menus (popularized by mobile and responsive design standards). A text label takes up precious header space on both desktop and mobile; an icon is universally recognized and scales well across viewports. The `aria-label` ensures the button's purpose remains clear to assistive tech users, satisfying WCAG accessibility requirements. This satisfies TOR-06-DRtjcOk (Epic vH3Ls3h).
 

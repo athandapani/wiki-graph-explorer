@@ -141,7 +141,7 @@ Data fetching:
 
 - `SearchInput.tsx` — Controlled search box with live query input. Displays "No closely matching results found" when a query has no results above the relevance threshold. Wired to `useSearchRanking` hook. Displays live match count. Ctrl+K and `/` global focus shortcuts activate the search input from anywhere.
 - `useSearchRanking.ts` — React hook that debounces user input (250ms), performs client-side query embedding via dynamic import, scores every page by cosine similarity against its precomputed embedding (via `lib/query-embedding.ts`), and returns scores and UI flags (isSearchActive, hasResults, matchCount). Exports `computeSearchDimmedNodeIds()` and `computeMatchCount()` — pure functions that both `GraphCanvas` and `SwimLaneCanvas` consume to ensure identical search filtering behavior across layout modes. Reuses the same `Xenova/all-MiniLM-L6-v2` model (384-dim) settled by build-time embeddings, guaranteeing embedding-space parity. Scores are passed to both canvases; each canvas dims non-matching nodes identically.
-- `SidePanel.tsx` — Always-visible flex column (right sidebar). When no node is selected, displays a "Start anywhere" onboarding card: a title, a built-from line (e.g., "This map is built from 47 interlinked wiki pages across 5 folders"), a folder legend and status legend (both managed by `Legend.tsx`), and a suggestion line ("Try clicking a brightly-colored, well-connected node, or search for a topic above."). When a node is clicked, displays the node's title, tags, content-freshness status dot, a folder badge (colored via `getFolderColor()` to match the node's graph color), the node's description (frontmatter `description:` field or first paragraph fallback, empty string if neither), and a "Connected pages" section listing directly connected related nodes as clickable `PillNode` chips grouped by folder (via exported `groupNodesByFolder()` helper). Clicking a chip sets that node as selected, driving the same focus treatment a direct graph click gets: canvas center/zoom in force-directed mode (via `focusedNodeId` prop) or active-node highlight/connector-lines in swim-lane mode (via `focusedNodeId` prop). The helper `getRelatedNodeIds()` defensively handles both string ids and d3-force-mutated node-object references. Includes a "View source on GitHub" link (built from hardcoded repo/branch/vault constants) that lets visitors verify page content is genuine and source-traced. Close button reverts panel to the onboarding card state.
+- `SidePanel.tsx` — Responsive side panel. **Desktop layout (`md:` and above):** Rendered as a flex column in the right sidebar, always visible. **Mobile layout (below `md:`):** Hidden by default, appears as a `position: fixed` bottom-sheet overlay (max-height: 70vh, `overflow-y: auto`) anchored to the bottom when a node is selected. When no node is selected, both layouts display a "Start anywhere" onboarding card: a title, a built-from line (e.g., "This map is built from 47 interlinked wiki pages across 5 folders"), a folder legend and status legend (both managed by `Legend.tsx`), and a suggestion line ("Try clicking a brightly-colored, well-connected node, or search for a topic above."). When a node is clicked, both layouts display the node's title, tags, content-freshness status dot, a folder badge (colored via `getFolderColor()` to match the node's graph color), the node's description (frontmatter `description:` field or first paragraph fallback, empty string if neither), and a "Connected pages" section listing directly connected related nodes as clickable `PillNode` chips grouped by folder (via exported `groupNodesByFolder()` helper). Clicking a chip re-targets the panel to that node, driving the same focus treatment a direct graph click gets: canvas center/zoom in force-directed mode or active-node highlight/connector-lines in swim-lane mode (via `focusedNodeId` prop). The helper `getRelatedNodeIds()` defensively handles both string ids and d3-force-mutated node-object references. Includes a "View source on GitHub" link (built from hardcoded repo/branch/vault constants) that lets visitors verify page content is genuine and source-traced. Close button reverts the panel to the onboarding card state (desktop) or dismisses the overlay (mobile). See design-notes.md §21 for responsive layout rationale.
 - `EmptyState.tsx` — Renders a dedicated message when the graph contains zero nodes (e.g., empty vault).
 - `ErrorState.tsx` — Renders error message naming the problem and next action when JSON fetch fails.
 
@@ -159,7 +159,7 @@ Data fetching:
 - `react-force-graph-2d` touches canvas and window APIs at module scope, which breaks Next.js's build-time static-export prerender pass. The dynamic import with `ssr: false` ensures the library code never runs at build time, keeping the prerender pass clean even inside a `"use client"` file.
 - Semantic search (live query embedding and cosine-similarity scoring) is implemented as of Epic TBZJM0j. Client-side query embedding delegates to the existing `computeEmbedding()` function via dynamic import, reusing the same model and configuration as build-time embeddings to guarantee embedding-space parity. See design-notes.md §19 for the resolution of this previously-open design question.
 - Swim-lane and force-directed canvases are both mounted simultaneously and toggled via CSS `display` property. This preserves pan/zoom state and avoids expensive refetches when switching modes (design-notes.md §20).
-- Side panel is always visible as a flex column, not a slide-in overlay, to keep related-nodes and source-link information persistently discoverable (design-notes.md §21).
+- Side panel is responsive: desktop sidebar (always-visible flex column), mobile bottom-sheet overlay (appears on node selection). See design-notes.md §21 for responsive layout rationale and constraints.
 
 ---
 
@@ -176,18 +176,20 @@ None planned — rebuild-on-publish only, no dynamic backend.
 **Deployment:** GitHub Pages via GitHub Actions workflow (`.github/workflows/deploy.yml`).
 
 **Build pipeline (triggered on push to `master`)**:
-1. Checkout code
-2. Install Node.js 20 + npm dependencies
-3. Run `npm run check:vault-safety` — scans git-tracked files for hardcoded `../second-brain` path references; exits 1 if found
-4. Run `npm run build:graph -- --vault public-vault/wiki --out public` — parses public vault, generates `graph-data.json` and `vector-index.json`, writes to `public/` directory
-5. Run `npm run build` — Next.js static export; reads JSON assets from `public/`, emits static HTML/CSS/JS to `out/`
-6. Upload `out/` to GitHub Pages artifact
-7. Deploy artifact to GitHub Pages (requires manual one-time repo settings enablement: Settings → Pages → Source: GitHub Actions)
+1. Checkout code (this repo: `wiki-graph-explorer`)
+2. Checkout external public vault (secondary `actions/checkout@v4` step fetches `athandapani/ai-adoption-wiki` repo at `path: ../ai-adoption-wiki`)
+3. Install Node.js 20 + npm dependencies
+4. Run `npm run check:vault-safety` — scans git-tracked files for hardcoded `../second-brain` path references; exits 1 if found
+5. Run `npm run build:graph -- --vault ../ai-adoption-wiki/wiki --out public` — parses external vault, generates `graph-data.json` and `vector-index.json`, writes to `public/` directory
+6. Run `npm run build` — Next.js static export; reads JSON assets from `public/`, emits static HTML/CSS/JS to `out/`
+7. Upload `out/` to GitHub Pages artifact
+8. Deploy artifact to GitHub Pages (requires manual one-time repo settings enablement: Settings → Pages → Source: GitHub Actions)
 
 **Key constraints:**
-- Vault path is hardcoded in workflow (`public-vault/wiki`) with no override mechanism — prevents accidental deployment of private vault content.
+- Vault path is hardcoded in workflow (`../ai-adoption-wiki/wiki`) with no override mechanism — prevents accidental deployment of private vault content. The workflow uses a secondary `actions/checkout@v4` step to fetch the external vault at a sibling path before the build step, allowing a single literal `--vault` argument to reference it.
 - Output directory is hardcoded as `public` — becomes the fetch root for client-side JSON asset requests.
 - No container runtime in production; deployed artifact is pure static files.
+- In-repo `public-vault/` 2-page placeholder was retired in epic iv5GPN9 — all builds now target the external vault only.
 
 ---
 

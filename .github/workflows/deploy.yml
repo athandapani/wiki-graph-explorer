@@ -20,6 +20,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Checkout ai-adoption-wiki (public demo vault)
+        uses: actions/checkout@v4
+        with:
+          repository: athandapani/ai-adoption-wiki
+          path: ../ai-adoption-wiki
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -29,7 +35,7 @@ jobs:
 
       - run: npm run check:vault-safety
 
-      - run: npm run build:graph -- --vault public-vault/wiki --out public
+      - run: npm run build:graph -- --vault ../ai-adoption-wiki/wiki --out public
 
       - run: npm run build
 

@@ -18,4 +18,9 @@ describe("components/graph/SearchInput.tsx", () => {
     expect(source).toContain("isActive && !hasResults");
     expect(source).toContain("No closely matching results found.");
   });
+
+  it("TOR-09-kMjRcRb: input font-size is at least 16px below md, avoiding iOS's auto-zoom-on-focus at the 390px design floor", () => {
+    expect(source).toContain("text-base");
+    expect(source).toContain("md:text-sm");
+  });
 });

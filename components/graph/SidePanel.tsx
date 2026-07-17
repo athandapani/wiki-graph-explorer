@@ -58,8 +58,21 @@ export function SidePanel({ node, edges, allNodes, isDark, onClose, onSelectNode
         .filter((candidate): candidate is GraphNode => candidate !== undefined)
     : [];
 
+  // Below md (768px), the panel is always a `fixed` bottom-sheet overlay rather than a
+  // fixed-width column competing with the board for the 390px design floor (TOR-09-ULogLhW) —
+  // never hidden entirely, since the empty state now carries genuinely useful onboarding content
+  // (start-anywhere card, TOR-08-LuQzsEi) that must render "whenever no node is selected," not
+  // only once something is clicked. The unselected sheet caps at a shorter 45vh (its content is
+  // lighter than full node detail) so it doesn't dominate a first-time mobile visitor's screen;
+  // the selected sheet keeps the fuller 70vh since that's an explicit user action. At md and up,
+  // both branches converge on the same static in-flow column (md:max-h-none overrides both mobile
+  // caps), so desktop remains pixel-for-pixel unchanged regardless of selection.
+  const panelClassName = node
+    ? "fixed inset-x-0 bottom-0 z-30 max-h-[70vh] overflow-y-auto rounded-t-lg border-t border-black/10 bg-background p-4 text-foreground shadow-lg dark:border-white/10 md:static md:inset-auto md:z-auto md:h-full md:max-h-none md:w-80 md:shrink-0 md:rounded-none md:border-t-0 md:border-l"
+    : "fixed inset-x-0 bottom-0 z-30 max-h-[45vh] overflow-y-auto rounded-t-lg border-t border-black/10 bg-background p-4 text-foreground shadow-lg dark:border-white/10 md:static md:inset-auto md:z-auto md:h-full md:max-h-none md:w-80 md:shrink-0 md:rounded-none md:border-t-0 md:border-l";
+
   return (
-    <aside className="h-full w-80 shrink-0 overflow-y-auto border-l border-black/10 bg-background p-4 text-foreground shadow-lg dark:border-white/10">
+    <aside className={panelClassName}>
       {node ? (
         <>
           <button

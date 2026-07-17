@@ -36,4 +36,9 @@ describe("components/graph/Header.tsx", () => {
   it("TOR-07-DsHsIKN: bumps the title to hero size/weight only when tagline is present, exceeding lane/section headings (text-xs) and side-panel body text (text-sm)", () => {
     expect(source).toContain('tagline ? "text-xl font-bold" : "text-lg font-semibold"');
   });
+
+  it("TOR-09-kMjRcRb: inner row wraps and the search slot can shrink, so logo/title/search don't force horizontal overflow at the 390px design floor", () => {
+    expect(source).toContain("flex flex-wrap items-center gap-4");
+    expect(source).toContain('<div className="min-w-0 flex-1">{search}</div>');
+  });
 });
