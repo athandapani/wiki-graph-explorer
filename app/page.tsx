@@ -28,7 +28,7 @@ function HomeHeroGraphic() {
     <svg
       viewBox="0 0 320 320"
       aria-hidden="true"
-      className="mx-auto hidden h-auto w-full max-w-md text-blue-500 lg:block"
+      className="mx-auto hidden h-auto w-full max-w-md text-[var(--accent)] lg:block"
     >
       {HERO_EDGES.map(([a, b], i) => {
         const from = HERO_NODES[a];
@@ -95,7 +95,7 @@ export default function Home() {
           </div>
           <Link
             href="/graph"
-            className="inline-flex w-fit items-center rounded-full bg-blue-500 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-600"
+            className="inline-flex w-fit items-center rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
           >
             Open the graph →
           </Link>

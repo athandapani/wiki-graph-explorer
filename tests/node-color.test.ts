@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { getFolderColor, resetFolderColors } from "../components/graph/nodeColor";
+import { ACCENT_DARK, ACCENT_LIGHT, getFolderColor, resetFolderColors } from "../components/graph/nodeColor";
 
 describe("getFolderColor", () => {
   beforeEach(() => {
@@ -18,5 +18,11 @@ describe("getFolderColor", () => {
     const folders = Array.from({ length: 12 }, (_, i) => `folder-${i}`);
     const colors = folders.map((folder) => getFolderColor(folder));
     expect(new Set(colors).size).toBe(folders.length);
+  });
+
+  it("TOR-07-7ha0SK5: ACCENT_LIGHT/ACCENT_DARK equal the palette's first slot, so the shared interface accent tracks the graph's own folder colors", () => {
+    expect(ACCENT_LIGHT).toBe(getFolderColor("__first-folder-slot__", false));
+    resetFolderColors();
+    expect(ACCENT_DARK).toBe(getFolderColor("__first-folder-slot__", true));
   });
 });

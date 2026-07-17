@@ -89,6 +89,7 @@ export default function GraphPage() {
     <div className="flex h-full flex-col overflow-y-auto">
       <div className="flex h-full shrink-0 flex-col overflow-hidden">
         <Header
+          tagline="Every page of this wiki in one map — click anything to see what it is and how it connects."
           search={
             <SearchInput
               value={query}
