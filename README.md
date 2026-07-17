@@ -68,7 +68,8 @@ incremental/partial update, and `--vault` has no fallback (no env var, no cached
 **For local dev iteration against a richer, real dataset**, point `--vault` at your private
 `second-brain` vault (a sibling directory, e.g. `../second-brain`) per the project's dogfooding
 workflow — this output is gitignored and must never be committed or deployed. Only builds against
-the dedicated public vault (`public-vault/wiki`) are ever deployed; the CI/CD pipeline hardcodes
+the dedicated public demo vault (the external [`ai-adoption-wiki`](https://github.com/athandapani/ai-adoption-wiki)
+repo, checked out as a sibling directory in CI) are ever deployed; the CI/CD pipeline hardcodes
 that path with no override.
 
 ### Quality gates
