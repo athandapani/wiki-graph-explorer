@@ -9,6 +9,7 @@ interface OptionsPanelProps {
   onLayoutModeChange: (mode: LayoutMode) => void;
   isDark: boolean;
   onThemeChange: (isDark: boolean) => void;
+  onResetView?: () => void;
 }
 
 export function OptionsPanel({
@@ -16,6 +17,7 @@ export function OptionsPanel({
   onLayoutModeChange,
   isDark,
   onThemeChange,
+  onResetView,
 }: OptionsPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -43,6 +45,15 @@ export function OptionsPanel({
                 Diagram style
               </h2>
               <LayoutModeToggle mode={layoutMode} onChange={onLayoutModeChange} />
+              {layoutMode === "force-directed" && (
+                <button
+                  type="button"
+                  onClick={onResetView}
+                  className="mt-2 rounded px-2 py-1 text-sm hover:bg-black/10 dark:hover:bg-white/10"
+                >
+                  Reset view
+                </button>
+              )}
             </section>
             <section className="mb-4">
               <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-foreground/60">

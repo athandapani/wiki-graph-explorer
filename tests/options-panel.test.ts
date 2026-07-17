@@ -23,4 +23,11 @@ describe("components/graph/OptionsPanel.tsx", () => {
     expect(source).toContain("Swim-lane");
     expect(source).toContain("Force-directed");
   });
+
+  it("TOR-02-IrF7v8x: renders a Reset view control only in force-directed mode, wired to onResetView", () => {
+    expect(source).toContain("onResetView?: () => void");
+    expect(source).toMatch(
+      /\{layoutMode === "force-directed" && \(\s*<button[\s\S]*?onClick=\{onResetView\}[\s\S]*?Reset view[\s\S]*?<\/button>\s*\)\}/,
+    );
+  });
 });
