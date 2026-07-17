@@ -12,4 +12,9 @@ describe("app/page.tsx", () => {
     expect(source).not.toContain("Create Next App");
     expect(source).not.toContain("create-next-app");
   });
+
+  it("uses a wide two-column hero layout with a decorative graphic on large viewports, not a narrow centered column", () => {
+    expect(source).toContain("lg:grid-cols-2");
+    expect(source).toContain('aria-hidden="true"');
+  });
 });
