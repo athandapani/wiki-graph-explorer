@@ -267,18 +267,25 @@ during exploration; the sidebar layout avoids this and scales well to larger vau
 
 ---
 
-## 22. Swim-Lane Rendering: Custom SVG/CSS, Not react-force-graph-2d Fixed Mode
+## 24. Swim-Lane Rendering: Custom SVG/CSS, Not react-force-graph-2d Fixed Mode
 
 **Decision:** The swim-lane layout is implemented via a custom React component (`SwimLaneCanvas.tsx`)
 using real DOM text for pill titles (not canvas-based rendering), CSS flexbox for lane layout, and
 standard SVG `<path>` elements for connector lines. Each lane is a rounded container with a folder-tinted
 background (10% opacity via `{folderColor}1a` dark or `{folderColor}0f` light), an `<h3>` folder heading
-(uppercase, smaller font), and a "{N} pages total" page-count descriptor. Minimum lane height is 84px
-to prevent clipping of headings/descriptors. Connector-line SVG is positioned absolutely with
-`-z-10` (negative z-index) so lines render behind pill buttons and their text labels, preventing
+(uppercase, smaller font), and a "{N} pages total" page-count descriptor in a smaller, dimmed font. Pill
+buttons display full titles with `whitespace-nowrap` (no text truncation). A minimum lane height of 84px
+ensures the heading, descriptor, and affordances are never clipped; remaining vertical space is
+distributed proportionally to lanes by their visible node count. Connector-line SVG is positioned
+absolutely with `z-index: -10` so lines render behind pill buttons and their text labels, preventing
 visual obscuring of node titles. Normal connector lines are solid (2px stroke), while connector lines to
 revealed low-connectivity nodes are dashed (1.5px stroke, visual distinction per design-notes.md §39).
-No use of `react-force-graph-2d` in fixed-position or constrained-layout mode.
+Zero-degree nodes (no connections) are permanently hidden; low-connectivity nodes (exactly one edge) are
+hidden by default and revealed with dashed borders when a connected node is clicked, when a search match
+reveals them, or when a visitor clicks a "+N more" affordance button. The "+N more" button appears in
+lanes with hidden nodes; clicking it reveals all hidden nodes as dashed-bordered pills for the remainder
+of the session (expansion state is not persisted across page reloads). No use of `react-force-graph-2d`
+in fixed-position or constrained-layout mode.
 
 **Rationale:** `react-force-graph-2d` is designed for physics-based force-directed layouts, not for
 static, tiered swimlanes. Building a swim-lane mode on top of `react-force-graph-2d` would require
@@ -288,7 +295,10 @@ more performant for static layouts, and provides exact control over interaction 
 the 950ms curved connector-line animation, variable line styles for revealed vs. normal connectors,
 z-index layering to keep lines non-occluding, and explicit folder headings/descriptors). The tinted
 backgrounds and headings make the folder taxonomy visible at a glance, helping visitors understand
-the vault's structure without requiring clicks. No pan/zoom is needed in swim-lane mode (fixed layout),
+the vault's structure without requiring clicks. Full-title pill buttons (no truncation) keep page names
+legible at a glance. The "+N more" affordance surfaces the count of hidden peripheral nodes per lane
+without requiring a side-panel lookup or search, making discovery explicit rather than silent (satisfies
+TOR-06-BxA7IRn and TOR-06-YjETzyC, Epic H0q48k8). No pan/zoom is needed in swim-lane mode (fixed layout),
 so the move away from `react-force-graph-2d` carries no UX cost and gains clarity and control.
 
 ---
@@ -333,23 +343,80 @@ persistence without a backend; the pattern is robust to private-browsing modes t
 
 ---
 
-## 25. Product Header and Home Page Redesign (Epic scQi8pt)
+## 23. Geist Typeface: Removing Hardcoded Arial Fallback (Epic xvzgc4Z)
+
+**Decision:** The Geist font is loaded via `next/font` and bound to the CSS custom property
+`--font-sans`, which is wired to Tailwind's theme. Previously, a hardcoded `font-family: Arial,
+Helvetica, sans-serif;` rule on the `body` element was silently overriding this binding. The
+hardcoded rule was removed from `app/globals.css` (lines ~26–29), allowing the intended `--font-sans`
+binding to take effect site-wide.
+
+**Rationale:** Geist is the intended typeface for the portfolio site (professional, modern,
+accessible). The hardcoded rule was a remnant from an earlier scaffolding phase and created a
+silent override that broke the design. Removing it ensures visitors see Geist throughout both the
+home page and graph page, providing consistent visual polish and proper rendering of typography
+hierarchy (e.g., hero headings at different weights and sizes). The fix was discovered during
+xvzgc4Z's typography hierarchy verification (TOR-07-DsHsIKN).
+
+---
+
+## 25. Shared Accent Color System: Palette Slot 0 via CSS Custom Property (Epic xvzgc4Z)
+
+**Decision:** The site's accent color (used for header logo, CTA button, and focus ring) is
+defined as a CSS custom property `--accent` in `app/globals.css`, with values that mirror
+`ACCENT_LIGHT` and `ACCENT_DARK` exported from `components/graph/nodeColor.ts` (the first slot,
+index 0, from the validated categorical folder-color palette). The site-wide accent is therefore
+the same blue used for the first folder's nodes, not an unrelated stock Tailwind color.
+
+**Rationale:** The interface chrome (header, buttons, focus rings) should read as authored around
+the data it displays. Using the graph's own palette (rather than a generic brand blue like
+`blue-500`) creates visual coherence. The CSS custom property approach (`var(--accent)`) enables
+static/server components (like the home page, `app/page.tsx`) to reference the accent without
+threading an `isDark` prop through component trees — a pattern already established with
+`--background` and `--foreground`. The implementation keeps both `app/globals.css` and
+`components/graph/nodeColor.ts` in sync via a sync-reminder comment in both files; if the palette
+slot is ever changed, both sources must be updated together (issue #4 finding B10).
+
+---
+
+## 26. Focus Ring with Negative Outline-Offset (Epic xvzgc4Z)
+
+**Decision:** A global `:focus-visible` rule in `app/globals.css` applies a 2px solid outline
+in the accent color with `outline-offset: -2px`. The negative offset draws the outline ring
+*inside* the element's own box rather than outside it.
+
+**Rationale:** Swim-lane board lanes and the board wrapper use `overflow-hidden` to clip pill
+content and connector-line SVG. A standard outline (drawn outside the element's box) is clipped
+by the ancestor's overflow, invisibly silencing the focus ring for keyboard-only users. By
+inverting the offset to -2px, the ring draws inside the element's padding box and is never
+clipped, remaining fully visible when a tab-focused pill button is inside an `overflow-hidden`
+ancestor. This approach is verified live with a real Tab-key sequence (not programmatic focus,
+which unreliably triggers `:focus-visible`); independently confirmed in both themes.
+
+---
+
+## 27. Product Header and Home Page Redesign (Epic scQi8pt)
 
 **Decision:** Both `/` and `/graph` pages share a persistent `Header` component displaying the
 product logo and "Wiki Graph Explorer" title as a link back to `/`. The home page (`/app/page.tsx`)
 was redesigned away from `create-next-app` boilerplate to include a real product intro, a structured
 "How to use it" section explaining swim-lane mode, force-directed mode, theme/layout toggles, and
-semantic search, and a CTA button linking to `/graph`.
+semantic search, and a CTA button linking to `/graph`. The `/graph` page's header accepts an optional
+`tagline?: string` prop; when provided, the title bumps to hero size/weight (`text-xl font-bold`)
+and the tagline renders below the logo/title row as a subtitle. The `/graph` page passes the
+tagline "Every page of this wiki in one map — click anything to see what it is and how it connects."
 
 **Rationale:** The original boilerplate home page conveyed no value; visitors had no way to understand
 what the tool does or how to use its two rendering modes. The redesigned page explicitly teaches the
 two modes and key features, reducing the barrier to first use. The shared header provides consistent
 navigation and branding across both pages. The logo link back to `/` from `/graph` allows visitors to
-easily return to the intro.
+easily return to the intro. The tagline on `/graph` immediately orients new visitors — it names the
+page's identity and promises quick insight into page connections without requiring clicks, satisfying
+the onboarding requirement (TOR-08-qBVi9Aa).
 
 ---
 
-## 26. Connector Line Animation: Curved SVG Paths with 950ms Stroke-Draw
+## 28. Connector Line Animation: Curved SVG Paths with 950ms Stroke-Draw
 
 **Decision:** When a user clicks a node in swim-lane mode, curved SVG `<path>` elements animate from
 the clicked node's pill to each of its neighbors over ~950ms using the `stroke-dasharray` /
@@ -366,7 +433,7 @@ accumulating multiple connector sets.
 
 ---
 
-## 27. Swim-Lane Search Implementation: Shared Dimming Logic
+## 29. Swim-Lane Search Implementation: Shared Dimming Logic
 
 **Decision:** Semantic search is now implemented for swim-lane mode using the same `computeSearchDimmedNodeIds()` function that force-directed mode uses. A search query dims/highlights pills identically across both layout modes. Matches that would be hidden by the swim-lane board's low-degree filtering (degree ≤ 1) are force-revealed with a dashed pill border (same visual language as click-reveals) rather than remaining invisible — ensuring the search result count and the visible board never disagree.
 
@@ -374,7 +441,7 @@ accumulating multiple connector sets.
 
 ---
 
-## 28. Filter Controls: Dynamic Dataset-Derived Dropdowns (Force-Directed Mode)
+## 30. Filter Controls: Dynamic Dataset-Derived Dropdowns (Force-Directed Mode)
 
 **Decision:** The force-directed graph canvas includes two filter dropdowns (`FilterControls.tsx`): one for "Status" and one for "Folder" (taxonomy). Filter options are derived live from the loaded dataset (`graph-data.json`'s node records), not hardcoded. Selecting a filter value immediately dims all non-matching nodes via `ctx.globalAlpha` in the canvas. The filters apply only to force-directed mode; swim-lane mode does not filter.
 
@@ -382,7 +449,7 @@ accumulating multiple connector sets.
 
 ---
 
-## 29. Edge-Count Indicator: Visual Radius Scaling by Degree
+## 31. Edge-Count Indicator: Visual Radius Scaling by Degree
 
 **Decision:** Nodes in the force-directed graph are visually scaled by their connectivity within their own folder cluster. `edgeCountIndicator.ts` computes each node's degree (number of directly connected related nodes) and scales its visual radius between 0.5× and 1.0× relative to the cluster's highest-degree peer. Hub nodes (most connected) render at 1.0× radius; under-connected nodes render smaller (down to 0.5×), making them visually distinct. This scaling applies only to the force-directed canvas; swim-lane mode does not scale.
 
@@ -390,7 +457,7 @@ accumulating multiple connector sets.
 
 ---
 
-## 30. Node Description Field: Frontmatter or First Paragraph Fallback
+## 32. Node Description Field: Frontmatter or First Paragraph Fallback
 
 **Decision:** Every node in `graph-data.json` includes a `description: string` field resolved via a
 two-tier strategy: if the page's YAML frontmatter declares a `description:` key, use that value
@@ -408,7 +475,7 @@ in `lib/frontmatter-parser.ts#extractFirstBodyParagraph()` (Epic Dj3m8aH).
 
 ---
 
-## 31. Build-Time Source-Count Metadata: Raw Sibling Directory
+## 33. Build-Time Source-Count Metadata: Raw Sibling Directory
 
 **Decision:** The build tool detects and counts a sibling `raw/` directory (e.g., the `raw/`
 alongside a `wiki/` vault directory). The count is emitted as a top-level `meta: { sourceCount }`
@@ -424,7 +491,7 @@ dotdir-skipping and `.md`-discovery logic from drifting apart across the two cod
 
 ---
 
-## 32. Inline Markdown Stripping: Self-Contained Regex Helper
+## 34. Inline Markdown Stripping: Self-Contained Regex Helper
 
 **Decision:** When extracting the first-body-paragraph description fallback, inline Markdown
 syntax (wikilinks `[[slug|title]]`, standard links `[text](url)`, bold `**text**`, italic
@@ -439,7 +506,7 @@ not literal syntax. Implemented in `lib/frontmatter-parser.ts` (Epic Dj3m8aH).
 
 ---
 
-## 38. Home Page Hero Layout: Two-Column Desktop with Decorative SVG Graphic (Epic hxffZxb)
+## 42. Home Page Hero Layout: Two-Column Desktop with Decorative SVG Graphic (Epic hxffZxb)
 
 **Decision:** The home page (`app/page.tsx`) uses a two-column layout on desktop (via `lg:grid-cols-2`), with the existing product description, "How to use it" content, and CTA in the left column. A new local `HomeHeroGraphic` component renders a decorative, non-interactive SVG graphic (abstract nodes/edges representing the wiki→graph transformation) in the right column. The component is marked `aria-hidden="true"`, uses the existing `text-blue-500` accent with `currentColor` theming, and animates via a new `hero-pulse` `@keyframes` (staggered opacity pulses). Below the `lg:` breakpoint, the layout reverts to single column with the teaser hidden (`hidden lg:block`).
 
@@ -447,7 +514,7 @@ not literal syntax. Implemented in `lib/frontmatter-parser.ts` (Epic Dj3m8aH).
 
 ---
 
-## 39. Per-Lane "+N More" Affordance: Surfacing Hidden Low-Connectivity Nodes
+## 43. Per-Lane "+N More" Affordance: Surfacing Hidden Low-Connectivity Nodes
 
 **Decision:** In swim-lane mode, nodes with zero edges are permanently hidden (never discover-able via click). Nodes with exactly one edge are hidden by default. When a lane contains hidden nodes (zero-degree, single-edge, or both) that are not otherwise revealed via a click or search match, a "+N more" button appears in that lane showing the count of hidden nodes. Clicking the button expands the lane to reveal all hidden nodes as dashed-bordered pills (same visual language as click-reveals) with full opacity, making them discoverable without requiring a side-panel lookup or search. Once a lane is expanded, the "+N more" button disappears and remains absent for the lifetime of the page session (state is `expandedLaneNames`, a Set tracked per render, not persisted across navigation).
 
@@ -455,7 +522,7 @@ not literal syntax. Implemented in `lib/frontmatter-parser.ts` (Epic Dj3m8aH).
 
 ---
 
-## 40. Swim-Lane Container Styling: Tinted Backgrounds with Headings and Page-Count Descriptors
+## 44. Swim-Lane Container Styling: Tinted Backgrounds with Headings and Page-Count Descriptors
 
 **Decision:** Each swim-lane is rendered as a rounded container with a folder-tinted background (e.g., `{folderColor}1a` in dark theme, `0f` in light theme for 10% opacity tint). The container's header section includes an `<h3>` folder heading (uppercase, smaller font) and a descriptor line reading "{N} pages total" in a smaller, dimmed font. The container's `MIN_LANE_HEIGHT_PX` is set to 84 (raised from the original 52) to ensure the heading, descriptor, and "+N more" affordance are never clipped. Remaining vertical space is distributed proportionally to lanes by their visible node count via `flexGrow`.
 
@@ -463,7 +530,7 @@ not literal syntax. Implemented in `lib/frontmatter-parser.ts` (Epic Dj3m8aH).
 
 ---
 
-## 41. Hamburger Icon Button for Options Menu (No Text Label)
+## 45. Hamburger Icon Button for Options Menu (No Text Label)
 
 **Decision:** The "Options & help" button in the top-right corner of the graph page is rendered as an icon-only control: three horizontal lines SVG (styled with `currentColor` for automatic dark/light theme adaptation, `strokeWidth=1.75`, `strokeLinecap="round"`, matching the project's Logo.tsx SVG convention), with no visible text label. The button retains its accessible name via `aria-label="Options & help"` for screen readers and accessibility tools, ensuring no loss of clarity for assistive tech.
 
@@ -471,7 +538,7 @@ not literal syntax. Implemented in `lib/frontmatter-parser.ts` (Epic Dj3m8aH).
 
 ---
 
-## 33. Known Issues and Deferred Work
+## 46. Known Issues and Deferred Work
 
 - **Force-directed layout settle time:** Against the real `second-brain` vault (47 nodes, 96 edges),
   the physics simulation continues redistributing node positions for ~9–10 seconds after
@@ -515,7 +582,7 @@ not literal syntax. Implemented in `lib/frontmatter-parser.ts` (Epic Dj3m8aH).
 
 ---
 
-## 34. Externally-Driven Node Focus: `focusedNodeId` Prop on Both Canvases
+## 47. Externally-Driven Node Focus: `focusedNodeId` Prop on Both Canvases
 
 **Decision:** Both `GraphCanvas.tsx` and `SwimLaneCanvas.tsx` accept an optional `focusedNodeId`
 prop (string or null). When this prop changes to a non-null value, the component applies the
@@ -540,7 +607,7 @@ the existing behavior that closing the panel leaves the graph view intact.
 
 ---
 
-## 35. Chase-Fit Mechanism: Converging on Settling Layout Bounds
+## 48. Chase-Fit Mechanism: Converging on Settling Layout Bounds
 
 **Decision:** The force-directed graph's `fitView()` function does not execute once at mount or
 on `onEngineStop`; instead, it "chases" the settling layout by re-fitting every
@@ -561,7 +628,7 @@ text remains satisfied. See Epic niaTair handoff for full live-verification deta
 
 ---
 
-## 36. Node Label Sizing and Collision Suppression: Constant Screen Space + Per-Frame Gate
+## 49. Node Label Sizing and Collision Suppression: Constant Screen Space + Per-Frame Gate
 
 **Decision:** Node labels in the force-directed graph are sized at a constant on-screen pixel size
 (`LABEL_SCREEN_SIZE_PX`, currently 11px, divided by `globalScale` to convert to world units), not
@@ -587,7 +654,7 @@ live-verification results.
 
 ---
 
-## 37. GitHub Pages Deployment: Manual Settings Enablement Required
+## 50. GitHub Pages Deployment: Manual Settings Enablement Required
 
 **Decision:** The GitHub Actions workflow (`.github/workflows/deploy.yml`) is created and
 configured to deploy to GitHub Pages on push to `master`, uploading the static `out/`

@@ -21,4 +21,19 @@ describe("components/graph/Header.tsx", () => {
     expect(source).toContain("{search}");
     expect(source).toContain("shrink-0");
   });
+
+  it("TOR-07-7ha0SK5: tints the logo with the shared folder-palette accent, not the stock Tailwind blue", () => {
+    expect(source).toContain("text-[var(--accent)]");
+    expect(source).not.toContain("text-blue-500");
+  });
+
+  it("TOR-08-qBVi9Aa: accepts an optional tagline and renders it below the title, identity, when set", () => {
+    expect(source).toContain("tagline?: string");
+    expect(source).toContain("{tagline ? <p");
+    expect(source).toContain("{tagline}</p>");
+  });
+
+  it("TOR-07-DsHsIKN: bumps the title to hero size/weight only when tagline is present, exceeding lane/section headings (text-xs) and side-panel body text (text-sm)", () => {
+    expect(source).toContain('tagline ? "text-xl font-bold" : "text-lg font-semibold"');
+  });
 });

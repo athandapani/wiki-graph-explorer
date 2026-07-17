@@ -17,4 +17,10 @@ describe("app/page.tsx", () => {
     expect(source).toContain("lg:grid-cols-2");
     expect(source).toContain('aria-hidden="true"');
   });
+
+  it("TOR-07-7ha0SK5: tints the hero graphic and CTA with the shared folder-palette accent, not the stock Tailwind blue", () => {
+    expect(source).not.toContain("blue-500");
+    expect(source).not.toContain("blue-600");
+    expect(source).toContain("var(--accent)");
+  });
 });

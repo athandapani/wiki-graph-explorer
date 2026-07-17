@@ -26,6 +26,15 @@ const DARK_PALETTE = [
   "#d95926", // orange
 ];
 
+// The interface's shared accent color (header logo, CTA button, focus ring) is drawn from the
+// same palette as the graph nodes rather than an unrelated stock Tailwind color, so the chrome
+// reads as authored around the data it's showing (issue #4 finding B10). Slot 0 (blue) was
+// chosen to preserve visual continuity with the pre-existing blue-500 brand accent. Mirrored as
+// the --accent CSS custom property in app/globals.css for use in static/server components that
+// have no isDark prop to thread through — keep both in sync if this slot ever changes.
+export const ACCENT_LIGHT = LIGHT_PALETTE[0];
+export const ACCENT_DARK = DARK_PALETTE[0];
+
 const GOLDEN_ANGLE_DEGREES = 137.508;
 
 const folderSlots = new Map<string, number>();

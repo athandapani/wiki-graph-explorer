@@ -173,6 +173,16 @@ describe("app/graph/page.tsx", () => {
     expect(source.indexOf("<SwimLaneCanvas")).toBeLessThan(source.indexOf("<SidePanel"));
   });
 
+  it("TOR-08-qBVi9Aa: passes a hero tagline into Header, which renders above both canvases (no scroll needed to see it)", () => {
+    const headerProps = source.slice(
+      source.indexOf("<Header"),
+      source.indexOf("/>", source.indexOf("<Header")),
+    );
+    expect(headerProps).toContain("tagline=");
+    expect(source.indexOf("<Header")).toBeLessThan(source.indexOf("<GraphCanvas"));
+    expect(source.indexOf("<Header")).toBeLessThan(source.indexOf("<SwimLaneCanvas"));
+  });
+
   it("TOR-05-G72S3H4: renders ExplainerSection below the graph so a visitor can scroll to it", () => {
     expect(source).toContain("<ExplainerSection");
     // Outer wrapper scrolls; inner graph section keeps the original fixed-height class (proven
