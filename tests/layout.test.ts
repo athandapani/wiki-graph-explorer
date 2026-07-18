@@ -6,7 +6,7 @@ describe("app/layout.tsx", () => {
   const source = fs.readFileSync(path.resolve(__dirname, "..", "app", "layout.tsx"), "utf-8");
 
   it("TOR-07-Wb3kNfT: defaults to the dark theme class and runs an anti-flash script honoring a stored light preference", () => {
-    expect(source).toContain('className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}');
+    expect(source).toContain('className={`${inter.variable} ${manrope.variable} dark h-full antialiased`}');
     expect(source).toContain("localStorage.getItem('theme')==='light'");
     expect(source).toContain("classList.remove('dark')");
   });

@@ -1,11 +1,18 @@
-// Validated categorical palette (dataviz skill, references/palette.md) — fixed hue order,
-// worst adjacent CVD ΔE 24.2 (light) / 10.3 (dark). Folders beyond the 8 fixed slots fall
-// back to a generated golden-angle HSL ramp rather than cycling the fixed slots (a cycled hue
-// would collide with an earlier folder's color, which nodes-with-different-folders-render-
-// distinctly forbids). Dark-mode steps are the same eight hues stepped for the dark surface,
-// not a separate palette — lighter/less saturated so they still clear 3:1 against #0a0a0a.
+// Validated categorical palette (dataviz skill, references/palette.md) — fixed hue order.
+// Folders beyond the 8 fixed slots fall back to a generated golden-angle HSL ramp rather than
+// cycling the fixed slots (a cycled hue would collide with an earlier folder's color, which
+// nodes-with-different-folders-render-distinctly forbids). Dark-mode steps are the same eight
+// hues stepped for the dark surface, not a separate palette — lighter/less saturated so they
+// still clear 3:1 against #0a0f14.
+//
+// Slot 0 (teal) was re-validated against the other 7 fixed hues when the accent moved from
+// blue to teal (visual refresh, TOR-07-37VPhrV Spec Deviation) — CVD separation, chroma floor,
+// and surface contrast all pass for the new slot 0 in both themes. The validator also surfaced
+// two pre-existing floor failures unrelated to slot 0 (orange↔magenta in light, red↔magenta
+// and green↔yellow in dark) — these predate this change and are a separate, not-yet-addressed
+// finding, not a regression introduced here.
 const LIGHT_PALETTE = [
-  "#2a78d6", // blue
+  "#0088a3", // teal
   "#1baf7a", // aqua
   "#eda100", // yellow
   "#008300", // green
@@ -16,7 +23,7 @@ const LIGHT_PALETTE = [
 ];
 
 const DARK_PALETTE = [
-  "#3987e5", // blue
+  "#109cc6", // teal
   "#199e70", // aqua
   "#c98500", // yellow
   "#008300", // green
@@ -28,10 +35,11 @@ const DARK_PALETTE = [
 
 // The interface's shared accent color (header logo, CTA button, focus ring) is drawn from the
 // same palette as the graph nodes rather than an unrelated stock Tailwind color, so the chrome
-// reads as authored around the data it's showing (issue #4 finding B10). Slot 0 (blue) was
-// chosen to preserve visual continuity with the pre-existing blue-500 brand accent. Mirrored as
-// the --accent CSS custom property in app/globals.css for use in static/server components that
-// have no isDark prop to thread through — keep both in sync if this slot ever changes.
+// reads as authored around the data it's showing (issue #4 finding B10). Slot 0 (teal, moved
+// from the original blue in a later visual refresh) is kept in 1:1 sync with the chrome accent
+// by deliberate design. Mirrored as the --accent CSS custom property in app/globals.css for use
+// in static/server components that have no isDark prop to thread through — keep both in sync
+// if this slot ever changes.
 export const ACCENT_LIGHT = LIGHT_PALETTE[0];
 export const ACCENT_DARK = DARK_PALETTE[0];
 
