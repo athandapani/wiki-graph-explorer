@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
+import { DualPaneBoard } from "@/components/graph/DualPaneBoard";
 import { EmptyState } from "@/components/graph/EmptyState";
 import { ErrorState } from "@/components/graph/ErrorState";
 import { ALL_FILTER_VALUE, computeFilteredOutNodeIds, FilterControls } from "@/components/graph/FilterControls";
@@ -11,6 +12,7 @@ import { computeRadiusScale } from "@/components/graph/edgeCountIndicator";
 import { Header } from "@/components/graph/Header";
 import { type LayoutMode } from "@/components/graph/LayoutModeToggle";
 import { OptionsPanel } from "@/components/graph/OptionsPanel";
+import { type PaneCount, PaneCountControl } from "@/components/graph/PaneCountControl";
 import { SearchInput } from "@/components/graph/SearchInput";
 import { SidePanel } from "@/components/graph/SidePanel";
 import SwimLaneCanvas from "@/components/graph/SwimLaneCanvas";
@@ -33,6 +35,7 @@ export default function GraphPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("swim-lane");
+  const [paneCount, setPaneCount] = useState<PaneCount>(1);
   const [statusFilter, setStatusFilter] = useState(ALL_FILTER_VALUE);
   const [folderFilter, setFolderFilter] = useState(ALL_FILTER_VALUE);
   const [isDark, setIsDark] = useState(() =>
@@ -82,12 +85,14 @@ export default function GraphPage() {
   // time a visitor switches into it (default layoutMode is swim-lane) and every subsequent
   // toggle back from swim-lane (TOR-06-AFMTHM6, amended). GraphCanvas is always mounted
   // (design-notes.md §20), so triggering the fit here, at the moment the canvas actually
-  // becomes visible, is what fixes the display:none-during-fit clump bug.
+  // becomes visible, is what fixes the display:none-during-fit clump bug. Also fires when
+  // paneCount becomes 2 (TOR-11-6XjR1qm): DualPaneBoard can make force-directed newly visible at
+  // its new ~half-width bounds without a layoutMode change (e.g. swim-lane stays primary).
   useEffect(() => {
-    if (layoutMode === "force-directed") {
+    if (layoutMode === "force-directed" || paneCount === 2) {
       resetViewRef.current?.();
     }
-  }, [layoutMode]);
+  }, [layoutMode, paneCount]);
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -103,13 +108,17 @@ export default function GraphPage() {
           />
         }
         options={
-          <OptionsPanel
-            layoutMode={layoutMode}
-            onLayoutModeChange={setLayoutMode}
-            isDark={isDark}
-            onThemeChange={handleThemeChange}
-            onResetView={() => resetViewRef.current?.()}
-          />
+          <div className="flex items-center gap-2">
+            <PaneCountControl paneCount={paneCount} onChange={setPaneCount} />
+            <OptionsPanel
+              layoutMode={layoutMode}
+              onLayoutModeChange={setLayoutMode}
+              isDark={isDark}
+              onThemeChange={handleThemeChange}
+              onResetView={() => resetViewRef.current?.()}
+              showResetView={layoutMode === "force-directed" || paneCount === 2}
+            />
+          </div>
         }
       />
       <div className="flex flex-1 overflow-hidden">
@@ -129,47 +138,72 @@ export default function GraphPage() {
                   onFolderFilterChange={setFolderFilter}
                 />
               )}
-              <div
-                className="min-h-0 flex-1"
-                style={{ display: layoutMode === "force-directed" ? "block" : "none" }}
-              >
-                {graphData.nodes.length === 0 ? (
-                  <EmptyState />
-                ) : (
-                  <GraphCanvas
-                    nodes={graphData.nodes}
-                    edges={graphData.edges}
-                    onNodeClick={setSelectedNode}
-                    searchScores={scores}
-                    relevanceThreshold={RELEVANCE_THRESHOLD}
-                    isDark={isDark}
-                    filteredOutNodeIds={computeFilteredOutNodeIds(
-                      graphData.nodes,
-                      statusFilter,
-                      folderFilter,
-                    )}
-                    radiusScaleByNodeId={computeRadiusScale(graphData.nodes, graphData.edges)}
-                    focusedNodeId={selectedNode?.id ?? null}
-                    onResetViewReady={(fn) => {
-                      resetViewRef.current = fn;
-                    }}
-                  />
-                )}
-              </div>
-              <div
-                className="min-h-0 flex-1"
-                style={{ display: layoutMode === "swim-lane" ? "block" : "none" }}
-              >
-                <SwimLaneCanvas
+              {paneCount === 2 ? (
+                <DualPaneBoard
                   nodes={graphData.nodes}
                   edges={graphData.edges}
+                  layoutMode={layoutMode}
+                  onLayoutModeChange={setLayoutMode}
+                  selectedNode={selectedNode}
                   onNodeClick={setSelectedNode}
                   isDark={isDark}
                   searchScores={scores}
                   relevanceThreshold={RELEVANCE_THRESHOLD}
-                  focusedNodeId={selectedNode?.id ?? null}
+                  filteredOutNodeIds={computeFilteredOutNodeIds(
+                    graphData.nodes,
+                    statusFilter,
+                    folderFilter,
+                  )}
+                  radiusScaleByNodeId={computeRadiusScale(graphData.nodes, graphData.edges)}
+                  onResetViewReady={(fn) => {
+                    resetViewRef.current = fn;
+                  }}
                 />
-              </div>
+              ) : (
+                <>
+                  <div
+                    className="min-h-0 flex-1"
+                    style={{ display: layoutMode === "force-directed" ? "block" : "none" }}
+                  >
+                    {graphData.nodes.length === 0 ? (
+                      <EmptyState />
+                    ) : (
+                      <GraphCanvas
+                        nodes={graphData.nodes}
+                        edges={graphData.edges}
+                        onNodeClick={setSelectedNode}
+                        searchScores={scores}
+                        relevanceThreshold={RELEVANCE_THRESHOLD}
+                        isDark={isDark}
+                        filteredOutNodeIds={computeFilteredOutNodeIds(
+                          graphData.nodes,
+                          statusFilter,
+                          folderFilter,
+                        )}
+                        radiusScaleByNodeId={computeRadiusScale(graphData.nodes, graphData.edges)}
+                        focusedNodeId={selectedNode?.id ?? null}
+                        onResetViewReady={(fn) => {
+                          resetViewRef.current = fn;
+                        }}
+                      />
+                    )}
+                  </div>
+                  <div
+                    className="min-h-0 flex-1"
+                    style={{ display: layoutMode === "swim-lane" ? "block" : "none" }}
+                  >
+                    <SwimLaneCanvas
+                      nodes={graphData.nodes}
+                      edges={graphData.edges}
+                      onNodeClick={setSelectedNode}
+                      isDark={isDark}
+                      searchScores={scores}
+                      relevanceThreshold={RELEVANCE_THRESHOLD}
+                      focusedNodeId={selectedNode?.id ?? null}
+                    />
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>

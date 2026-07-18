@@ -24,11 +24,20 @@ describe("components/graph/OptionsPanel.tsx", () => {
     expect(source).toContain("Force-directed");
   });
 
-  it("TOR-02-IrF7v8x: renders a Reset view control only in force-directed mode, wired to onResetView", () => {
+  it("TOR-02-IrF7v8x: renders a Reset view control only when the force-directed pane is rendered, wired to onResetView", () => {
     expect(source).toContain("onResetView?: () => void");
     expect(source).toMatch(
-      /\{layoutMode === "force-directed" && \(\s*<button[\s\S]*?onClick=\{onResetView\}[\s\S]*?Reset view[\s\S]*?<\/button>\s*\)\}/,
+      /\{showResetView && \(\s*<button[\s\S]*?onClick=\{onResetView\}[\s\S]*?Reset view[\s\S]*?<\/button>\s*\)\}/,
     );
+  });
+
+  it("TOR-11-6XjR1qm: defaults showResetView to force-directed mode, but accepts an override for when force-directed is a secondary DualPaneBoard pane", () => {
+    // DualPaneBoard can render force-directed as the non-primary pane in 2-pane mode, in which
+    // case layoutMode reflects the primary (swim-lane) pane — showResetView lets app/graph/page.tsx
+    // broaden visibility to `layoutMode === "force-directed" || paneCount === 2` without OptionsPanel
+    // needing to know about paneCount at all.
+    expect(source).toContain('showResetView?: boolean;');
+    expect(source).toContain('showResetView = layoutMode === "force-directed",');
   });
 
   it("TOR-06-DRtjcOk: renders an icon-only hamburger button with an accessible label, not a text label", () => {
