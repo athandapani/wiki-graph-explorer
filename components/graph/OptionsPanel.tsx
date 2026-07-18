@@ -10,6 +10,10 @@ interface OptionsPanelProps {
   isDark: boolean;
   onThemeChange: (isDark: boolean) => void;
   onResetView?: () => void;
+  // Whether the force-directed pane is rendered anywhere on the board right now — true when it's
+  // the sole active mode, and also in 2-pane mode where it may be the secondary pane even while
+  // layoutMode reflects the primary swim-lane pane (DualPaneBoard, TOR-11-6XjR1qm).
+  showResetView?: boolean;
 }
 
 export function OptionsPanel({
@@ -18,6 +22,7 @@ export function OptionsPanel({
   isDark,
   onThemeChange,
   onResetView,
+  showResetView = layoutMode === "force-directed",
 }: OptionsPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -58,7 +63,7 @@ export function OptionsPanel({
                 Diagram style
               </h2>
               <LayoutModeToggle mode={layoutMode} onChange={onLayoutModeChange} />
-              {layoutMode === "force-directed" && (
+              {showResetView && (
                 <button
                   type="button"
                   onClick={onResetView}

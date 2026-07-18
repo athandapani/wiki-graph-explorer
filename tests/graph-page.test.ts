@@ -152,8 +152,15 @@ describe("app/graph/page.tsx", () => {
     // swim-lane, so a visitor's first view of force-directed is always such a transition).
     expect(source).toContain("const resetViewRef = useRef<(() => void) | null>(null);");
     expect(source).toMatch(
-      /useEffect\(\(\) => \{\s*if \(layoutMode === "force-directed"\) \{\s*resetViewRef\.current\?\.\(\);\s*\}\s*\}, \[layoutMode\]\);/,
+      /useEffect\(\(\) => \{\s*if \(layoutMode === "force-directed" \|\| paneCount === 2\) \{\s*resetViewRef\.current\?\.\(\);\s*\}\s*\}, \[layoutMode, paneCount\]\);/,
     );
+  });
+
+  it("TOR-11-6XjR1qm: also re-fits the force-directed camera when paneCount becomes 2, not only on a layoutMode change", () => {
+    // DualPaneBoard can make force-directed newly visible at its new ~half-width bounds purely
+    // via the pane-count toggle, with layoutMode unchanged (swim-lane stays primary) — the
+    // dependency array above must include paneCount for that case to re-fit.
+    expect(source).toContain("[layoutMode, paneCount]");
   });
 
   it("TOR-02-lcYAVDz / TOR-02-IrF7v8x: wires GraphCanvas's fit function into resetViewRef, and resetViewRef into OptionsPanel's reset control", () => {
@@ -194,5 +201,53 @@ describe("app/graph/page.tsx", () => {
     expect(source).not.toContain("<ExplainerSection");
     expect(source).not.toContain("ExplainerSection");
     expect(source).toContain('className="flex h-full flex-col overflow-hidden"');
+  });
+
+  it("TOR-11-45utBRH: renders PaneCountControl beside OptionsPanel in the Header options slot, independent of the layout-mode toggle", () => {
+    const optionsSlot = source.slice(source.indexOf("options={"), source.indexOf("<OptionsPanel"));
+    expect(optionsSlot).toContain("<PaneCountControl");
+    expect(source).toContain('useState<PaneCount>(1);');
+    expect(source).toContain("paneCount={paneCount} onChange={setPaneCount}");
+    // Independent of the layout-mode toggle: PaneCountControl doesn't read or write layoutMode.
+    const paneControlProps = source.slice(
+      source.indexOf("<PaneCountControl"),
+      source.indexOf("/>", source.indexOf("<PaneCountControl")),
+    );
+    expect(paneControlProps).not.toContain("layoutMode");
+  });
+
+  it("TOR-11-6XjR1qm / TOR-11-XOBsafW: renders DualPaneBoard when paneCount is 2, passing layoutMode so the active mode is the primary pane", () => {
+    expect(source).toContain("paneCount === 2 ? (");
+    expect(source).toContain("<DualPaneBoard");
+    const dualPaneProps = source.slice(
+      source.indexOf("<DualPaneBoard"),
+      source.indexOf("/>", source.indexOf("<DualPaneBoard")),
+    );
+    expect(dualPaneProps).toContain("layoutMode={layoutMode}");
+    expect(dualPaneProps).toContain("onLayoutModeChange={setLayoutMode}");
+    expect(dualPaneProps).toContain("selectedNode={selectedNode}");
+    expect(dualPaneProps).toContain("onNodeClick={setSelectedNode}");
+  });
+
+  it("TOR-11-qzGSh7K: passes onLayoutModeChange (not just onNodeClick) into DualPaneBoard so returning to 1-pane can show the last-interacted pane", () => {
+    // DualPaneBoard owns the actual last-interacted-pane tracking (see
+    // tests/dual-pane-board.test.tsx) — this only guards that page.tsx wires the callback
+    // DualPaneBoard needs for that, into the same setLayoutMode used by the 1-pane toggle.
+    const dualPaneProps = source.slice(
+      source.indexOf("<DualPaneBoard"),
+      source.indexOf("/>", source.indexOf("<DualPaneBoard")),
+    );
+    expect(dualPaneProps).toContain("onLayoutModeChange={setLayoutMode}");
+  });
+
+  it("TOR-11-73Scw5U: paneCount is not a dependency of the graph-data/vector-index fetch effect, so toggling it never refetches", () => {
+    // Reuses the same fetch-count assertions as TOR-06-mvJp8Oa above; this test additionally
+    // pins down that the fetch effect's dependency array stays empty even after paneCount exists.
+    const graphDataFetches = source.match(/fetch\(`\$\{basePath\}\/graph-data\.json`\)/g) ?? [];
+    const vectorIndexFetches = source.match(/fetch\(`\$\{basePath\}\/vector-index\.json`\)/g) ?? [];
+    expect(graphDataFetches).toHaveLength(1);
+    expect(vectorIndexFetches).toHaveLength(1);
+    expect(source).toMatch(/useEffect\(\(\) => \{\s*async function load/);
+    expect(source).toMatch(/void load\(\);\s*\}, \[\]\);/);
   });
 });
