@@ -260,7 +260,7 @@ export default function SwimLaneCanvas({
 
       paths.push({
         targetId,
-        d: buildConnectorPath(source.x, source.y, target.x, target.y),
+        d: buildConnectorPath(source.x, source.y, target.x, target.y, sourceEdge, targetEdge),
         color: getFolderColor(targetNode.folder, isDark),
         isRevealed: revealableIds.has(targetId),
       });
@@ -319,7 +319,7 @@ export default function SwimLaneCanvas({
                 {totalCount} page{totalCount === 1 ? "" : "s"} total
               </p>
             </div>
-            <div className="flex flex-1 flex-wrap content-start gap-1 overflow-hidden">
+            <div className="relative z-0 flex flex-1 flex-wrap content-start gap-1 overflow-hidden">
               {visibleIds
                 .map((id) => nodesById.get(id))
                 .filter((candidate): candidate is GraphNode => candidate !== undefined)

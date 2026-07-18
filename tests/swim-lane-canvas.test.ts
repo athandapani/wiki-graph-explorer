@@ -95,6 +95,15 @@ describe("components/graph/SwimLaneCanvas.tsx", () => {
     expect(source).toContain('className="pointer-events-none absolute inset-0 -z-10 h-full w-full"');
   });
 
+  it("gives the pill-row container an explicit stacking-context z-index above the connector svg", () => {
+    // Belt-and-suspenders guarantee (on top of the svg's -z-10 above) that pills are always an
+    // unambiguous stacking-context member above the connector lines, regardless of any future
+    // change to pill or lane styling — a pill's text must never be visually covered by a line.
+    expect(source).toContain(
+      'className="relative z-0 flex flex-1 flex-wrap content-start gap-1 overflow-hidden"',
+    );
+  });
+
   it("TOR-04-1iMsnYq: syncs activeNodeId from an externally focused node (e.g. a SidePanel chip click), one-way and non-null-only", () => {
     expect(source).toContain("focusedNodeId?: string | null");
     // Adjusted during render (not inside useEffect) per React's props->state sync pattern.
