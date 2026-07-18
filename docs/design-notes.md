@@ -158,9 +158,12 @@ legitimately describes the local dev setup and expected directory structure.
 
 ## 13. Taxonomy Node Colors: Validated Categorical Palette with Golden-Angle Overflow
 
-**Decision:** Nodes are colored by folder (taxonomy) using a validated 8-hue categorical palette
-(worst adjacent color-vision-deficiency ΔE 24.2, sourced from the project's `dataviz` skill).
-Folders beyond the first 8 receive generated golden-angle HSL colors to avoid collisions.
+**Decision:** Nodes are colored by folder (taxonomy) using a validated 8-hue categorical palette,
+sourced from and re-checked against the project's `dataviz` skill palette validator
+(`scripts/validate_palette.js`). Folders beyond the first 8 receive generated golden-angle HSL
+colors to avoid collisions. Slot 0 was updated from blue to teal (`#0088a3` light / `#109cc6`
+dark) as part of a visual refresh; the validator confirmed CVD separation, chroma floor, and
+surface contrast all pass for the new slot 0 against the other 7 fixed hues in both themes.
 
 **Rationale:** Nodes-with-different-folders must render distinctly (TOR-02-AyzgOJs). A validated
 categorical palette ensures accessibility (CVD-safe) and perceptual separation. A naive cycling
@@ -168,6 +171,12 @@ approach (reusing the 8 colors for folder #9, #10, etc.) would collide with an e
 color, breaking the requirement; golden-angle hue distribution ensures all colors remain distinct
 even for arbitrarily many folders. A proper UI legend or "Other" grouping for overflow folders is
 deferred to the future side-panel epic (V3PlLFL).
+
+**Known pre-existing gap (not introduced by the teal change, not yet fixed):** the validator also
+flags the orange↔magenta pair (light theme) and the red↔magenta and green↔yellow pairs (dark
+theme) as below its normal-vision-floor threshold. This predates the slot-0 teal change and was
+discovered, not caused, while re-validating slot 0 — left as a follow-up rather than fixed inline,
+since it touches slots outside this refresh's scope.
 
 ---
 
@@ -716,6 +725,35 @@ security — it prevents an attacker from using GitHub Actions to force a deploy
 explicit repo-owner consent. The workflow itself is complete and tested (per Epic cxjcyqx);
 the Settings → Pages → Source step is a one-time post-merge ceremony that must be completed
 after the workflow lands in the repo.
+
+---
+
+## 51. Visual Refresh: Manrope/Inter Typefaces and Teal Accent (TOR-07-37VPhrV Spec Deviation)
+
+**Decision:** The site's typeface pairing changed from all-Geist to Manrope (headings, via a new
+`--font-heading` CSS variable and `font-heading` Tailwind utility applied globally to `h1`–`h6`)
++ Inter (body, replacing Geist as the `--font-sans` default). The shared accent color (§25) moved
+from blue to teal — `#0088a3` light / `#109cc6` dark — and the dark-mode background shifted from
+neutral `#0a0a0a` to a cool-tinted `#0a0f14`. Per §13's established convention, the graph's own
+categorical palette slot 0 (`nodeColor.ts`) was updated in lockstep so chrome and graph nodes stay
+in sync.
+
+**Rationale:** User-requested visual refresh after reviewing mocked-up font/color comparisons
+(rendered as real Google Fonts via a local static HTML page + `playwright-cli` screenshots, since
+published Artifacts block external font/CDN requests via CSP). The user picked the Manrope
+pairing and confirmed the teal accent should also apply to the graph's categorical palette, not
+just chrome. This directly conflicts with **`TOR-07-37VPhrV`**, which mandates Geist specifically
+("never falling back to Arial or a generic sans-serif default"). The user explicitly confirmed
+proceeding as an intentional, documented Spec Deviation rather than fixing the requirement first
+— the same pattern used for the `TOR-05-G72S3H4` explainer-placement deviation. §23's original
+Geist decision and §25's original blue-slot-0 rationale remain historically accurate for the
+epic they describe; this entry documents the values that superseded them.
+
+The new teal slot 0 was re-validated with the dataviz skill's `validate_palette.js` against the
+other 7 fixed categorical hues (CVD separation, chroma floor, and surface contrast all pass, in
+both themes). The validator also surfaced two pre-existing, unrelated floor failures (orange↔
+magenta in light, red↔magenta and green↔yellow in dark) that predate this change — left as a
+follow-up rather than fixed inline, since they fall outside this refresh's slot-0-only scope.
 
 ---
 

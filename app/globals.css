@@ -5,27 +5,44 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  /* Mirrors components/graph/nodeColor.ts's ACCENT_LIGHT (LIGHT_PALETTE[0]) — keep in sync. */
-  --accent: #2a78d6;
+  /* Mirrors components/graph/nodeColor.ts's ACCENT_LIGHT (LIGHT_PALETTE[0]) — keep in sync.
+     Teal, validated with the dataviz skill's palette validator against the other 7 fixed
+     categorical hues (CVD separation + chroma floor + surface contrast all pass). */
+  --accent: #0088a3;
 }
 
 .dark {
-  --background: #0a0a0a;
+  /* Cool-tinted dark surface (was neutral #0a0a0a) — part of the teal/cool-dark visual
+     refresh; re-validated as the dark-mode contrast surface for --accent below. */
+  --background: #0a0f14;
   --foreground: #ededed;
   /* Mirrors components/graph/nodeColor.ts's ACCENT_DARK (DARK_PALETTE[0]) — keep in sync. */
-  --accent: #3987e5;
+  --accent: #109cc6;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* TOR-07-37VPhrV Spec Deviation: that requirement mandates Geist specifically. Confirmed
+     by the user as an intentional, documented deviation (visual refresh) rather than fixing
+     the requirement first — same pattern as the TOR-05-G72S3H4 deviation. */
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-manrope);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+/* Headings use the Manrope pairing site-wide without touching every component individually. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
 }
 
 /* Negative outline-offset draws the ring inside the element's own box instead of outside it, so

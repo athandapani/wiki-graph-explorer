@@ -19,7 +19,7 @@ export function Header({ search, tagline }: HeaderProps = {}) {
       <div className="flex flex-wrap items-center gap-4">
         <Link href="/" className="flex shrink-0 items-center gap-2">
           <Logo className="h-6 w-6 text-[var(--accent)]" />
-          <span className={tagline ? "text-xl font-bold" : "text-lg font-semibold"}>
+          <span className={`font-heading ${tagline ? "text-xl font-bold" : "text-lg font-semibold"}`}>
             Wiki Graph Explorer
           </span>
         </Link>
