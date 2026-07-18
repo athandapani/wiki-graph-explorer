@@ -102,3 +102,54 @@ Scenario: [TOR-07-juwVT2o] The /graph page shall render a visible focus indicato
     When each control receives focus
     Then that control should render a visible focus indicator distinguishing it from its unfocused state
     And no interactive control should receive focus without a visible indicator
+
+
+# --------------------------------------------------------------------------------------------------
+# Theme Chooser (added 2026-07-18, Cycle 3 — dual-pane & theming)
+# --------------------------------------------------------------------------------------------------
+
+Scenario: [TOR-07-6nVdgBJ] The Color theme section shall display 3 curated font+accent-color presets in addition to the existing light/dark toggle
+    Given a visitor opens the Options & help popover on /graph
+    When the Color theme section renders
+    Then it should display the existing light/dark toggle
+    And it should display 3 curated preset swatches, each representing a distinct font+accent-color combination
+
+Scenario: [TOR-07-VBZZx0f] Selecting a curated theme preset shall update both the page's chrome and the graph's node color palette to that preset's validated values
+    Given a visitor is viewing /graph with the default theme
+    When the visitor selects a curated preset from the Color theme section
+    Then the page's font pairing and accent color (chrome) should update to the preset's values
+    And the graph's node color palette should update to the same preset's validated values
+
+Scenario: [TOR-07-LquSsD5] The Color theme section shall provide a 4th "Custom" option that reveals a color picker for selecting an arbitrary accent color
+    Given a visitor opens the Color theme section
+    When the visitor selects the "Custom" option
+    Then a color picker control should become visible
+    And no theme change should occur until the visitor picks a color
+
+Scenario: [TOR-07-p18cpcx] Selecting a custom accent color shall re-theme only chrome elements, leaving the graph's node color palette unchanged
+    Given a visitor has selected the "Custom" option and opened the color picker
+    When the visitor picks a custom accent color
+    Then the header, buttons, and focus ring should update to reflect the chosen color
+    And the graph's node color palette should remain unchanged from its current preset
+
+Scenario: [TOR-07-HKyFd0T] The theme chooser shall visibly disclose that a custom accent color is not validated for CVD-safety or contrast, distinguishing it from the curated presets
+    #
+    # Note:
+    #   1. Curated presets are pre-validated as a set via the dataviz skill's palette validator
+    #      (same process used for the shipped teal/Manrope refresh). A visitor-chosen custom
+    #      color has no such guarantee, so the UI must say so rather than imply parity.
+    #
+    Given a visitor has selected the "Custom" option
+    When the custom color picker is visible
+    Then a visible note should disclose that the custom color is not validated for color-vision-deficiency safety or contrast, unlike the curated presets
+
+Scenario: [TOR-07-WU8PBMV] The visitor's selected theme preset or custom color choice shall persist across page reloads via localStorage
+    Given a visitor has selected a curated preset or a custom accent color
+    When the visitor reloads the page
+    Then the previously selected preset or custom color should be applied without requiring re-selection
+
+Scenario: [TOR-07-dttI7qm] Switching from a custom accent color back to a curated preset shall re-sync both chrome and the graph's node color palette to that preset's validated values
+    Given a visitor has an active custom accent color selected
+    When the visitor selects a curated preset
+    Then chrome should update to the preset's font+accent values
+    And the graph's node color palette should update to the same preset's validated values

@@ -1,0 +1,194 @@
+{
+  "feature_id": "11",
+  "feature_file": "11-dual-pane-layout.feature.md",
+  "generated": "2026-07-18",
+  "generator": "haiku-sub-agent via /peak-workflow:capture-requirements",
+  "requirements": [
+    {
+      "id": "TOR-11-45utBRH",
+      "title": "Above the wide-screen breakpoint, the /graph page shall display a pane-count control positioned beside the Options & help hamburger, independent of the layout-mode toggle",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Dual-Pane & Theming, Cycle 3)",
+            "paraphrase": "An independent pane-count control (1-pane / 2-pane) sits in the header beside the Options & help hamburger, orthogonal to the existing force-directed/swim-lane mode toggle."
+          },
+          {
+            "section": "§9 — Design Direction (Dual-Pane & Theming, Cycle 3)",
+            "paraphrase": "The pane-count control is positioned beside the Options & help hamburger and is always visible above the wide-screen breakpoint, ensuring discoverable access to dual-pane mode."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S13",
+            "step": 1,
+            "paraphrase": "When a visitor is on /graph above the wide-screen breakpoint, a pane-count control is visible in the header, independent from the layout-mode toggle."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-11-6XjR1qm",
+      "title": "Activating the pane-count control shall switch the board from 1-pane to 2-pane mode, rendering both the swim-lane and force-directed layouts side by side at approximately half width each",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Dual-Pane & Theming, Cycle 3)",
+            "paraphrase": "In 2-pane mode both layouts render simultaneously side by side at roughly half width each, letting visitors compare data presentation styles without losing context."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S13",
+            "step": 2,
+            "paraphrase": "When a visitor clicks the pane-count toggle, the board splits into two side-by-side panes, each at approximately half the board's width."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-11-XOBsafW",
+      "title": "In 2-pane mode, whichever layout mode was active before switching shall render as the primary pane, with the other mode filling the second pane",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Dual-Pane & Theming, Cycle 3)",
+            "paraphrase": "When entering 2-pane mode, the layout that was active before the switch becomes the primary pane, preserving the visitor's prior intent."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S13",
+            "step": 3,
+            "paraphrase": "When toggling to 2-pane mode, the layout mode that was active becomes the primary pane and the other mode fills the secondary pane."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-11-y75iqea",
+      "title": "Clicking a node in one pane while in 2-pane mode shall focus that same node in the other pane and update the shared side panel with that node's detail",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Dual-Pane & Theming, Cycle 3)",
+            "paraphrase": "Node selection is synced across both panes and the shared side panel, so a click in one pane immediately updates the other."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S13",
+            "step": 4,
+            "paraphrase": "When a visitor clicks a node in one pane, that same node becomes focused in the other pane with connector lines or highlighting activated, and the shared side panel displays its detail."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-11-edqY3uP",
+      "title": "Clicking a different node in the other pane shall update focus in both panes and the side panel together",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Dual-Pane & Theming, Cycle 3)",
+            "paraphrase": "Node selection is synced across both panes and the shared side panel, maintaining state consistency as the visitor explores via either pane."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S13",
+            "step": 5,
+            "paraphrase": "When a visitor clicks a different node in the other pane, focus updates in both panes and the shared side panel together, showing the newly selected node's detail."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-11-qzGSh7K",
+      "title": "Deactivating the pane-count control while in 2-pane mode shall return the board to 1-pane mode, showing whichever layout mode was last focused or interacted with",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Dual-Pane & Theming, Cycle 3)",
+            "paraphrase": "The pane-count toggle is a persistent control; toggling from 2-pane back to 1-pane restores the mode that was last focused, preserving navigation intent."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S13",
+            "step": 6,
+            "paraphrase": "When a visitor deactivates the pane-count control, the board returns to 1-pane mode displaying whichever layout mode was last focused or interacted with."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-11-TFakQZA",
+      "title": "Below the wide-screen breakpoint, the pane-count control shall be hidden and the board shall render in 1-pane mode only",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Dual-Pane & Theming, Cycle 3)",
+            "paraphrase": "Available only above a wide-screen breakpoint — below it, the control is hidden and the page behaves exactly as it does today (1-pane only), consistent with the existing 390px responsive-floor precedent."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S10",
+            "step": 1,
+            "paraphrase": "When a visitor opens /graph at 390px viewport width, the board lays out single-column with no dual-pane option visible, matching the existing responsive floor."
+          },
+          {
+            "scenario": "S13",
+            "step": 7,
+            "paraphrase": "When a visitor is viewing /graph below the wide-screen breakpoint, the pane-count control is not visible and the board renders in 1-pane mode only."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-11-Umq6yH6",
+      "title": "If a visitor resizes the browser below the wide-screen breakpoint while in 2-pane mode, the board shall automatically fall back to 1-pane mode",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Dual-Pane & Theming, Cycle 3)",
+            "paraphrase": "Below the wide-screen breakpoint, the page behaves exactly as it does today (1-pane only), consistent with the existing 390px responsive-floor precedent, automatically collapsing 2-pane mode if already active."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S13",
+            "step": 7,
+            "paraphrase": "When a visitor resizes the viewport below the wide-screen breakpoint while in 2-pane mode, the board automatically falls back to 1-pane mode and the pane-count control becomes hidden."
+          },
+          {
+            "scenario": "S13",
+            "step": null,
+            "paraphrase": "The Operational Constraints (§8) specify that 2-pane mode requires a wide-screen viewport; below it, the control is hidden and the board is 1-pane only."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-11-73Scw5U",
+      "title": "Switching between 1-pane and 2-pane mode shall not trigger a new network request for graph-data.json or vector-index.json",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary",
+            "paraphrase": "Both force-directed and swim-lane modes share the same node coloring, status dots, hover tooltips, and side-panel/search integration; switching is instant with no data refetch."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S13",
+            "step": null,
+            "paraphrase": "When a visitor toggles between 1-pane and 2-pane mode, both panes reuse the already-fetched graph-data.json and vector-index.json with no new network requests."
+          }
+        ]
+      }
+    }
+  ],
+  "coverage_gaps": []
+}

@@ -1,0 +1,32 @@
+# Discovery Changelog
+
+**Date:** 2026-07-18
+**Mode:** Brownfield (post-MVP ideation)
+**Previous Version:** 1.2
+
+## What Changed
+
+| Document | Section | Change Type | Summary |
+|----------|---------|-------------|---------|
+| product-vision.md | 6 (MVP Scope Summary) | Added | New "Dual-Pane & Theming (Cycle 3)" subsection: pane-count control + 3-preset theme chooser with custom option |
+| product-vision.md | 8 (Key Business Scenarios) | Added | Scenarios 11 (Dual-pane exploration) and 12 (Theme selection) |
+| product-vision.md | 9 (Design Direction) | Modified | New bullet covering pane-control placement and theme-chooser validation/disclosure approach |
+| concept-of-operations.md | 3 (Proposed System) | Modified | New "Cycle 3" paragraph describing dual-pane and theming behavior |
+| concept-of-operations.md | 5 (Operational Scenarios) | Added | Scenario 13 (Dual-pane exploration) and Scenario 14 (Theme selection), fully detailed |
+| concept-of-operations.md | 7 (Functional Summary) | Added | "Pane layout" and "Theming" table rows |
+| concept-of-operations.md | 8 (Operational Constraints) | Added | "Pane-count breakpoint" and "Custom theme accessibility" constraint rows |
+| concept-of-operations.md | 9 (Glossary) | Added | "Pane count" and "Theme preset" terms |
+
+## New Capabilities Identified
+
+- **Dual-pane graph view**: an independent 1-pane/2-pane control, positioned beside the Options & help hamburger, orthogonal to the existing force-directed/swim-lane mode toggle. In 2-pane mode both layouts render side by side with synced node selection across both panes and the shared side panel. Available only above a wide-screen breakpoint (exact px value deferred to epic planning); below it, behaves exactly as today.
+- **Theme chooser**: extends the existing Color theme section with 3 CVD-validated font+accent presets (chrome + graph-node-palette synced, same validation process as the shipped teal/Manrope refresh) plus a 4th "Custom" option (chrome-only, accessibility-unvalidated, disclosed in the UI). Persists via localStorage.
+
+## Priority Signal
+
+User explicitly prioritized these two capabilities ahead of the already-scoped-but-unimplemented Guided Tour epic (2Ze47tg) and Keyboard De-escalation epic (eMNbiFL) — both of which remain queued for after this cycle. Within this session: pane control must be a separate, always-visible control beside the hamburger (not folded into the existing mode toggle or the Options popover), and the theme chooser must include the custom-color option, not just 3 fixed presets — both were explicit, non-default choices over the recommended simpler alternatives presented during the interview.
+
+## Deferred Items
+
+- Whether dual-pane mode should ever be forceable below the wide-screen breakpoint — explicitly deferred in favor of the existing 390px-floor auto-fallback precedent.
+- Guided Tour epic (2Ze47tg) and Keyboard De-escalation epic (eMNbiFL) — both already-scoped, un-implemented epics from a prior cycle, explicitly deferred behind this cycle's work per the user's stated priority.
