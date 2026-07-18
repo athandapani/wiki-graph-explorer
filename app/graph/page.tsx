@@ -57,9 +57,13 @@ export default function GraphPage() {
   useEffect(() => {
     async function load(): Promise<void> {
       try {
+        // Next's basePath rewriting only covers its own build-time asset/link references, not
+        // plain runtime fetch() calls — these must prepend it manually to resolve correctly when
+        // served from a subpath (e.g. GitHub Project Pages).
+        const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
         const [graphResponse, vectorResponse] = await Promise.all([
-          fetch("/graph-data.json"),
-          fetch("/vector-index.json"),
+          fetch(`${basePath}/graph-data.json`),
+          fetch(`${basePath}/vector-index.json`),
         ]);
         if (!graphResponse.ok || !vectorResponse.ok) {
           throw new Error("Failed to load graph data.");

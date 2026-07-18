@@ -10,8 +10,8 @@ describe("app/graph/page.tsx", () => {
 
   it("TOR-01-ly1VpL1: is a client component that fetches graph-data.json and vector-index.json for client-side rendering", () => {
     expect(source).toContain('"use client"');
-    expect(source).toContain('fetch("/graph-data.json")');
-    expect(source).toContain('fetch("/vector-index.json")');
+    expect(source).toContain("fetch(`${basePath}/graph-data.json`)");
+    expect(source).toContain("fetch(`${basePath}/vector-index.json`)");
   });
 
   it("TOR-02-TW7XEms: dynamically imports GraphCanvas with ssr disabled", () => {
@@ -126,8 +126,10 @@ describe("app/graph/page.tsx", () => {
   });
 
   it("TOR-06-mvJp8Oa: fetches graph-data.json and vector-index.json exactly once, never inside the toggle path", () => {
-    const graphDataFetches = source.match(/fetch\("\/graph-data\.json"\)/g) ?? [];
-    const vectorIndexFetches = source.match(/fetch\("\/vector-index\.json"\)/g) ?? [];
+    // Fetch URLs prepend NEXT_PUBLIC_BASE_PATH (template literal) so they resolve correctly when
+    // served from a subpath, e.g. GitHub Project Pages — see next.config.ts.
+    const graphDataFetches = source.match(/fetch\(`\$\{basePath\}\/graph-data\.json`\)/g) ?? [];
+    const vectorIndexFetches = source.match(/fetch\(`\$\{basePath\}\/vector-index\.json`\)/g) ?? [];
     expect(graphDataFetches).toHaveLength(1);
     expect(vectorIndexFetches).toHaveLength(1);
     expect(source).toMatch(/useEffect\(\(\) => \{[\s\S]*?\}, \[\]\);/);
