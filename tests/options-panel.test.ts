@@ -37,4 +37,18 @@ describe("components/graph/OptionsPanel.tsx", () => {
     expect(source.match(/<line /g)?.length).toBe(3);
     expect(source).not.toContain("Options &amp; help");
   });
+
+  // Moved from the deleted tests/explainer-section.test.ts (TOR-05-G72S3H4 Spec Deviation —
+  // the explainer now lives here instead of a separate below-the-fold section).
+  it("TOR-05-G72S3H4: includes a 'Why build this' section with descriptive text about second-brain/dynamic-context benefits and missing-link discovery", () => {
+    expect(source).toContain("Why build this");
+    expect(source.toLowerCase()).toContain("second-brain");
+    expect(source).toMatch(/dynamic context|dynamic, relevant context|relevant context/i);
+    expect(source).toMatch(/missing link|content gap|isolated/i);
+  });
+
+  it("TOR-05-OMWVZWL: names force-directed mode as where the filter and node-sizing affordances live", () => {
+    expect(source).toContain("force-directed");
+    expect(source).toMatch(/force-directed[\s\S]*status\s+and\s+folder\s+filters/);
+  });
 });

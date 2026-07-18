@@ -185,12 +185,14 @@ describe("app/graph/page.tsx", () => {
     expect(source.indexOf("<Header")).toBeLessThan(source.indexOf("<SwimLaneCanvas"));
   });
 
-  it("TOR-05-G72S3H4: renders ExplainerSection below the graph so a visitor can scroll to it", () => {
-    expect(source).toContain("<ExplainerSection");
-    // Outer wrapper scrolls; inner graph section keeps the original fixed-height class (proven
-    // to size GraphCanvas/SwimLaneCanvas correctly) plus shrink-0 so flexbox can't compress it
-    // to fit the scrollable outer container.
-    expect(source).toContain('className="flex h-full flex-col overflow-y-auto"');
-    expect(source).toContain('className="flex h-full shrink-0 flex-col overflow-hidden"');
+  // TOR-05-G72S3H4 Spec Deviation: that requirement specifies the explainer is revealed by
+  // scrolling. User-confirmed intentional deviation — the explainer content now lives inside
+  // the Options & help popover instead (see tests/options-panel.test.ts for the content
+  // assertions). With no more below-the-fold content, the page dropped the two-level
+  // scroll/fixed wrapper it used to need.
+  it("TOR-05-G72S3H4 (Spec Deviation): no longer renders a separate below-the-fold ExplainerSection", () => {
+    expect(source).not.toContain("<ExplainerSection");
+    expect(source).not.toContain("ExplainerSection");
+    expect(source).toContain('className="flex h-full flex-col overflow-hidden"');
   });
 });
