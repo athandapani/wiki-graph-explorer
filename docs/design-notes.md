@@ -757,3 +757,31 @@ follow-up rather than fixed inline, since they fall outside this refresh's slot-
 
 ---
 
+## 52. Categorical Palette: Violet Promoted to a Visible Slot, Dark Yellow Brightened
+
+**Decision:** Slots 3 and 4 of the categorical palette (§13) were swapped — violet
+(`#4a3aa7`/`#9085e9`) moved to slot 3, pure green (`#008300`) moved to slot 4. Dark-mode slot 2
+(yellow) changed from `#c98500` to `#d17d00`.
+
+**Rationale:** User-reported: with exactly 4 folders in the deployed demo vault (only slots 0–3
+ever render), slot 1 (aqua, `#1baf7a`/`#199e70`) and the old slot 3 (green, `#008300`) both read
+as green-family and too similar, while violet (slot 4) never appeared at all. Swapping slots 3
+and 4 fixes both — the four visible slots become teal/aqua/yellow/violet instead of
+teal/aqua/yellow/green, and green remains available for a 5th+ folder in other vaults. This
+introduces one new WARN-level (not FAIL) adjacency, red↔green in light mode (ΔE 7.2, within the
+validator's "6–8, legal only with secondary encoding" band) — acceptable since folder identity
+is never color-alone here; every pill always shows its full title text.
+
+The dark-mode yellow was reported as needing to read brighter. Re-validated with
+`validate_palette.js`: the dark-mode OKLCH lightness band caps at L 0.67, and the original
+`#c98500` already sat at L 0.6699 — essentially the ceiling, leaving no room for genuine
+"lighter" without breaking CVD-safety. `#d17d00` instead maximizes chroma within the same safe
+band (found via a scan across hue 36–48°, chroma 0.1425 → 0.1494) for a more vivid look at
+equivalent lightness.
+
+Both changes were validated end-to-end before implementation; neither introduces a new FAIL —
+only the same two pre-existing, unrelated floor failures noted in §13/§51 (orange↔magenta
+light, red↔magenta dark) persist, untouched.
+
+---
+

@@ -7,16 +7,30 @@
 //
 // Slot 0 (teal) was re-validated against the other 7 fixed hues when the accent moved from
 // blue to teal (visual refresh, TOR-07-37VPhrV Spec Deviation) — CVD separation, chroma floor,
-// and surface contrast all pass for the new slot 0 in both themes. The validator also surfaced
-// two pre-existing floor failures unrelated to slot 0 (orange↔magenta in light, red↔magenta
-// and green↔yellow in dark) — these predate this change and are a separate, not-yet-addressed
-// finding, not a regression introduced here.
+// and surface contrast all pass for the new slot 0 in both themes.
+//
+// Slots 3/4 (green/violet) were swapped after the first 4 slots — the only ones visible for a
+// dataset with exactly 4 folders — put two green-family hues (slot 1 aqua, slot 3 green) next
+// to each other while violet sat entirely unused. Violet now renders; pure green moved to slot
+// 4, only used with a 5th+ folder. This introduces one new WARN-level (not FAIL) adjacency
+// (red↔green in light, ΔE 7.2) — legal per the validator's own rules since folder identity is
+// never color-alone here (every pill always shows its full title text as well).
+//
+// Dark-mode slot 2 (yellow) was brightened from #c98500 (#0088a3-era) to #d17d00 — found via a
+// max-chroma search within hue 36–48°: the dark-mode OKLCH lightness band caps at L 0.67, and
+// #c98500 already sat at L 0.6699 (the ceiling), so true "lighter" wasn't available without
+// breaking CVD-safety. #d17d00 instead maximizes chroma within the same safe band (0.1425 →
+// 0.1494) for a more vivid look at the same lightness.
+//
+// The validator also surfaces two pre-existing floor failures unrelated to any of the above
+// (orange↔magenta in light, red↔magenta in dark) — these predate this change and are a
+// separate, not-yet-addressed finding, not a regression introduced here.
 const LIGHT_PALETTE = [
   "#0088a3", // teal
   "#1baf7a", // aqua
   "#eda100", // yellow
-  "#008300", // green
   "#4a3aa7", // violet
+  "#008300", // green
   "#e34948", // red
   "#e87ba4", // magenta
   "#eb6834", // orange
@@ -25,9 +39,9 @@ const LIGHT_PALETTE = [
 const DARK_PALETTE = [
   "#109cc6", // teal
   "#199e70", // aqua
-  "#c98500", // yellow
-  "#008300", // green
+  "#d17d00", // yellow
   "#9085e9", // violet
+  "#008300", // green
   "#e66767", // red
   "#d55181", // magenta
   "#d95926", // orange
