@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { EmptyState } from "@/components/graph/EmptyState";
 import { ErrorState } from "@/components/graph/ErrorState";
-import { ExplainerSection } from "@/components/graph/ExplainerSection";
 import { ALL_FILTER_VALUE, computeFilteredOutNodeIds, FilterControls } from "@/components/graph/FilterControls";
 import { Footer } from "@/components/graph/Footer";
 import type { GraphEdge, GraphNode } from "@/components/graph/GraphCanvas";
@@ -91,101 +90,98 @@ export default function GraphPage() {
   }, [layoutMode]);
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto">
-      <div className="flex h-full shrink-0 flex-col overflow-hidden">
-        <Header
-          tagline="Every page of this wiki in one map — click anything to see what it is and how it connects."
-          search={
-            <SearchInput
-              value={query}
-              onChange={setQuery}
-              isActive={isSearchActive}
-              hasResults={hasResults}
-              matchCount={matchCount}
-            />
-          }
-        />
-        <div className="flex flex-1 overflow-hidden">
-          <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-            {error ? (
-              <ErrorState />
-            ) : !graphData ? (
-              <p className="p-4">Loading graph…</p>
-            ) : (
-              <>
-                <div className="flex justify-end px-4 pt-3">
-                  <OptionsPanel
-                    layoutMode={layoutMode}
-                    onLayoutModeChange={setLayoutMode}
-                    isDark={isDark}
-                    onThemeChange={handleThemeChange}
-                    onResetView={() => resetViewRef.current?.()}
-                  />
-                </div>
-                {layoutMode === "force-directed" && (
-                  <FilterControls
-                    nodes={graphData.nodes}
-                    statusFilter={statusFilter}
-                    onStatusFilterChange={setStatusFilter}
-                    folderFilter={folderFilter}
-                    onFolderFilterChange={setFolderFilter}
-                  />
-                )}
-                <div
-                  className="min-h-0 flex-1"
-                  style={{ display: layoutMode === "force-directed" ? "block" : "none" }}
-                >
-                  {graphData.nodes.length === 0 ? (
-                    <EmptyState />
-                  ) : (
-                    <GraphCanvas
-                      nodes={graphData.nodes}
-                      edges={graphData.edges}
-                      onNodeClick={setSelectedNode}
-                      searchScores={scores}
-                      relevanceThreshold={RELEVANCE_THRESHOLD}
-                      isDark={isDark}
-                      filteredOutNodeIds={computeFilteredOutNodeIds(
-                        graphData.nodes,
-                        statusFilter,
-                        folderFilter,
-                      )}
-                      radiusScaleByNodeId={computeRadiusScale(graphData.nodes, graphData.edges)}
-                      focusedNodeId={selectedNode?.id ?? null}
-                      onResetViewReady={(fn) => {
-                        resetViewRef.current = fn;
-                      }}
-                    />
-                  )}
-                </div>
-                <div
-                  className="min-h-0 flex-1"
-                  style={{ display: layoutMode === "swim-lane" ? "block" : "none" }}
-                >
-                  <SwimLaneCanvas
+    <div className="flex h-full flex-col overflow-hidden">
+      <Header
+        tagline="Every page of this wiki in one map — click anything to see what it is and how it connects."
+        search={
+          <SearchInput
+            value={query}
+            onChange={setQuery}
+            isActive={isSearchActive}
+            hasResults={hasResults}
+            matchCount={matchCount}
+          />
+        }
+        options={
+          <OptionsPanel
+            layoutMode={layoutMode}
+            onLayoutModeChange={setLayoutMode}
+            isDark={isDark}
+            onThemeChange={handleThemeChange}
+            onResetView={() => resetViewRef.current?.()}
+          />
+        }
+      />
+      <div className="flex flex-1 overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          {error ? (
+            <ErrorState />
+          ) : !graphData ? (
+            <p className="p-4">Loading graph…</p>
+          ) : (
+            <>
+              {layoutMode === "force-directed" && (
+                <FilterControls
+                  nodes={graphData.nodes}
+                  statusFilter={statusFilter}
+                  onStatusFilterChange={setStatusFilter}
+                  folderFilter={folderFilter}
+                  onFolderFilterChange={setFolderFilter}
+                />
+              )}
+              <div
+                className="min-h-0 flex-1"
+                style={{ display: layoutMode === "force-directed" ? "block" : "none" }}
+              >
+                {graphData.nodes.length === 0 ? (
+                  <EmptyState />
+                ) : (
+                  <GraphCanvas
                     nodes={graphData.nodes}
                     edges={graphData.edges}
                     onNodeClick={setSelectedNode}
-                    isDark={isDark}
                     searchScores={scores}
                     relevanceThreshold={RELEVANCE_THRESHOLD}
+                    isDark={isDark}
+                    filteredOutNodeIds={computeFilteredOutNodeIds(
+                      graphData.nodes,
+                      statusFilter,
+                      folderFilter,
+                    )}
+                    radiusScaleByNodeId={computeRadiusScale(graphData.nodes, graphData.edges)}
                     focusedNodeId={selectedNode?.id ?? null}
+                    onResetViewReady={(fn) => {
+                      resetViewRef.current = fn;
+                    }}
                   />
-                </div>
-              </>
-            )}
-          </div>
-          <SidePanel
-            node={selectedNode}
-            edges={graphData?.edges ?? []}
-            allNodes={graphData?.nodes ?? []}
-            isDark={isDark}
-            onClose={() => setSelectedNode(null)}
-            onSelectNode={setSelectedNode}
-          />
+                )}
+              </div>
+              <div
+                className="min-h-0 flex-1"
+                style={{ display: layoutMode === "swim-lane" ? "block" : "none" }}
+              >
+                <SwimLaneCanvas
+                  nodes={graphData.nodes}
+                  edges={graphData.edges}
+                  onNodeClick={setSelectedNode}
+                  isDark={isDark}
+                  searchScores={scores}
+                  relevanceThreshold={RELEVANCE_THRESHOLD}
+                  focusedNodeId={selectedNode?.id ?? null}
+                />
+              </div>
+            </>
+          )}
         </div>
+        <SidePanel
+          node={selectedNode}
+          edges={graphData?.edges ?? []}
+          allNodes={graphData?.nodes ?? []}
+          isDark={isDark}
+          onClose={() => setSelectedNode(null)}
+          onSelectNode={setSelectedNode}
+        />
       </div>
-      <ExplainerSection />
       {graphData ? (
         <Footer
           nodeCount={graphData.nodes.length}

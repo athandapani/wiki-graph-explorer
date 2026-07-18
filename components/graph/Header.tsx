@@ -11,9 +11,12 @@ interface HeaderProps {
   // is the visibly largest text on /graph (TOR-07-DsHsIKN); the home page passes no tagline, so
   // its header is unchanged.
   tagline?: string;
+  // Optional /graph-only slot for the Options & help control, same pattern as `search` — the
+  // home page has nothing to put here.
+  options?: ReactNode;
 }
 
-export function Header({ search, tagline }: HeaderProps = {}) {
+export function Header({ search, tagline, options }: HeaderProps = {}) {
   return (
     <header className="flex shrink-0 flex-col gap-1 border-b border-black/10 px-4 py-3 dark:border-white/10">
       <div className="flex flex-wrap items-center gap-4">
@@ -24,6 +27,7 @@ export function Header({ search, tagline }: HeaderProps = {}) {
           </span>
         </Link>
         {search ? <div className="min-w-0 flex-1">{search}</div> : null}
+        {options ? <div className="shrink-0">{options}</div> : null}
       </div>
       {tagline ? <p className="text-sm text-foreground/70">{tagline}</p> : null}
     </header>
