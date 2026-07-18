@@ -1,8 +1,8 @@
 {
   "feature_id": "07",
   "feature_file": "07-product-shell-and-theming.feature.md",
-  "generated": "2026-07-15",
-  "generator": "main-agent retroactive capture during /peak-workflow:start-epic scQi8pt",
+  "generated": "2026-07-18",
+  "generator": "haiku-sub-agent via /peak-workflow:capture-requirements",
   "requirements": [
     {
       "id": "TOR-07-Wb3kNfT",
@@ -138,6 +138,148 @@
             "scenario": "S11",
             "step": 1,
             "paraphrase": "When a visitor tabs through interactive controls, each control renders a visible focus indicator upon receiving keyboard focus."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-07-6nVdgBJ",
+      "title": "The Color theme section shall display 3 curated font+accent-color presets in addition to the existing light/dark toggle",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Dual-Pane & Theming, Cycle 3)",
+            "paraphrase": "The theme chooser extends the existing dark/light toggle with 3 pre-validated font and accent-color combinations chosen via curated swatches."
+          },
+          {
+            "section": "§9 — Design Direction (Dual-Pane & Theming, Cycle 3)",
+            "paraphrase": "The theme chooser surface shows the existing light/dark toggle alongside curated preset swatches offering alternative font and accent pairings."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S14",
+            "step": 1,
+            "paraphrase": "When a visitor opens the Options & help popover, the Color theme section displays both the light/dark toggle and 3 preset swatches representing distinct visual identities."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-07-VBZZx0f",
+      "title": "Selecting a curated theme preset shall update both the page's chrome and the graph's node color palette to that preset's validated values",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Dual-Pane & Theming, Cycle 3)",
+            "paraphrase": "Picking a curated preset re-themes both chrome and the graph's node palette in sync, maintaining the existing design affordance where these two color systems are coupled."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S14",
+            "step": 2,
+            "paraphrase": "When a visitor clicks a preset swatch, the page's font pairing and header/button/focus-ring colors update immediately, and the graph's categorical node palette updates to the same preset's validated scheme."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-07-LquSsD5",
+      "title": "The Color theme section shall provide a 4th 'Custom' option that reveals a color picker for selecting an arbitrary accent color",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Dual-Pane & Theming, Cycle 3)",
+            "paraphrase": "A 4th 'Custom' option lets visitors pick their own accent color via a color picker, offering personal choice beyond the curated set."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S14",
+            "step": 3,
+            "paraphrase": "When a visitor selects the Custom option, a color picker control becomes available for entering an arbitrary accent color value."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-07-p18cpcx",
+      "title": "Selecting a custom accent color shall re-theme only chrome elements, leaving the graph's node color palette unchanged",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Dual-Pane & Theming, Cycle 3)",
+            "paraphrase": "The custom option is chrome-only: a visitor-chosen color updates header/button/focus styling but is not re-validated into the categorical node palette, breaking the sync intentionally."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S14",
+            "step": 4,
+            "paraphrase": "When a visitor picks a custom color, chrome elements (header, buttons, focus ring) update to that color, but the graph's node palette remains on its current preset or custom scheme."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-07-HKyFd0T",
+      "title": "The theme chooser shall visibly disclose that a custom accent color is not validated for CVD-safety or contrast, distinguishing it from the curated presets",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Dual-Pane & Theming, Cycle 3)",
+            "paraphrase": "The UI must disclose that a visitor-chosen custom accent has not been validated for color-vision-deficiency safety, unlike the pre-validated curated presets."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S14",
+            "step": 4,
+            "paraphrase": "When a custom color is selected, a visible note informs the visitor that the chosen color is not validated for accessibility guarantees the way curated presets are."
+          },
+          {
+            "scenario": "S14",
+            "step": null,
+            "paraphrase": "The Operational Constraints (§8) mandate that custom-theme accessibility be visibly disclosed rather than implied to match the presets' validation rigor."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-07-WU8PBMV",
+      "title": "The visitor's selected theme preset or custom color choice shall persist across page reloads via localStorage",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Dual-Pane & Theming, Cycle 3)",
+            "paraphrase": "Selection persists via localStorage, matching the same pattern used for the existing dark/light theme preference."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S14",
+            "step": 5,
+            "paraphrase": "When a visitor reloads the page after selecting a preset or custom color, the previously chosen theme is restored without requiring re-selection."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-07-dttI7qm",
+      "title": "Switching from a custom accent color back to a curated preset shall re-sync both chrome and the graph's node color palette to that preset's validated values",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Dual-Pane & Theming, Cycle 3)",
+            "paraphrase": "Picking a curated preset re-themes both chrome and graph palette together, re-establishing the validated sync that the custom option temporarily breaks."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S14",
+            "step": 6,
+            "paraphrase": "When a visitor switches from a custom accent back to a curated preset, both chrome and the graph's node palette update together to that preset's validated color scheme."
           }
         ]
       }

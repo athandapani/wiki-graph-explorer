@@ -1,7 +1,7 @@
 # wiki-graph-explorer — Product Vision & Brief
 
-**Document Version:** 1.2
-**Date:** 2026-07-15
+**Document Version:** 1.3
+**Date:** 2026-07-18
 **Status:** Draft
 
 ---
@@ -155,6 +155,27 @@ public-by-construction, never a filtered export); placement as a secondary page 
 the homepage; `react-force-graph` chosen over `sigma.js`/`Cosmograph` partly to sidestep
 `Cosmograph`'s CC BY-NC 4.0 license risk on a job-seeking site.
 
+### Dual-Pane & Theming (Cycle 3)
+
+Post-Cycle-2 scope, driven by direct feedback on the shipped visual refresh:
+
+- **Dual-pane graph view**: an independent pane-count control (1-pane / 2-pane), positioned
+  beside the "Options & help" hamburger in the header, orthogonal to the existing
+  force-directed/swim-lane mode toggle. In 2-pane mode both layouts render simultaneously,
+  side by side at roughly half width each; node selection is synced across both panes and the
+  shared side panel. Available only above a wide-screen breakpoint — below it, the control is
+  hidden and the page behaves exactly as it does today (1-pane, mode-toggle only), consistent
+  with the existing 390px responsive-floor precedent.
+- **Theme chooser**: extends the existing Color theme section (light/dark toggle) with 3
+  curated font+accent-color presets, each CVD-validated as a set via the dataviz skill's
+  palette validator — same process used for the shipped teal/Manrope refresh — plus a 4th
+  "Custom" option where the visitor picks an arbitrary accent color via a color picker. The 3
+  curated presets keep the existing chrome-accent/graph-node-palette sync (picking a preset
+  re-themes both together); the custom option is chrome-only (header, buttons, focus ring) — a
+  visitor-chosen color isn't re-validated into the 8-hue categorical node palette, so the UI
+  discloses this rather than implying the same accessibility guarantee as the presets. Selection
+  persists via localStorage, the same pattern as the existing dark/light preference.
+
 ## 7. Out of Scope for MVP
 
 - GitHub-URL / remote-clone input (local filesystem path only, for now)
@@ -207,6 +228,12 @@ the homepage; `react-force-graph` chosen over `sigma.js`/`Cosmograph` partly to 
     (~40 source links on AI adoption in medium-sized enterprises), runs the Karpathy-pattern
     ingestion pass to produce `raw/` entries and interlinked wiki pages, and the rebuilt deployed
     graph shows demo-scale density instead of the 2-page placeholder.
+11. **Dual-pane exploration** — a visitor on a wide screen toggles to 2-pane mode and sees the
+    swim-lane and force-directed views side by side, exploring the same dataset through both
+    lenses simultaneously without losing pan/zoom or selection state in either.
+12. **Theme selection** — a visitor opens the theme chooser, previews the 3 curated presets, and
+    either picks one or opens the custom option to set their own accent color, with the choice
+    persisting across visits.
 
 ## 9. Design Direction
 
@@ -237,6 +264,10 @@ the homepage; `react-force-graph` chosen over `sigma.js`/`Cosmograph` partly to 
 - Consistent hover/focus transitions on pills, chips, and controls
 - Onboarding surfaces (hero, start-anywhere panel, legend, stats footer) frame the graph so a
   cold visitor never faces an unexplained canvas
+- **Dual-pane & theming (Cycle 3):** pane-count control sits beside the Options & help hamburger
+  — always visible above the wide-screen breakpoint, absent below it; the theme chooser extends
+  the existing Color theme section in the Options panel, with curated presets CVD-validated as a
+  set and the custom option visibly disclosed as unvalidated
 
 ## 10. Data Strategy
 

@@ -1,7 +1,7 @@
 # wiki-graph-explorer — Concept of Operations (ConOps)
 
-**Document Version:** 1.2
-**Date:** 2026-07-15
+**Document Version:** 1.3
+**Date:** 2026-07-18
 **Status:** Draft
 
 ---
@@ -86,6 +86,15 @@ responsive down to 390px (panel as bottom sheet), the visual identity commits to
 typography and a deliberate palette, and the review's A-series bugs are fixed. The deployed
 dataset is replaced by a demo-scale vault produced by a dedicated research-ingestion epic, and
 the repo goes public (after a history audit) so source links resolve.
+
+**Cycle 3 (dual-pane & theming):** Above a wide-screen breakpoint, a visitor can toggle 2-pane
+mode via a control beside the Options & help hamburger — swim-lane and force-directed render
+side by side, with node selection synced across both panes and the shared side panel. Below
+the breakpoint, the control is hidden and the page behaves exactly as it does today. The Color
+theme section in the Options panel gains 3 CVD-validated font+accent presets plus a 4th
+"Custom" option with its own color picker; presets keep the existing chrome/graph-node-palette
+sync, while the custom option only re-themes chrome (its accessibility isn't guaranteed the
+way the presets are, and the UI discloses this). Both preferences persist via localStorage.
 
 ## 4. User Roles & Profiles
 
@@ -289,6 +298,37 @@ the repo goes public (after a history audit) so source links resolve.
 
 **Outcome:** The deployed demo carries the same visual and content richness as the local `second-brain` build, without any private content
 
+### Scenario 13: Dual-pane exploration
+**Actor:** Any visitor on a wide-screen device
+**Trigger:** Visitor clicks the pane-count toggle beside the Options & help hamburger
+**Goal:** Compare the swim-lane and force-directed views of the same dataset side by side
+
+**Steps:**
+1. Visitor is on `/graph` above the wide-screen breakpoint, in 1-pane mode (today's default)
+2. Visitor clicks the pane-count toggle; the board splits into two side-by-side panes, each at roughly half width
+3. One pane shows swim-lane, the other shows force-directed (mode assignment: whichever was active becomes the primary pane; the other mode fills the second pane)
+4. Visitor clicks a node in the force-directed pane; the same node becomes focused in the swim-lane pane too — connector lines/highlighting activate there, and the shared side panel shows that node's detail
+5. Visitor clicks a different node in the swim-lane pane; focus updates in both panes and the side panel together
+6. Visitor clicks the pane-count toggle again; the board returns to 1-pane mode, showing whichever mode was last focused/interacted with
+7. Visitor resizes the browser below the wide-screen breakpoint; the pane-count toggle becomes unavailable and the board falls back to 1-pane automatically if it was in 2-pane mode
+
+**Outcome:** Visitor explores the same underlying graph through both presentation styles at once, without losing selection state or triggering a data refetch
+
+### Scenario 14: Theme selection
+**Actor:** Any visitor
+**Trigger:** Visitor opens the Options & help popover and finds the extended Color theme section
+**Goal:** Pick a visual identity that suits their preference, beyond the existing light/dark toggle
+
+**Steps:**
+1. Visitor opens Options & help; the Color theme section now shows the light/dark toggle plus 3 preset swatches and a "Custom" option
+2. Visitor clicks a preset; the page's font and accent color update immediately (font pairing + accent, chrome and graph node palette both re-theme together, since presets are pre-validated for CVD-safety same as the shipped teal/Manrope refresh)
+3. Visitor clicks "Custom"; a color picker appears for choosing an arbitrary accent
+4. Visitor picks a custom color; chrome (header, buttons, focus ring) updates to that color, with a visible note that the graph's node colors are unaffected (custom colors aren't validated for CVD-safety against the fixed categorical palette)
+5. Visitor reloads the page; their preset or custom choice persists (localStorage, same pattern as the light/dark preference)
+6. Visitor switches back to a curated preset; chrome and node palette both re-sync to that preset's validated values
+
+**Outcome:** Visitor personalizes the visual identity to their preference, with curated presets guaranteeing accessibility and the custom option offering personal choice at a disclosed accessibility trade-off
+
 ## 6. System Interfaces & Data Flows
 
 | Source | Format | Produced By |
@@ -329,6 +369,8 @@ the repo goes public (after a history audit) so source links resolve.
 | Explainer | "Why build this" static content section, copy matched to the UI that exists per mode |
 | Build pipeline | `graph-data.json` (incl. per-page `description`) + `vector-index.json` generation from a local vault path |
 | Demo vault | One-time research-ingestion epic: deep-research MD → `raw/` → interlinked `wiki/` pages at demo scale |
+| Pane layout | Independent 1-pane/2-pane control beside the Options & help hamburger (wide-screen only); 2-pane shows both layout modes side by side with synced node selection |
+| Theming | 3 CVD-validated presets (font + color) plus a custom accent-color option, chrome-and-node-palette synced for presets, chrome-only for custom; persisted via localStorage |
 
 ## 8. Operational Constraints & Assumptions
 
@@ -347,6 +389,8 @@ the repo goes public (after a history audit) so source links resolve.
 | Responsive floor | 390px viewport width is the design floor for `/graph` usability |
 | ~~Open risk~~ (resolved) | Client-side query embedding — resolved in Epic TBZJM0j via `@huggingface/transformers` with the same `Xenova/all-MiniLM-L6-v2` model as build time |
 | ~~Open risk~~ (resolved) | Swim-lane rendering — resolved in Epic scQi8pt as a custom SVG/CSS renderer (`SwimLaneCanvas`), separate from `react-force-graph` |
+| Pane-count breakpoint | 2-pane mode requires a wide-screen viewport; below it, the control is hidden and the board is 1-pane only — exact breakpoint px value to be set during epic planning |
+| Custom theme accessibility | A visitor-chosen custom accent is not validated for CVD-safety or contrast; the UI must disclose this rather than imply the same guarantee as the curated presets |
 
 ## 9. Glossary
 
@@ -373,3 +417,5 @@ the repo goes public (after a history audit) so source links resolve.
 | Bottom sheet | The mobile presentation of the side panel — an overlay sliding up from the bottom edge on small viewports |
 | "+N more" affordance | Per-lane control in swim-lane mode surfacing low-connectivity pages that are not initially rendered as pills |
 | Deep-research MD | The author-provided Markdown file (source links + findings) that seeds the demo-vault ingestion epic |
+| Pane count | Whether `/graph` shows one active layout mode (1-pane) or both swim-lane and force-directed simultaneously (2-pane); independent from the layout-mode toggle |
+| Theme preset | One of 3 curated font+accent-color combinations, CVD-validated as a set, selectable independently of the light/dark toggle |
