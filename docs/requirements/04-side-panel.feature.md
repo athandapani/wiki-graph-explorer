@@ -140,3 +140,33 @@ Scenario: [TOR-04-Pc0DlQe] The side panel's "View source on GitHub" link shall r
     When each node's "View source on GitHub" link href is requested
     Then every such request should return an HTTP 200 response
     And no such href should contain a duplicated path segment such as 'wiki/wiki'
+
+
+# --------------------------------------------------------------------------------------------------
+# Cited Sources (added 2026-07-18, Cycle 4)
+# --------------------------------------------------------------------------------------------------
+
+Scenario: [TOR-04-nsmOOZ8] The side panel shall display a "Cited sources" list of clickable links when the selected node's sourceLinks field is non-empty
+    #
+    # Note:
+    #   1. sourceLinks is emitted by the build tool per TOR-01-VpUINkL (extraction) and
+    #      TOR-01-C9XWA4Y (5-link cap, document order).
+    #   2. This is distinct from the "View source on GitHub" self-link (TOR-04-JCORp98), which
+    #      points to the page's own file, not material the page cites.
+    #
+    Given a visitor clicks a node whose graph-data.json entry has 3 entries in its 'sourceLinks' field
+    When the side panel populates with that node's detail
+    Then the panel should display a "Cited sources" section
+    And that section should list 3 clickable links, each labeled with its corresponding sourceLinks entry's text
+
+Scenario: [TOR-04-F5cdTRd] The side panel shall omit the "Cited sources" section entirely, without rendering an empty heading or placeholder, when the selected node's sourceLinks field is empty
+    Given a visitor clicks a node whose graph-data.json entry has an empty 'sourceLinks' field
+    When the side panel populates with that node's detail
+    Then no "Cited sources" heading or empty-list placeholder should render in the panel
+    And the panel's remaining detail (title, folder badge, status dot, tags, description, connected pages, GitHub source link) should render normally
+
+Scenario: [TOR-04-9JDfgAA] Each cited-source link shall open its target URL in a new tab
+    Given the side panel is showing a node's detail with a "Cited sources" section containing a link whose sourceLinks entry has url "https://example.com/report"
+    When the visitor clicks that cited-source link
+    Then the link should open in a new browser tab
+    And that link's href should equal "https://example.com/report"

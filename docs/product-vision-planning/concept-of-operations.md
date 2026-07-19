@@ -1,6 +1,6 @@
 # wiki-graph-explorer — Concept of Operations (ConOps)
 
-**Document Version:** 1.3
+**Document Version:** 1.4
 **Date:** 2026-07-18
 **Status:** Draft
 
@@ -95,6 +95,14 @@ theme section in the Options panel gains 3 CVD-validated font+accent presets plu
 "Custom" option with its own color picker; presets keep the existing chrome/graph-node-palette
 sync, while the custom option only re-themes chrome (its accessibility isn't guaranteed the
 way the presets are, and the UI discloses this). Both preferences persist via localStorage.
+
+**Cycle 4 (body source links):** The build tool additionally scans each page's Markdown body
+(frontmatter excluded) for standard inline `[text](url)` links — distinct from the
+`[[slug|title]]` wikilink syntax already used for `Related`/`Referenced By` edges — and captures
+up to the first 5 found, in document order, as a new `sourceLinks` field per node in
+`graph-data.json`. The side panel renders these as a "Cited sources" list below the existing
+"Connected pages" section when a node has at least one; the section is omitted entirely when a
+node has none, matching the existing empty-description omission pattern.
 
 ## 4. User Roles & Profiles
 
@@ -329,12 +337,27 @@ way the presets are, and the UI discloses this). Both preferences persist via lo
 
 **Outcome:** Visitor personalizes the visual identity to their preference, with curated presets guaranteeing accessibility and the custom option offering personal choice at a disclosed accessibility trade-off
 
+### Scenario 15: Body source-link discovery
+**Actor:** Any visitor
+**Trigger:** Visitor clicks a node whose page body contains one or more standard Markdown links (`[text](url)`)
+**Goal:** Jump directly to the external material a page cites, not just verify the page itself is real
+
+**Steps:**
+1. Visitor clicks a node whose source page cites external material inline, e.g. "as argued in [this McKinsey report](https://...)"
+2. The side panel populates with that node's detail as usual (title, folder badge, description, connected-page chips, "View source on GitHub" link)
+3. Below the "Connected pages" section, a "Cited sources" list appears showing up to 5 clickable links, labeled with each link's Markdown text, in the order they appear in the page body
+4. Visitor clicks a cited-source link; it opens in a new tab (same pattern as the GitHub source link)
+5. Visitor returns to the `/graph` tab; the side panel state is preserved
+6. Visitor clicks a different node whose page has no inline Markdown links; the "Cited sources" section does not render at all — no heading, no empty-list placeholder
+
+**Outcome:** A visitor can distinguish "this page is genuinely sourced content" (self-link) from "this page cites specific external material" (cited sources), reinforcing the tool's overall source-transparency goal
+
 ## 6. System Interfaces & Data Flows
 
 | Source | Format | Produced By |
 |---|---|---|
 | Public vault markdown files | `.md` + YAML frontmatter (title, tags, status, Related, Referenced By) | Karpathy-pattern raw→wiki ingestion of AI-in-enterprises research |
-| `graph-data.json` | Nodes (id, title, folder/taxonomy, status, **description**) + undirected edges + **`meta.sourceCount`** | Build-time graph-builder script; description from frontmatter `description:` with first-body-paragraph fallback. `meta.sourceCount` counts `.md` files in the `raw/` directory sibling to the `--vault` path — `null` when no `raw/` sibling exists (vault declares no provenance), `0` when it exists but is empty |
+| `graph-data.json` | Nodes (id, title, folder/taxonomy, status, **description**, **`sourceLinks`**) + undirected edges + **`meta.sourceCount`** | Build-time graph-builder script; description from frontmatter `description:` with first-body-paragraph fallback. `meta.sourceCount` counts `.md` files in the `raw/` directory sibling to the `--vault` path — `null` when no `raw/` sibling exists (vault declares no provenance), `0` when it exists but is empty. `sourceLinks` is an array of up to 5 `{ text, url }` pairs, extracted from standard `[text](url)` Markdown links found anywhere in the page body (frontmatter excluded), in document order, capped (not deduplicated) at 5 — empty array when the page has no such links |
 | `vector-index.json` | Per-page precomputed embedding + metadata | Build-time embedding script |
 | GitHub source links | URL to raw `.md` per node | Derived from vault repo path at build time (repo public; path join verified against the deployed vault layout) |
 | Deep-research Markdown file | Author-provided `.md` with ~40 source links + findings (e.g. Perplexity output) | Manual deep-research pass; input to the raw→wiki ingestion epic, never processed by the build tool directly |
@@ -363,11 +386,11 @@ way the presets are, and the UI discloses this). Both preferences persist via lo
 |---|---|
 | Graph rendering | Layout-mode toggle: force-directed (always-visible edges, folder/taxonomy coloring, status dots, click-to-center-zoom ~900ms with centered landing, selection ring, connection highlighting, theme-aware link colors, camera re-fit on layout switch + reset-view control) OR swim-lane (up to 4 folder/taxonomy lanes in tinted descriptor-labeled containers, full-text pill nodes, "+N more" affordance for low-connectivity pages, edges hidden until click, then animated connector-line draw, no camera movement) |
 | Search | Build-time embeddings, static vector-index, client-side cosine similarity, live filtering in **both** layout modes, always-visible header placement, result count, Ctrl+K / `/` focus |
-| Side panel | Onboarding "start anywhere" empty state (legend + pointers), folder badge, description, clickable connected-page chips grouped by folder, GitHub source link; bottom sheet on mobile |
+| Side panel | Onboarding "start anywhere" empty state (legend + pointers), folder badge, description, clickable connected-page chips grouped by folder, GitHub source link, "Cited sources" list (up to 5 inline body links, omitted when none); bottom sheet on mobile |
 | Onboarding & identity | Hero/tagline row, stats footer (`Built from K raw sources → Y wiki pages and Z connections` + Esc hint; provenance clause omitted for vaults with no `raw/` sibling), guided tour (single 4–5 node path), Geist typography + deliberate palette |
 | Keyboard | Esc de-escalates (tour → popover → search → selection); Ctrl+K / `/` focuses search |
 | Explainer | "Why build this" static content section, copy matched to the UI that exists per mode |
-| Build pipeline | `graph-data.json` (incl. per-page `description`) + `vector-index.json` generation from a local vault path |
+| Build pipeline | `graph-data.json` (incl. per-page `description` and `sourceLinks`) + `vector-index.json` generation from a local vault path |
 | Demo vault | One-time research-ingestion epic: deep-research MD → `raw/` → interlinked `wiki/` pages at demo scale |
 | Pane layout | Independent 1-pane/2-pane control beside the Options & help hamburger (wide-screen only); 2-pane shows both layout modes side by side with synced node selection |
 | Theming | 3 CVD-validated presets (font + color) plus a custom accent-color option, chrome-and-node-palette synced for presets, chrome-only for custom; persisted via localStorage |
@@ -391,6 +414,7 @@ way the presets are, and the UI discloses this). Both preferences persist via lo
 | ~~Open risk~~ (resolved) | Swim-lane rendering — resolved in Epic scQi8pt as a custom SVG/CSS renderer (`SwimLaneCanvas`), separate from `react-force-graph` |
 | Pane-count breakpoint | 2-pane mode requires a wide-screen viewport; below it, the control is hidden and the board is 1-pane only — exact breakpoint px value to be set during epic planning |
 | Custom theme accessibility | A visitor-chosen custom accent is not validated for CVD-safety or contrast; the UI must disclose this rather than imply the same guarantee as the curated presets |
+| Body source-link cap | `sourceLinks` extraction is capped at the first 5 `[text](url)` links found in document order per page, with no deduplication and no "+N more" affordance for links beyond the cap — deliberately kept simple/contained rather than exhaustive |
 
 ## 9. Glossary
 
@@ -419,3 +443,5 @@ way the presets are, and the UI discloses this). Both preferences persist via lo
 | Deep-research MD | The author-provided Markdown file (source links + findings) that seeds the demo-vault ingestion epic |
 | Pane count | Whether `/graph` shows one active layout mode (1-pane) or both swim-lane and force-directed simultaneously (2-pane); independent from the layout-mode toggle |
 | Theme preset | One of 3 curated font+accent-color combinations, CVD-validated as a set, selectable independently of the light/dark toggle |
+| `sourceLinks` | Per-node `graph-data.json` field: an array of up to 5 `{ text, url }` pairs extracted from standard `[text](url)` Markdown links found in a page's body, in document order; distinct from wikilinks (graph edges) and the GitHub self-link |
+| Cited sources | The side-panel list rendering a node's `sourceLinks`; omitted entirely (no heading) when the node has none |
