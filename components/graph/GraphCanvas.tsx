@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ForceGraph2D, { type ForceGraphMethods, type NodeObject } from "react-force-graph-2d";
 import { getFolderColor } from "./nodeColor";
 import { computeSearchDimmedNodeIds } from "./useSearchRanking";
@@ -134,6 +134,28 @@ export default function GraphCanvas({
 }: GraphCanvasProps) {
   const graphRef = useRef<ForceGraphMethods<GraphNode, GraphEdge> | undefined>(undefined);
 
+  // react-force-graph-2d's own auto-sizing falls back to window.innerWidth/innerHeight when its
+  // container reports zero size at the moment its internal tracking first runs, and never
+  // corrects afterward — harmless for the single always-mounted instance (its container is never
+  // zero-sized for long), but produces a canvas locked to the full viewport width inside
+  // DualPaneBoard's ~half-width pane, clipped by the pane's overflow and fit far off to one side.
+  // Measuring the container directly and passing explicit width/height sidesteps that library
+  // behavior entirely rather than relying on it.
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry == null) return;
+      setDimensions({ width: entry.contentRect.width, height: entry.contentRect.height });
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const searchDimmedNodeIds = useMemo(
     () => computeSearchDimmedNodeIds(nodes, searchScores ?? null, relevanceThreshold),
     [nodes, searchScores, relevanceThreshold],
@@ -219,96 +241,102 @@ export default function GraphCanvas({
   }, [focusedNodeId, nodes]);
 
   return (
-    <ForceGraph2D
-      ref={graphRef}
-      graphData={{ nodes, links: edges }}
-      onRenderFramePre={() => {
-        drawnLabelRectsRef.current = [];
-      }}
-      nodeLabel={(node: NodeObject<GraphNode>) => `${node.title} · ${node.status}`}
-      linkColor={(link: GraphEdge) => {
-        if (!focusedNodeId) {
-          return isDark ? LINK_COLOR_NORMAL_DARK : LINK_COLOR_NORMAL_LIGHT;
-        }
-        const sourceId = endpointId(link.source as unknown as EdgeEndpoint);
-        const targetId = endpointId(link.target as unknown as EdgeEndpoint);
-        const connected = sourceId === focusedNodeId || targetId === focusedNodeId;
-        if (connected) return EMPHASIZED_COLOR;
-        return isDark ? LINK_COLOR_DIMMED_DARK : LINK_COLOR_DIMMED_LIGHT;
-      }}
-      nodeCanvasObject={(node: NodeObject<GraphNode>, ctx: CanvasRenderingContext2D, globalScale: number) => {
-        const x = node.x ?? 0;
-        const y = node.y ?? 0;
+    <div ref={containerRef} className="h-full w-full">
+      {dimensions && (
+        <ForceGraph2D
+          ref={graphRef}
+          width={dimensions.width}
+          height={dimensions.height}
+          graphData={{ nodes, links: edges }}
+          onRenderFramePre={() => {
+            drawnLabelRectsRef.current = [];
+          }}
+          nodeLabel={(node: NodeObject<GraphNode>) => `${node.title} · ${node.status}`}
+          linkColor={(link: GraphEdge) => {
+            if (!focusedNodeId) {
+              return isDark ? LINK_COLOR_NORMAL_DARK : LINK_COLOR_NORMAL_LIGHT;
+            }
+            const sourceId = endpointId(link.source as unknown as EdgeEndpoint);
+            const targetId = endpointId(link.target as unknown as EdgeEndpoint);
+            const connected = sourceId === focusedNodeId || targetId === focusedNodeId;
+            if (connected) return EMPHASIZED_COLOR;
+            return isDark ? LINK_COLOR_DIMMED_DARK : LINK_COLOR_DIMMED_LIGHT;
+          }}
+          nodeCanvasObject={(node: NodeObject<GraphNode>, ctx: CanvasRenderingContext2D, globalScale: number) => {
+            const x = node.x ?? 0;
+            const y = node.y ?? 0;
 
-        const searchDimmed = searchDimmedNodeIds.has(node.id);
-        const filterDimmed = filteredOutNodeIds?.has(node.id) ?? false;
-        const selectionDimmed =
-          focusedNodeId != null && node.id !== focusedNodeId && !connectedIds.has(node.id);
-        const dimmed = searchDimmed || filterDimmed || selectionDimmed;
-        ctx.globalAlpha = dimmed ? DIMMED_OPACITY : 1;
+            const searchDimmed = searchDimmedNodeIds.has(node.id);
+            const filterDimmed = filteredOutNodeIds?.has(node.id) ?? false;
+            const selectionDimmed =
+              focusedNodeId != null && node.id !== focusedNodeId && !connectedIds.has(node.id);
+            const dimmed = searchDimmed || filterDimmed || selectionDimmed;
+            ctx.globalAlpha = dimmed ? DIMMED_OPACITY : 1;
 
-        const radius = NODE_RADIUS * (radiusScaleByNodeId?.get(node.id) ?? 1);
+            const radius = NODE_RADIUS * (radiusScaleByNodeId?.get(node.id) ?? 1);
 
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, 2 * Math.PI);
-        ctx.fillStyle = getFolderColor(node.folder, isDark);
-        ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = getFolderColor(node.folder, isDark);
+            ctx.fill();
 
-        if (node.id === focusedNodeId) {
-          ctx.beginPath();
-          ctx.arc(x, y, radius + SELECTION_RING_OFFSET, 0, 2 * Math.PI);
-          ctx.strokeStyle = EMPHASIZED_COLOR;
-          ctx.lineWidth = SELECTION_RING_WIDTH;
-          ctx.stroke();
-        }
+            if (node.id === focusedNodeId) {
+              ctx.beginPath();
+              ctx.arc(x, y, radius + SELECTION_RING_OFFSET, 0, 2 * Math.PI);
+              ctx.strokeStyle = EMPHASIZED_COLOR;
+              ctx.lineWidth = SELECTION_RING_WIDTH;
+              ctx.stroke();
+            }
 
-        {
-          // Sized/offset in screen pixels rather than world units, so the label is a constant,
-          // legible size regardless of the current zoom level.
-          const fontSize = LABEL_SCREEN_SIZE_PX / globalScale;
-          ctx.font = `${fontSize}px sans-serif`;
-          const textWidth = ctx.measureText(node.title).width;
-          const labelTop = y + radius + LABEL_SCREEN_GAP_PX / globalScale;
-          const rect = {
-            x1: x - textWidth / 2,
-            y1: labelTop,
-            x2: x + textWidth / 2,
-            y2: labelTop + fontSize,
-          };
-          // Skip a label that would overlap one already drawn this frame, rather than let them
-          // stack into unreadable text — this is the sole gate on label visibility (see
-          // drawnLabelRectsRef above for why there's no separate zoom threshold).
-          const overlapsDrawnLabel = drawnLabelRectsRef.current.some(
-            (drawn) => rect.x1 < drawn.x2 && rect.x2 > drawn.x1 && rect.y1 < drawn.y2 && rect.y2 > drawn.y1,
-          );
-          if (!overlapsDrawnLabel) {
-            ctx.textAlign = "center";
-            ctx.textBaseline = "top";
-            ctx.fillStyle = isDark ? "#ededed" : "#171717";
-            ctx.fillText(node.title, x, labelTop);
-            drawnLabelRectsRef.current.push(rect);
-          }
-        }
+            {
+              // Sized/offset in screen pixels rather than world units, so the label is a constant,
+              // legible size regardless of the current zoom level.
+              const fontSize = LABEL_SCREEN_SIZE_PX / globalScale;
+              ctx.font = `${fontSize}px sans-serif`;
+              const textWidth = ctx.measureText(node.title).width;
+              const labelTop = y + radius + LABEL_SCREEN_GAP_PX / globalScale;
+              const rect = {
+                x1: x - textWidth / 2,
+                y1: labelTop,
+                x2: x + textWidth / 2,
+                y2: labelTop + fontSize,
+              };
+              // Skip a label that would overlap one already drawn this frame, rather than let them
+              // stack into unreadable text — this is the sole gate on label visibility (see
+              // drawnLabelRectsRef above for why there's no separate zoom threshold).
+              const overlapsDrawnLabel = drawnLabelRectsRef.current.some(
+                (drawn) => rect.x1 < drawn.x2 && rect.x2 > drawn.x1 && rect.y1 < drawn.y2 && rect.y2 > drawn.y1,
+              );
+              if (!overlapsDrawnLabel) {
+                ctx.textAlign = "center";
+                ctx.textBaseline = "top";
+                ctx.fillStyle = isDark ? "#ededed" : "#171717";
+                ctx.fillText(node.title, x, labelTop);
+                drawnLabelRectsRef.current.push(rect);
+              }
+            }
 
-        ctx.globalAlpha = 1;
-      }}
-      nodePointerAreaPaint={(node: NodeObject<GraphNode>, color: string, ctx: CanvasRenderingContext2D) => {
-        const x = node.x ?? 0;
-        const y = node.y ?? 0;
-        const radius = NODE_RADIUS * (radiusScaleByNodeId?.get(node.id) ?? 1);
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, 2 * Math.PI);
-        ctx.fill();
-      }}
-      onNodeClick={(node: NodeObject<GraphNode>) => {
-        const x = node.x ?? 0;
-        const y = node.y ?? 0;
-        graphRef.current?.centerAt(x, y, CLICK_ZOOM_DURATION_MS);
-        graphRef.current?.zoom(CLICK_ZOOM_LEVEL, CLICK_ZOOM_DURATION_MS);
-        onNodeClick?.(node);
-      }}
-      onEngineStop={fitView}
-    />
+            ctx.globalAlpha = 1;
+          }}
+          nodePointerAreaPaint={(node: NodeObject<GraphNode>, color: string, ctx: CanvasRenderingContext2D) => {
+            const x = node.x ?? 0;
+            const y = node.y ?? 0;
+            const radius = NODE_RADIUS * (radiusScaleByNodeId?.get(node.id) ?? 1);
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, 2 * Math.PI);
+            ctx.fill();
+          }}
+          onNodeClick={(node: NodeObject<GraphNode>) => {
+            const x = node.x ?? 0;
+            const y = node.y ?? 0;
+            graphRef.current?.centerAt(x, y, CLICK_ZOOM_DURATION_MS);
+            graphRef.current?.zoom(CLICK_ZOOM_LEVEL, CLICK_ZOOM_DURATION_MS);
+            onNodeClick?.(node);
+          }}
+          onEngineStop={fitView}
+        />
+      )}
+    </div>
   );
 }

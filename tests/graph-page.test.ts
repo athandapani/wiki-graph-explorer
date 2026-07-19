@@ -158,8 +158,8 @@ describe("app/graph/page.tsx", () => {
 
   it("TOR-11-6XjR1qm: also re-fits the force-directed camera when paneCount becomes 2, not only on a layoutMode change", () => {
     // DualPaneBoard can make force-directed newly visible at its new ~half-width bounds purely
-    // via the pane-count toggle, with layoutMode unchanged (swim-lane stays primary) — the
-    // dependency array above must include paneCount for that case to re-fit.
+    // via the pane-count toggle, with layoutMode unchanged — the dependency array above must
+    // include paneCount for that case to re-fit.
     expect(source).toContain("[layoutMode, paneCount]");
   });
 
@@ -216,7 +216,7 @@ describe("app/graph/page.tsx", () => {
     expect(paneControlProps).not.toContain("layoutMode");
   });
 
-  it("TOR-11-6XjR1qm / TOR-11-XOBsafW: renders DualPaneBoard when paneCount is 2, passing layoutMode so the active mode is the primary pane", () => {
+  it("TOR-11-6XjR1qm: renders DualPaneBoard when paneCount is 2, passing layoutMode/onLayoutModeChange for below-breakpoint visibility and last-interacted-pane tracking", () => {
     expect(source).toContain("paneCount === 2 ? (");
     expect(source).toContain("<DualPaneBoard");
     const dualPaneProps = source.slice(

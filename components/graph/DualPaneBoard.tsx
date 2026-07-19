@@ -13,7 +13,11 @@ const GraphCanvas = dynamic(() => import("./GraphCanvas"), { ssr: false });
 interface DualPaneBoardProps {
   nodes: GraphNode[];
   edges: GraphEdge[];
-  // Whichever mode is `layoutMode` renders as the primary (first/left) pane (TOR-11-XOBsafW).
+  // Fixed pane order: swim-lane always left, force-directed always right (TOR-11-XOBsafW,
+  // amended — see docs/requirements/11-dual-pane-layout.feature.md). `layoutMode` no longer
+  // decides pane position; it's used only below the wide-screen breakpoint, where exactly one
+  // pane shows (whichever `layoutMode` currently is), and by paneClickHandler to track the
+  // last-interacted pane for TOR-11-qzGSh7K's return-to-1-pane behavior.
   layoutMode: LayoutMode;
   // Called with a pane's own mode whenever a node is clicked in that pane, so `layoutMode`
   // tracks "last interacted pane" — this is what lets returning to 1-pane show the right board
@@ -29,8 +33,9 @@ interface DualPaneBoardProps {
   onResetViewReady?: (resetView: () => void) => void;
 }
 
-// Renders both layout modes simultaneously (TOR-11-6XjR1qm). Below the wide-screen breakpoint
-// (`xl`, 1280px) the secondary pane is hidden and the primary pane takes full width via pure
+// Renders both layout modes simultaneously (TOR-11-6XjR1qm), swim-lane fixed on the left and
+// force-directed fixed on the right (TOR-11-XOBsafW, amended). Below the wide-screen breakpoint
+// (`xl`, 1280px) only the pane matching the current `layoutMode` is shown, at full width, via pure
 // CSS — same pattern as the existing 390px responsive floor (SidePanel.tsx's `md:` classes) and
 // the layoutMode display:none/block toggle in app/graph/page.tsx: no resize listener needed, and
 // the board observably renders as 1-pane below the breakpoint regardless of the paneCount state
@@ -49,8 +54,6 @@ export function DualPaneBoard({
   radiusScaleByNodeId,
   onResetViewReady,
 }: DualPaneBoardProps) {
-  const secondaryMode: LayoutMode = layoutMode === "force-directed" ? "swim-lane" : "force-directed";
-
   function paneClickHandler(mode: LayoutMode) {
     return (node: GraphNode) => {
       onNodeClick(node);
@@ -91,8 +94,16 @@ export function DualPaneBoard({
 
   return (
     <div className="flex min-h-0 flex-1 overflow-hidden">
-      <div className="min-h-0 w-full flex-1 xl:w-1/2">{renderPane(layoutMode)}</div>
-      <div className="hidden min-h-0 flex-1 xl:block xl:w-1/2">{renderPane(secondaryMode)}</div>
+      <div
+        className={`min-h-0 flex-1 xl:block xl:w-1/2 ${layoutMode === "swim-lane" ? "block w-full" : "hidden"}`}
+      >
+        {renderPane("swim-lane")}
+      </div>
+      <div
+        className={`min-h-0 flex-1 xl:block xl:w-1/2 ${layoutMode === "force-directed" ? "block w-full" : "hidden"}`}
+      >
+        {renderPane("force-directed")}
+      </div>
     </div>
   );
 }

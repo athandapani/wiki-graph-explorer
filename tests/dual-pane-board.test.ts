@@ -13,34 +13,26 @@ describe("components/graph/DualPaneBoard.tsx", () => {
     expect(source).toContain('dynamic(() => import("./GraphCanvas")');
     expect(source).toContain("ssr: false");
     expect(source).toContain("<SwimLaneCanvas");
-    const primaryPaneClasses = source.slice(
-      source.indexOf('<div className="min-h-0 w-full'),
-      source.indexOf(">", source.indexOf('<div className="min-h-0 w-full')),
-    );
-    expect(primaryPaneClasses).toContain("xl:w-1/2");
-    const secondaryPaneClasses = source.slice(
-      source.indexOf('<div className="hidden min-h-0'),
-      source.indexOf(">", source.indexOf('<div className="hidden min-h-0')),
-    );
-    expect(secondaryPaneClasses).toContain("xl:w-1/2");
+    const paneClasses = source.match(/xl:block xl:w-1\/2/g) ?? [];
+    expect(paneClasses.length).toBe(2);
   });
 
-  it("TOR-11-XOBsafW: renders whichever mode is layoutMode as the primary (first) pane, the other mode as secondary", () => {
-    expect(source).toContain(
-      'const secondaryMode: LayoutMode = layoutMode === "force-directed" ? "swim-lane" : "force-directed";',
-    );
-    const primaryPaneIndex = source.indexOf("{renderPane(layoutMode)}");
-    const secondaryPaneIndex = source.indexOf("{renderPane(secondaryMode)}");
-    expect(primaryPaneIndex).toBeGreaterThan(-1);
-    expect(secondaryPaneIndex).toBeGreaterThan(-1);
-    expect(primaryPaneIndex).toBeLessThan(secondaryPaneIndex);
+  it("TOR-11-XOBsafW (amended): renders swim-lane as the fixed left pane and force-directed as the fixed right pane, regardless of layoutMode", () => {
+    const swimLanePaneIndex = source.indexOf('{renderPane("swim-lane")}');
+    const forceDirectedPaneIndex = source.indexOf('{renderPane("force-directed")}');
+    expect(swimLanePaneIndex).toBeGreaterThan(-1);
+    expect(forceDirectedPaneIndex).toBeGreaterThan(-1);
+    expect(swimLanePaneIndex).toBeLessThan(forceDirectedPaneIndex);
+    // Fixed order means pane position must not depend on layoutMode's value — only visibility
+    // below the breakpoint does (checked separately below).
+    expect(source).not.toContain("secondaryMode");
   });
 
-  it("TOR-11-TFakQZA / TOR-11-Umq6yH6: below the xl breakpoint the secondary pane is hidden and the primary pane takes full width, via pure CSS with no resize listener", () => {
-    expect(source).toContain("hidden min-h-0 flex-1 xl:block xl:w-1/2");
-    expect(source).toContain("min-h-0 w-full flex-1 xl:w-1/2");
+  it("TOR-11-TFakQZA / TOR-11-Umq6yH6: below the xl breakpoint exactly one pane (matching layoutMode) is shown at full width, via pure CSS with no resize listener", () => {
+    expect(source).toContain('layoutMode === "swim-lane" ? "block w-full" : "hidden"');
+    expect(source).toContain('layoutMode === "force-directed" ? "block w-full" : "hidden"');
     expect(source).not.toContain("matchMedia");
-    expect(source).not.toContain("addEventListener(\"resize\"");
+    expect(source).not.toContain('addEventListener("resize"');
   });
 
   it("TOR-11-qzGSh7K: wraps each pane's onNodeClick so a click also reports that pane's own mode via onLayoutModeChange", () => {

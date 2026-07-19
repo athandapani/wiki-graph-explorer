@@ -596,7 +596,31 @@ not literal syntax. Implemented in `lib/frontmatter-parser.ts` (Epic Dj3m8aH).
 
 ---
 
-## 46. Known Issues and Deferred Work
+## 53. Dual-Pane Layout: Side-by-Side Canvases with Responsive Collapse
+
+**Decision:** When screen width ≥1280px (`xl` breakpoint), a `PaneCountControl` toggle button (rendered beside the hamburger menu) allows visitors to switch to a dual-pane layout. Swim-lane canvas is fixed on the left (50% width), force-directed on the right (50% width), with node selection synced across both panes via shared `selectedNode` state in the page component. Below 1280px, the layout automatically collapses to a single pane via CSS (`display: none/block` toggle) based on `layoutMode` (whichever mode the visitor was in last remains visible), exactly matching single-pane responsive behavior — no JavaScript resize listener needed.
+
+**Rationale:** Real vaults often benefit from viewing both layout modes simultaneously for comparison — swim-lane's organized folder structure alongside the force-directed physics-based reveal of connection density and clusters. The dual-pane option is independent of the existing layout-mode toggle, so visitors can switch modes within each pane or return to single-pane without losing the other's state. The CSS-based breakpoint (rather than a JS resize listener) keeps the implementation simple and aligns with the existing responsive-floor convention (TOR-11-45utBRH, TOR-11-6XjR1qm, TOR-11-TFakQZA, TOR-11-Umq6yH6). See Epic CU634Yc handoff for implementation details, amended TOR-11-XOBsafW rationale (fixed pane order), and live-verified behavior.
+
+---
+
+## 54. Container-Measured Canvas Sizing: ResizeObserver Workaround for Library Auto-Sizing Bug
+
+**Decision:** `GraphCanvas.tsx` measures its container via `ResizeObserver` and passes explicit `width`/`height` props to the underlying `ForceGraph2D` component, rather than relying on the library's own auto-sizing mechanism.
+
+**Rationale:** The `react-force-graph-2d` library captures container dimensions at module initialization, falls back to `window.innerWidth`/`innerHeight` if the container reads as zero-sized at that moment, and — critically — never self-corrects afterward, even across repeated `zoomToFit` calls over the 9-second chase-fit window. In single-pane mode, this bug was invisible because the canvas container rarely stays zero-sized for long. But in dual-pane mode (Epic CU634Yc), every fresh mount of `GraphCanvas` inside `DualPaneBoard` (which renders at half viewport width inside a flex container) would lock the canvas to the full viewport width, get clipped by the pane's `overflow: hidden`, and render nodes off-screen. The `ResizeObserver` approach captures live container dimensions and updates the canvas on every resize, bypassing the library's broken auto-detection entirely. This fix applies uniformly to both single-pane and dual-pane contexts (verified no regression in single-pane via live testing). See Epic CU634Yc handoff for root-cause analysis and before/after DOM measurements confirming the fix.
+
+---
+
+## 55. Logo Redesign: Orbit Node Mark with Dynamic Favicon Wiring
+
+**Decision:** The header logo (`components/graph/Logo.tsx`) was redesigned from a 4-circle/3-line symmetric star to a simpler "Orbit Node" mark: one large hub circle (r=6 at 8,16), one smaller satellite circle (r=3.5 at 17,7), and one bold connecting line (strokeWidth=2.5). The mark uses `currentColor` for theme adaptation, matching the existing header accent color. A new `app/icon.svg` file (using Next.js's auto-detected favicon convention) was added with the same mark in fixed colors (`#0a0a0a` background, accent color `#3987e5` for the dark theme, matching the app's actual `--accent` CSS variable). The old `app/favicon.ico` was deleted, making the browser tab icon match the in-page logo.
+
+**Rationale:** The original symmetric star was generic and didn't evoke the product's graph visualization identity. The new Orbit Node mark conveys connection and structure (two nodes, one link) at a glance. Simplifying the mark also reduced the visual complexity of the header chrome. The SVG favicon approach (auto-detected via `app/icon.svg`) is cleaner than a manually-maintained `.ico` file and ensures consistent visual appearance across browser tabs and bookmarks. The fixed colors in the favicon are necessary because browsers don't evaluate CSS custom properties or theming in tab icons — the favicon must be a static image. Using the app's actual dark-mode accent color (rather than a generic Tailwind blue) ensures the favicon remains visually coherent with the live interface. See Epic yyEszTE handoff for implementation details and regression testing of the a11y contract (role, aria-label, currentColor theming).
+
+---
+
+## 56. Known Issues and Deferred Work
 
 - **Force-directed layout settle time:** Against the real `second-brain` vault (47 nodes, 96 edges),
   the physics simulation continues redistributing node positions for ~9–10 seconds after
