@@ -79,6 +79,21 @@ describe("buildGraph", () => {
     expect(edges[0]).toEqual({ source: a, target: b });
   });
 
+  it("given a page whose body contains an inline Markdown link, when built, then the node's sourceLinks field contains that entry", () => {
+    writePage(
+      vaultDir,
+      "example.md",
+      { title: "Example", tags: [], status: "current" },
+      "## Body\nSee [this report](https://example.com/report) for details.",
+    );
+
+    const { nodes } = buildGraph(vaultDir, walkVault(vaultDir), warnSpy);
+
+    expect(nodes[0].sourceLinks).toEqual([
+      { text: "this report", url: "https://example.com/report" },
+    ]);
+  });
+
   it("TOR-01-dEUM3Pp: given one malformed and two valid files, when built, then warn names the malformed file and nodes has only the two valid entries", () => {
     writePage(vaultDir, "valid-1.md", { title: "Valid 1", tags: [], status: "current" }, "## Body\ncontent");
     writePage(vaultDir, "valid-2.md", { title: "Valid 2", tags: [], status: "current" }, "## Body\ncontent");

@@ -19,6 +19,7 @@ function node(id: string, folder = "concepts"): GraphNode {
     tags: [],
     status: "active",
     description: "",
+    sourceLinks: [],
     folder,
     path: `${id}.md`,
   };

@@ -1,6 +1,11 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { extractFirstBodyParagraph, extractWikilinks, parseFrontmatter } from "./frontmatter-parser";
+import {
+  extractFirstBodyParagraph,
+  extractSourceLinks,
+  extractWikilinks,
+  parseFrontmatter,
+} from "./frontmatter-parser";
 
 export interface NodeRecord {
   id: string;
@@ -8,6 +13,7 @@ export interface NodeRecord {
   tags: string[];
   status: string;
   description: string;
+  sourceLinks: { text: string; url: string }[];
   folder: string;
   path: string;
 }
@@ -50,6 +56,7 @@ export function buildGraph(
     const dir = path.dirname(relPath);
     const folder = dir === "." ? "" : dir;
     const description = parsed.description || extractFirstBodyParagraph(parsed.body);
+    const sourceLinks = extractSourceLinks(parsed.body);
 
     nodes.push({
       id,
@@ -57,6 +64,7 @@ export function buildGraph(
       tags: parsed.tags,
       status: parsed.status,
       description,
+      sourceLinks,
       folder,
       path: relPath,
     });

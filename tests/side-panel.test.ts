@@ -34,6 +34,7 @@ function node(id: string, folder: string): GraphNode {
     tags: [],
     status: "active",
     description: "",
+    sourceLinks: [],
     folder,
     path: `${id}.md`,
   };
@@ -110,6 +111,25 @@ describe("components/graph/SidePanel.tsx", () => {
   it("TOR-04-1iMsnYq: wires chip clicks to the onSelectNode callback prop", () => {
     expect(source).toContain("onSelectNode: (node: GraphNode) => void");
     expect(source).toContain("onClick={onSelectNode}");
+  });
+
+  it("TOR-04-nsmOOZ8: displays a Cited sources section listing clickable links when sourceLinks is non-empty", () => {
+    expect(source).toContain("node.sourceLinks.length > 0 ? (");
+    expect(source).toContain("Cited sources");
+    expect(source).toContain("node.sourceLinks.map");
+    expect(source).toContain("{link.text}");
+  });
+
+  it("TOR-04-F5cdTRd: renders nothing (not even a placeholder) when sourceLinks is empty", () => {
+    // The conditional renders `null` in the false branch, so nothing mounts when sourceLinks is [].
+    expect(source).toMatch(/node\.sourceLinks\.length > 0 \? \(/);
+    expect(source).not.toMatch(/node\.sourceLinks\.length > 0 \? \([\s\S]*?\)\s*:\s*<(ul|div|p)/);
+  });
+
+  it("TOR-04-9JDfgAA: each cited-source link opens its target url in a new tab", () => {
+    expect(source).toContain('href={link.url}');
+    expect(source).toContain('target="_blank"');
+    expect(source).toContain('rel="noopener noreferrer"');
   });
 
   it("TOR-04-JCORp98: displays a View source on GitHub link opening the raw file in a new tab", () => {

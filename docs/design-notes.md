@@ -620,6 +620,26 @@ not literal syntax. Implemented in `lib/frontmatter-parser.ts` (Epic Dj3m8aH).
 
 ---
 
+## 57. Body Source Links: Citation Extraction and Rendering (Epic cAE4h6z)
+
+**Decision:** Each page's build-time metadata includes a `sourceLinks` field containing up to 5 standard
+Markdown links (`[text](url)`) extracted from the page body (frontmatter excluded, wikilinks excluded
+by regex). The side panel renders these as a "Cited sources" list between the "Connected pages"
+section and the "View source on GitHub" link, omitted entirely when a page has no such links.
+
+**Rationale:** Pages often reference external sources in their body; surfacing these citations
+in the side panel provides readers with traceability and context (e.g., "where did this claim come
+from?") without requiring them to read the full Markdown source. The limit of 5 links prevents
+a cluttered interface while surfacing the most important references (first 5 in document order).
+Wikilinks are structurally excluded because they represent internal cross-references (already
+surfaced in "Connected pages"), not external citations. The extraction uses the existing regex
+patterns in `lib/frontmatter-parser.ts` (reused from the description-stripping logic), requiring
+no new parsing dependency. See Epic cAE4h6z for implementation details and full test coverage
+(TOR-01-VpUINkL, TOR-01-C9XWA4Y, TOR-01-BUr15UG, TOR-01-wU3svpK, TOR-01-6VVefyP, TOR-04-nsmOOZ8,
+TOR-04-F5cdTRd, TOR-04-9JDfgAA).
+
+---
+
 ## 56. Known Issues and Deferred Work
 
 - **Force-directed layout settle time:** Against the real `second-brain` vault (47 nodes, 96 edges),

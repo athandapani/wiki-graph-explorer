@@ -3,7 +3,7 @@ import { ALL_FILTER_VALUE, computeFilteredOutNodeIds } from "../components/graph
 import type { GraphNode } from "../components/graph/GraphCanvas";
 
 function node(id: string, status: string, folder: string): GraphNode {
-  return { id, title: id, tags: [], status, description: "", folder, path: `${id}.md` };
+  return { id, title: id, tags: [], status, description: "", sourceLinks: [], folder, path: `${id}.md` };
 }
 
 describe("computeFilteredOutNodeIds", () => {
