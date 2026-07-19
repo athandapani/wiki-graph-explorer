@@ -274,3 +274,42 @@ Scenario: [TOR-01-gYbfrvE] The build tool shall emit meta.sourceCount as 0 when 
     When the Tool is Run with '--vault <path>'
     Then graph-data.json should contain 'meta.sourceCount' with the value 0
     And the exit code should be 0
+
+
+# --------------------------------------------------------------------------------------------------
+# Body Source-Link Extraction (added 2026-07-18, Cycle 4)
+# --------------------------------------------------------------------------------------------------
+
+Scenario: [TOR-01-VpUINkL] The build tool shall extract standard inline Markdown links from a page's body into a sourceLinks field on that page's node entry in graph-data.json
+    #
+    # Note:
+    #   1. "Standard inline Markdown link" means the '[text](url)' syntax, distinct from the
+    #      '[[slug|title]]' wikilink syntax used for Related/Referenced By edges (TOR-01-IBry2Oi).
+    #   2. Frontmatter is excluded from this scan — only the Markdown body is examined.
+    #
+    Given a vault page whose body contains the text "See [this report](https://example.com/report) for details."
+    When the Tool is Run with '--vault <path>'
+    Then that page's node entry in graph-data.json should contain a 'sourceLinks' field
+    And that field should include an entry with text "this report" and url "https://example.com/report"
+
+Scenario: [TOR-01-C9XWA4Y] The build tool shall cap the sourceLinks field at the first 5 inline Markdown links found in a page's body, in document order
+    Given a vault page whose body contains 7 standard inline Markdown links in sequence
+    When the Tool is Run with '--vault <path>'
+    Then that page's node entry's 'sourceLinks' field should contain exactly 5 entries
+    And those 5 entries should match the first 5 links in the order they appear in the body
+
+Scenario: [TOR-01-BUr15UG] The build tool shall not extract wikilinks as sourceLinks entries, keeping body source-link extraction distinct from Related/Referenced By edge parsing
+    Given a vault page whose body contains only '[[slug|Title]]' wikilinks under a '## Related' section and no standard '[text](url)' links anywhere in the body
+    When the Tool is Run with '--vault <path>'
+    Then that page's node entry's 'sourceLinks' field should be an empty array
+
+Scenario: [TOR-01-wU3svpK] The build tool shall not deduplicate repeated URLs when extracting sourceLinks, counting each occurrence toward the 5-link cap
+    Given a vault page whose body contains the same '[text](url)' link twice among its first 5 inline links
+    When the Tool is Run with '--vault <path>'
+    Then that page's node entry's 'sourceLinks' field should contain two separate entries for that url
+
+Scenario: [TOR-01-6VVefyP] The build tool shall emit an empty sourceLinks array, without error, for a page whose body contains no inline Markdown links
+    Given a vault page with valid frontmatter and a body containing no '[text](url)' links
+    When the Tool is Run with '--vault <path>'
+    Then that page's node entry's 'sourceLinks' field should be an empty array
+    And the exit code should be 0

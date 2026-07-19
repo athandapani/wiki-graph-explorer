@@ -1,6 +1,6 @@
 # wiki-graph-explorer — Product Vision & Brief
 
-**Document Version:** 1.3
+**Document Version:** 1.4
 **Date:** 2026-07-18
 **Status:** Draft
 
@@ -60,6 +60,7 @@ in seconds what a paragraph of prose can only claim.
 | Node grouping + status | Nodes colored by folder taxonomy; status dot (`active`/`revisiting`/`dormant`) visible, sortable, filterable |
 | Source transparency | Side panel on node click shows page detail + working link to that page's source on GitHub |
 | Safe-by-construction boundary | The deployed instance only ever points at the dedicated public vault; zero path by which private-vault content reaches the built page |
+| Cited-source transparency (Cycle 4) | Side panel additionally lists up to 5 externally-cited links found inline in the page's body Markdown — distinct from the single self-referential "View source on GitHub" link — so a visitor can jump straight to the material a page cites |
 
 **Demo-quality goals (Cycle 2 — from the issue #4 critical review vs the "AI Stack, Connected"
 reference):**
@@ -176,6 +177,24 @@ Post-Cycle-2 scope, driven by direct feedback on the shipped visual refresh:
   discloses this rather than implying the same accessibility guarantee as the presets. Selection
   persists via localStorage, the same pattern as the existing dark/light preference.
 
+### Body Source Links (Cycle 4)
+
+Post-Cycle-3 scope, driven by a request to make the side panel show the *citations a page
+makes*, not just a self-link to the page's own file:
+
+- **Inline body-link extraction**: the build tool scans each page's Markdown body (frontmatter
+  excluded) for standard inline links in `[text](url)` form and captures up to the **first 5**
+  found, in document order. Wikilinks (`[[slug|title]]`, used for `Related`/`Referenced By`
+  edges) are a different syntax and are never picked up by this extraction.
+- **New `graph-data.json` field**: each node gains a `sourceLinks` array of `{ text, url }`
+  pairs (0–5 entries, no deduplication — a link cited twice in a page appears twice, capped at
+  5 total). This is separate from the existing per-node GitHub self-link and separate from the
+  wikilink-derived graph edges.
+- **Side panel display**: when a node has 1 or more `sourceLinks`, the panel renders a "Cited
+  sources" list of clickable links (opening in a new tab, same pattern as the GitHub source
+  link). When a node has zero `sourceLinks`, the section is omitted entirely — no empty list or
+  placeholder — mirroring the existing empty-description precedent.
+
 ## 7. Out of Scope for MVP
 
 - GitHub-URL / remote-clone input (local filesystem path only, for now)
@@ -234,6 +253,11 @@ Post-Cycle-2 scope, driven by direct feedback on the shipped visual refresh:
 12. **Theme selection** — a visitor opens the theme chooser, previews the 3 curated presets, and
     either picks one or opens the custom option to set their own accent color, with the choice
     persisting across visits.
+13. **Body source-link discovery** — a visitor clicks a node whose page cites external material
+    inline (e.g. "as argued in [this McKinsey report](https://...)"), and the side panel shows
+    up to 5 of those cited links as a distinct "Cited sources" list, separate from the page's own
+    "View source on GitHub" link — letting the visitor jump straight to the material the page
+    references, not just the page itself.
 
 ## 9. Design Direction
 
@@ -268,6 +292,11 @@ Post-Cycle-2 scope, driven by direct feedback on the shipped visual refresh:
   — always visible above the wide-screen breakpoint, absent below it; the theme chooser extends
   the existing Color theme section in the Options panel, with curated presets CVD-validated as a
   set and the custom option visibly disclosed as unvalidated
+- **Body source links (Cycle 4):** the "Cited sources" list renders below the existing
+  "Connected pages" section in the side panel, using the same clickable-link visual treatment as
+  the "View source on GitHub" link so all three source-transparency affordances (self-link,
+  connected pages, cited sources) read as one family; omitted entirely (no heading, no empty
+  state) when a page has zero extracted links
 
 ## 10. Data Strategy
 
@@ -290,6 +319,14 @@ author supplies a deep-research Markdown file (~40 source links, AI adoption in 
 enterprises); the ingestion pass creates `raw/` entries and interlinked `wiki/` pages
 Karpathy-style. The repo becomes public (after a history audit) so raw GitHub source links
 resolve for anonymous visitors.
+
+**Cycle 4 addition:** `graph-data.json` gains a per-node `sourceLinks` field — an array of up to
+5 `{ text, url }` pairs, extracted from standard `[text](url)` Markdown links found anywhere in
+the page's body (frontmatter excluded), in document order, uncapped by dedup (a link appearing
+twice counts twice toward the 5-link cap). This is parsed independently of the existing
+`## Related`/`## Referenced By` wikilink extraction (different syntax, different purpose) and of
+the per-node GitHub self-link. Pages with no inline links get an empty array; the side panel
+omits the "Cited sources" section entirely in that case.
 
 ## 11. Backlog / Future Vision
 

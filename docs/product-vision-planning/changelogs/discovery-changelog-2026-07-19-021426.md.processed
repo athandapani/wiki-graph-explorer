@@ -1,0 +1,37 @@
+# Discovery Changelog
+
+**Date:** 2026-07-18
+**Mode:** Brownfield (post-MVP ideation)
+**Previous Version:** 1.3
+
+## What Changed
+
+| Document | Section | Change Type | Summary |
+|----------|---------|-------------|---------|
+| product-vision.md | §5 Goals & Success Criteria | Added | New "Cited-source transparency (Cycle 4)" goal row |
+| product-vision.md | §6 MVP Scope Summary | Added | New "Body Source Links (Cycle 4)" subsection describing inline-link extraction, `sourceLinks` schema field, and side-panel display |
+| product-vision.md | §8 Key Business Scenarios | Added | New scenario 13: "Body source-link discovery" |
+| product-vision.md | §9 Design Direction | Added | New bullet on "Cited sources" list placement/styling relative to existing source-transparency affordances |
+| product-vision.md | §10 Data Strategy | Added | New paragraph specifying `sourceLinks` field shape, extraction rules, and empty-state behavior |
+| concept-of-operations.md | §3 Proposed System | Added | New paragraph describing Cycle 4 body-source-link behavior |
+| concept-of-operations.md | §5 Operational Scenarios | Added | New Scenario 15: "Body source-link discovery" with 6 numbered steps |
+| concept-of-operations.md | §6 System Interfaces & Data Flows | Modified | `graph-data.json` row updated to include `sourceLinks` field description |
+| concept-of-operations.md | §7 Functional Summary | Modified | Side panel and Build pipeline rows updated to mention "Cited sources" / `sourceLinks` |
+| concept-of-operations.md | §8 Operational Constraints & Assumptions | Added | New constraint row: 5-link cap, no dedup, no "+N more" overflow affordance |
+| concept-of-operations.md | §9 Glossary | Added | New terms: `sourceLinks`, "Cited sources" |
+
+## New Capabilities Identified
+
+- **Inline body-link extraction**: build tool scans each page's Markdown body (frontmatter excluded) for standard `[text](url)` links, distinct from the `[[slug|title]]` wikilink syntax already used for `Related`/`Referenced By` edges.
+- **`sourceLinks` schema field**: new per-node array (0–5 `{ text, url }` pairs) in `graph-data.json`, capped at the first 5 links found in document order, no deduplication.
+- **"Cited sources" side-panel section**: renders below "Connected pages"; omitted entirely (no heading, no empty-list placeholder) when a node has zero extracted links — mirrors the existing empty-description omission precedent (`TOR-04-olJvPNV`).
+
+## Priority Signal
+
+User explicitly requested the 5-link cap upfront ("first 5 max links that are found... limit it and make it contained") to keep the feature scoped and avoid an open-ended extraction/display surface. No other capabilities (e.g., a "+N more" overflow control, deduplication, external-vs-internal URL filtering) were requested — deliberately deferred rather than gold-plated.
+
+## Deferred Items
+
+- Overflow affordance for links beyond the 5-link cap (explicitly out of scope per user direction — "contained" was the stated goal).
+- Deduplication of repeated URLs within a page.
+- Distinguishing internal (relative/vault) links from external links in extraction or display.

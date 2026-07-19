@@ -505,6 +505,118 @@
           }
         ]
       }
+    },
+    {
+      "id": "TOR-01-VpUINkL",
+      "title": "The build tool shall extract standard inline Markdown links from a page's body into a sourceLinks field on that page's node entry in graph-data.json",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Body Source Links, Cycle 4)",
+            "paraphrase": "The build tool scans each page's Markdown body for standard inline links in `[text](url)` form and captures up to 5 found, in document order, storing them as sourceLinks in graph-data.json."
+          },
+          {
+            "section": "§10 — Data Strategy (Cycle 4 addition)",
+            "paraphrase": "The graph-data.json field sourceLinks stores an array of up to 5 `{ text, url }` pairs extracted from standard `[text](url)` Markdown links found in the page body, in document order, independent of wikilinks and the GitHub self-link."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S3",
+            "step": 3,
+            "paraphrase": "When a visitor clicks a node whose page body contains standard `[text](url)` links, those links appear in the side panel as a distinct cited-sources list."
+          },
+          {
+            "scenario": "S15",
+            "step": 1,
+            "paraphrase": "Body source-link discovery occurs when a visitor clicks a node whose page cites external material inline, surfacing up to 5 of those citations extracted from the page body."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-C9XWA4Y",
+      "title": "The build tool shall cap the sourceLinks field at the first 5 inline Markdown links found in a page's body, in document order",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Body Source Links, Cycle 4)",
+            "paraphrase": "The build tool captures up to the first 5 inline `[text](url)` links found in document order, enforcing a hard cap to keep the cited-sources list concise."
+          },
+          {
+            "section": "§10 — Data Strategy (Cycle 4 addition)",
+            "paraphrase": "The sourceLinks array is capped at 5 entries per page, preserving document order from the body scan."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S15",
+            "step": 3,
+            "paraphrase": "The cited-sources list shown in the side panel displays up to 5 links from the page body, in the order they appear, never exceeding this cap."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-BUr15UG",
+      "title": "The build tool shall not extract wikilinks as sourceLinks entries, keeping body source-link extraction distinct from Related/Referenced By edge parsing",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Body Source Links, Cycle 4)",
+            "paraphrase": "Wikilinks (`[[slug|title]]`, used for Related/Referenced By edges) are a different syntax from inline Markdown links (`[text](url)`) and are never picked up by sourceLinks extraction."
+          },
+          {
+            "section": "§10 — Data Strategy (Cycle 4 addition)",
+            "paraphrase": "SourceLinks extraction is parsed independently of the existing Related/Referenced By wikilink parsing, preserving the distinct purposes of each syntax."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S4",
+            "step": 2,
+            "paraphrase": "During the build, two separate parsing passes occur: one synthesizes undirected edges from wikilinks, and the other extracts external citations from body-link syntax; these do not interfere with each other."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-wU3svpK",
+      "title": "The build tool shall not deduplicate repeated URLs when extracting sourceLinks, counting each occurrence toward the 5-link cap",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§10 — Data Strategy (Cycle 4 addition)",
+            "paraphrase": "When a link is cited multiple times in a page's body, each occurrence is recorded separately in the sourceLinks array; no deduplication occurs, and each instance counts toward the 5-link cap."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S6",
+            "step": 3,
+            "paraphrase": "The cited-sources list faithfully represents what the author wrote: if a link appears twice, it appears twice in the list (within the 5-link cap), preserving the page's original emphasis."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-6VVefyP",
+      "title": "The build tool shall emit an empty sourceLinks array, without error, for a page whose body contains no inline Markdown links",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§10 — Data Strategy (Cycle 4 addition)",
+            "paraphrase": "Pages with no inline body links get an empty sourceLinks array in graph-data.json, allowing the side panel to cleanly omit the cited-sources section without error."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S15",
+            "step": 6,
+            "paraphrase": "When a visitor clicks a node whose page has no inline Markdown links, the cited-sources section is not rendered, and the build tool exits cleanly."
+          }
+        ]
+      }
     }
   ],
   "coverage_gaps": []

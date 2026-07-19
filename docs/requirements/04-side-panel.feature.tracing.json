@@ -271,6 +271,85 @@
           }
         ]
       }
+    },
+    {
+      "id": "TOR-04-nsmOOZ8",
+      "title": "The side panel shall display a \"Cited sources\" list of clickable links when the selected node's sourceLinks field is non-empty",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (MVP) — Cited-source transparency (Cycle 4)",
+            "paraphrase": "The side panel additionally lists up to 5 externally-cited links found inline in a page's body Markdown, distinct from the single self-referential GitHub source link."
+          },
+          {
+            "section": "§6 — MVP Scope Summary (Body Source Links, Cycle 4)",
+            "paraphrase": "When a node has one or more sourceLinks, the side panel renders a Cited sources list of clickable links opening in a new tab, using the same visual treatment as the GitHub source link."
+          },
+          {
+            "section": "§9 — Design Direction (Body source links, Cycle 4)",
+            "paraphrase": "The cited-sources list renders below the existing connected-pages section in the side panel, maintaining visual consistency with other source-transparency affordances."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S3",
+            "step": 3,
+            "paraphrase": "When a visitor clicks a node, the side panel displays the node's detail including a cited-sources list if the page has extracted body links."
+          },
+          {
+            "scenario": "S15",
+            "step": 3,
+            "paraphrase": "The cited-sources list appears below the connected-pages section showing up to 5 clickable links labeled with their Markdown text, in document order."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-04-F5cdTRd",
+      "title": "The side panel shall omit the \"Cited sources\" section entirely, without rendering an empty heading or placeholder, when the selected node's sourceLinks field is empty",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Body Source Links, Cycle 4)",
+            "paraphrase": "When a node has zero sourceLinks, the cited-sources section is omitted entirely without an empty list or placeholder, mirroring the existing empty-description precedent."
+          },
+          {
+            "section": "§10 — Data Strategy (Cycle 4 addition)",
+            "paraphrase": "The side panel omits the cited-sources section entirely when a page has no body links, allowing clean layout without empty sections."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S3",
+            "step": 3,
+            "paraphrase": "The side panel omits description and cited-sources areas entirely when they are empty, keeping the layout tight and focused on available content."
+          },
+          {
+            "scenario": "S15",
+            "step": 6,
+            "paraphrase": "When a visitor clicks a node with no inline body links, the cited-sources section does not render at all, and the panel displays remaining detail normally."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-04-9JDfgAA",
+      "title": "Each cited-source link shall open its target URL in a new tab",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§6 — MVP Scope Summary (Body Source Links, Cycle 4)",
+            "paraphrase": "Cited-source links open in a new tab, using the same interaction pattern as the GitHub source link to maintain consistent behavior across all source-transparency affordances."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S15",
+            "step": 4,
+            "paraphrase": "When a visitor clicks a cited-source link, it opens in a new tab, allowing them to verify the external material cited by the page without losing the graph context."
+          }
+        ]
+      }
     }
   ],
   "coverage_gaps": []
