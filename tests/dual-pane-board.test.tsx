@@ -66,14 +66,14 @@ describe("DualPaneBoard cross-pane sync", () => {
     expect(onLayoutModeChange).toHaveBeenCalledWith("swim-lane");
   });
 
-  it("TOR-11-y75iqea / TOR-11-XOBsafW: the swim-lane pane receives the shared selection regardless of whether it's the primary or secondary pane", () => {
+  it("TOR-11-y75iqea: the swim-lane pane (fixed left, TOR-11-XOBsafW amended) receives the shared selection even when layoutMode is force-directed", () => {
     const nodes = [node("a"), node("b")];
     const edges = wellConnected(["a", "b"]);
 
-    // layoutMode="force-directed" makes swim-lane the *secondary* pane here (TOR-11-XOBsafW's
-    // ordering rule) — the point of this test is that focus still reaches it either way, exactly
-    // as it would if a force-directed-pane click (untestable here — canvas-based) had set
-    // selectedNode.
+    // Swim-lane's pane position is fixed regardless of layoutMode (TOR-11-XOBsafW, amended) —
+    // layoutMode here only affects which pane is shown below the wide-screen breakpoint. The
+    // point of this test is that a selection made elsewhere (e.g. the force-directed pane,
+    // untestable here — canvas-based) still reaches the swim-lane pane's focus state.
     render(
       <DualPaneBoard
         nodes={nodes}
@@ -88,8 +88,8 @@ describe("DualPaneBoard cross-pane sync", () => {
 
     // SwimLaneCanvas gives the focused node's pill aria-pressed="true" (see
     // tests/swim-lane-canvas.test.tsx's externally-set-focusedNodeId case) — its presence here
-    // confirms DualPaneBoard forwarded focusedNodeId="a" down to the swim-lane pane even though
-    // it's in the secondary slot.
+    // confirms DualPaneBoard forwarded focusedNodeId="a" down to the swim-lane pane regardless of
+    // layoutMode's value.
     expect(pill("Title a").getAttribute("aria-pressed")).toBe("true");
   });
 

@@ -39,7 +39,7 @@ fetch, matching the existing layout-mode-switch contract (TOR-06-mvJp8Oa).
 |--------|--------------|-----------------|
 | TOR-11-45utBRH | `docs/requirements/11-dual-pane-layout.feature.md` | Above the wide-screen breakpoint, the /graph page shall display a pane-count control positioned beside the Options & help hamburger, independent of the layout-mode toggle |
 | TOR-11-6XjR1qm | `docs/requirements/11-dual-pane-layout.feature.md` | Activating the pane-count control shall switch the board from 1-pane to 2-pane mode, rendering both the swim-lane and force-directed layouts side by side at approximately half width each |
-| TOR-11-XOBsafW | `docs/requirements/11-dual-pane-layout.feature.md` | In 2-pane mode, whichever layout mode was active before switching shall render as the primary pane, with the other mode filling the second pane |
+| TOR-11-XOBsafW | `docs/requirements/11-dual-pane-layout.feature.md` | In 2-pane mode, the swim-lane layout shall always render as the left pane and the force-directed layout as the right pane, regardless of which mode was active before switching |
 | TOR-11-y75iqea | `docs/requirements/11-dual-pane-layout.feature.md` | Clicking a node in one pane while in 2-pane mode shall focus that same node in the other pane and update the shared side panel with that node's detail |
 | TOR-11-edqY3uP | `docs/requirements/11-dual-pane-layout.feature.md` | Clicking a different node in the other pane shall update focus in both panes and the side panel together |
 | TOR-11-qzGSh7K | `docs/requirements/11-dual-pane-layout.feature.md` | Deactivating the pane-count control while in 2-pane mode shall return the board to 1-pane mode, showing whichever layout mode was last focused or interacted with |

@@ -20,11 +20,24 @@ Scenario: [TOR-11-6XjR1qm] Activating the pane-count control shall switch the bo
     Then the board should render both the swim-lane and force-directed layouts simultaneously
     And each layout should occupy approximately half the board's width
 
-Scenario: [TOR-11-XOBsafW] In 2-pane mode, whichever layout mode was active before switching shall render as the primary pane, with the other mode filling the second pane
+Scenario: [TOR-11-XOBsafW] In 2-pane mode, the swim-lane layout shall always render as the left pane and the force-directed layout as the right pane, regardless of which mode was active before switching
+    #
+    # Note: amended 2026-07-18 — change-control event, user-approved directly (not run through
+    # /peak-workflow:capture-requirements as a separate docs/ branch pass, given the small,
+    # immediate scope; documented here per the same amendment convention as TOR-06-AFMTHM6).
+    #
+    # This requirement originally read: "In 2-pane mode, whichever layout mode was active before
+    # switching shall render as the primary pane, with the other mode filling the second pane."
+    # Live use during wrapup-epic verification showed the "whichever was active" rule made pane
+    # position unpredictable — the same visitor action (activating 2-pane mode) could land
+    # swim-lane on either side depending on unrelated prior navigation. A fixed left/right
+    # assignment is simpler to learn and remember. TOR-11-qzGSh7K's last-interacted-pane tracking
+    # for the return-to-1-pane behavior is unaffected — it never depended on pane position.
+    #
     Given a visitor is on /graph in 1-pane force-directed mode
     When the visitor activates the pane-count control
-    Then the force-directed layout should render as the primary pane
-    And the swim-lane layout should fill the second pane
+    Then the swim-lane layout should render as the left pane
+    And the force-directed layout should render as the right pane
 
 
 # --------------------------------------------------------------------------------------------------
