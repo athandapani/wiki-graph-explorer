@@ -86,7 +86,7 @@ Key implementation details:
 - Startup log line (`[INFO] wiki-graph-explorer v<version> starting`) is emitted immediately after arg parsing and before any vault access, making it the first observable output.
 - `--version` short-circuits before any startup log is emitted, so version queries remain silent on stderr (consistent with POSIX tools).
 - Related/Referenced By links are sourced from Markdown body-section H2 headers (`## Related`, `## Referenced By`), not YAML frontmatter, reflecting how the real Karpathy-pattern vault stores cross-references (design-notes.md §11).
-- Embeddings are computed once per page at build time; the resulting `vector-index.json` maps page IDs to their 384-dim vectors for downstream semantic search (client-side query embedding mechanism pending).
+- Embeddings are computed once per page at build time; the resulting `vector-index.json` maps page IDs to their 384-dim vectors for downstream semantic search. Client-side query embedding is implemented via dynamic import of the same `@huggingface/transformers` model (Epic TBZJM0j, design-notes.md §19), guaranteeing embedding-space parity between precomputed page vectors and live-typed queries.
 
 ---
 
