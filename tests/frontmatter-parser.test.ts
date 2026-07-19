@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   extractFirstBodyParagraph,
+  extractSourceLinks,
   extractWikilinks,
   parseFrontmatter,
 } from "../lib/frontmatter-parser";
@@ -85,6 +86,41 @@ describe("extractWikilinks", () => {
   it("given a body with no matching heading, when extracted, then returns an empty array", () => {
     const body = "## Body\nno related section here\n";
     expect(extractWikilinks(body, "Related")).toEqual([]);
+  });
+});
+
+describe("extractSourceLinks", () => {
+  it("TOR-01-VpUINkL: given a body containing a standard [text](url) link, when extracted, then returns an entry with that text and url", () => {
+    const body = "See [this report](https://example.com/report) for details.";
+    expect(extractSourceLinks(body)).toEqual([
+      { text: "this report", url: "https://example.com/report" },
+    ]);
+  });
+
+  it("TOR-01-C9XWA4Y: given a body with 7 sequential links, when extracted, then returns only the first 5 in document order", () => {
+    const links = Array.from({ length: 7 }, (_, i) => `[link${i}](https://example.com/${i})`);
+    const body = links.join(" ");
+    expect(extractSourceLinks(body)).toEqual(
+      Array.from({ length: 5 }, (_, i) => ({ text: `link${i}`, url: `https://example.com/${i}` })),
+    );
+  });
+
+  it("TOR-01-BUr15UG: given a body containing only wikilinks under ## Related, when extracted, then returns an empty array", () => {
+    const body = `## Related\n- [[foo|Foo]]\n- [[bar]]\n`;
+    expect(extractSourceLinks(body)).toEqual([]);
+  });
+
+  it("TOR-01-wU3svpK: given a body containing the same link twice, when extracted, then returns two separate entries for that url", () => {
+    const body = "[first mention](https://example.com/dup) and [second mention](https://example.com/dup)";
+    expect(extractSourceLinks(body)).toEqual([
+      { text: "first mention", url: "https://example.com/dup" },
+      { text: "second mention", url: "https://example.com/dup" },
+    ]);
+  });
+
+  it("TOR-01-6VVefyP: given a body with no inline Markdown links, when extracted, then returns an empty array", () => {
+    const body = "# Title\n\nJust prose, no links here.\n";
+    expect(extractSourceLinks(body)).toEqual([]);
   });
 });
 

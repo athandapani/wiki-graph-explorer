@@ -24,6 +24,7 @@ function node(overrides: Partial<GraphNode> & { id: string }): GraphNode {
     tags: [],
     status: "active",
     description: "",
+    sourceLinks: [],
     folder: "concepts",
     path: `${overrides.id}.md`,
     ...overrides,
@@ -100,6 +101,76 @@ describe("SidePanel description", () => {
     expect(screen.getByText("active")).toBeTruthy();
     expect(screen.getByText("tag-one")).toBeTruthy();
     expect(screen.getByText("Connected pages")).toBeTruthy();
+  });
+});
+
+describe("SidePanel cited sources", () => {
+  it("TOR-04-nsmOOZ8: displays a Cited sources list of clickable links when sourceLinks is non-empty", () => {
+    const selected = node({
+      id: "a",
+      sourceLinks: [
+        { text: "Source One", url: "https://example.com/one" },
+        { text: "Source Two", url: "https://example.com/two" },
+        { text: "Source Three", url: "https://example.com/three" },
+      ],
+    });
+
+    render(
+      <SidePanel
+        node={selected}
+        edges={[]}
+        allNodes={[selected]}
+        isDark={false}
+        onClose={() => {}}
+        onSelectNode={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("Cited sources")).toBeTruthy();
+    expect(screen.getByText("Source One")).toBeTruthy();
+    expect(screen.getByText("Source Two")).toBeTruthy();
+    expect(screen.getByText("Source Three")).toBeTruthy();
+  });
+
+  it("TOR-04-F5cdTRd: omits the Cited sources section entirely when sourceLinks is empty, while the rest of the panel renders normally", () => {
+    const selected = node({ id: "a", sourceLinks: [] });
+
+    render(
+      <SidePanel
+        node={selected}
+        edges={[]}
+        allNodes={[selected]}
+        isDark={false}
+        onClose={() => {}}
+        onSelectNode={() => {}}
+      />,
+    );
+
+    expect(screen.queryByText("Cited sources")).toBeNull();
+    expect(screen.getByText(selected.title)).toBeTruthy();
+    expect(screen.getByText("Connected pages")).toBeTruthy();
+  });
+
+  it("TOR-04-9JDfgAA: a cited-source link opens its target url in a new tab", () => {
+    const selected = node({
+      id: "a",
+      sourceLinks: [{ text: "The Report", url: "https://example.com/report" }],
+    });
+
+    render(
+      <SidePanel
+        node={selected}
+        edges={[]}
+        allNodes={[selected]}
+        isDark={false}
+        onClose={() => {}}
+        onSelectNode={() => {}}
+      />,
+    );
+
+    const link = screen.getByText("The Report") as HTMLAnchorElement;
+    expect(link.href).toBe("https://example.com/report");
+    expect(link.target).toBe("_blank");
   });
 });
 

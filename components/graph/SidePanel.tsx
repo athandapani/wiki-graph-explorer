@@ -137,6 +137,25 @@ export function SidePanel({ node, edges, allNodes, isDark, onClose, onSelectNode
           ) : (
             <p className="mt-1 text-sm text-foreground/60">No connected pages.</p>
           )}
+          {node.sourceLinks.length > 0 ? (
+            <>
+              <h3 className="mt-4 text-sm font-semibold">Cited sources</h3>
+              <ul className="mt-1 space-y-1">
+                {node.sourceLinks.map((link, i) => (
+                  <li key={`${link.url}-${i}`}>
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm underline"
+                    >
+                      {link.text}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
           <a
             href={getGithubSourceUrl(node.path)}
             target="_blank"

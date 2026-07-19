@@ -192,6 +192,39 @@ describe("build-graph CLI", () => {
     expect(graphData.nodes[0].description).toBe("");
   });
 
+  it("TOR-01-VpUINkL, TOR-01-C9XWA4Y: given a page with 7 sequential inline links, when run, then graph-data.json's node has exactly the first 5 sourceLinks in document order", () => {
+    const links = Array.from({ length: 7 }, (_, i) => `[link${i}](https://example.com/${i})`);
+    writePage(
+      tmpVaultDir,
+      "example.md",
+      { title: "Example Page", tags: [], status: "current" },
+      `## Body\n${links.join(" ")}\n`,
+    );
+
+    const { exitCode } = runCli(["--vault", tmpVaultDir]);
+    expect(exitCode).toBe(0);
+
+    const graphData = readGraphData();
+    expect(graphData.nodes[0].sourceLinks).toEqual(
+      Array.from({ length: 5 }, (_, i) => ({ text: `link${i}`, url: `https://example.com/${i}` })),
+    );
+  });
+
+  it("TOR-01-6VVefyP: given a page with no inline Markdown links, when run, then the node's sourceLinks is empty and exit code is 0", () => {
+    writePage(
+      tmpVaultDir,
+      "example.md",
+      { title: "Example Page", tags: [], status: "current" },
+      "## Body\nJust prose, no links here.",
+    );
+
+    const { exitCode } = runCli(["--vault", tmpVaultDir]);
+    expect(exitCode).toBe(0);
+
+    const graphData = readGraphData();
+    expect(graphData.nodes[0].sourceLinks).toEqual([]);
+  });
+
   it("TOR-01-IBry2Oi: given page A Related->B and page B Referenced By->A, when run, then graph-data.json has exactly one edge connecting them", () => {
     writePage(tmpVaultDir, "page-a.md", { title: "Page A", tags: [], status: "current" }, "## Related\n- [[page-b|Page B]]\n");
     writePage(tmpVaultDir, "page-b.md", { title: "Page B", tags: [], status: "current" }, "## Referenced By\n- [[page-a|Page A]]\n");

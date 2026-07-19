@@ -34,6 +34,8 @@ export function parseFrontmatter(content: string): ParsedFrontmatter | null {
 const WIKILINK_PATTERN = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
 const WIKILINK_STRIP_PATTERN = /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g;
 const MARKDOWN_LINK_PATTERN = /\[([^\]]+)\]\([^)]+\)/g;
+const SOURCE_LINK_PATTERN = /\[([^\]]+)\]\(([^)]+)\)/g;
+const SOURCE_LINK_CAP = 5;
 const BOLD_PATTERN = /(\*\*|__)([^*_]+)\1/g;
 const ITALIC_PATTERN = /(\*|_)([^*_]+)\1/g;
 
@@ -78,6 +80,20 @@ export function extractFirstBodyParagraph(body: string): string {
   }
 
   return stripInlineMarkdown(paragraph.join(" ")).trim();
+}
+
+// Standard "[text](url)" inline Markdown links, distinct from "[[slug|title]]" wikilink syntax
+// (no "(" ever immediately follows a wikilink's closing "]]", so this pattern never engages
+// there — no special-casing needed to keep the two syntaxes separate, TOR-01-BUr15UG). Capped
+// at the first 5 found, in document order, with no deduplication (TOR-01-C9XWA4Y, TOR-01-wU3svpK).
+export function extractSourceLinks(body: string): { text: string; url: string }[] {
+  const links: { text: string; url: string }[] = [];
+  let match: RegExpExecArray | null;
+  SOURCE_LINK_PATTERN.lastIndex = 0;
+  while ((match = SOURCE_LINK_PATTERN.exec(body)) !== null && links.length < SOURCE_LINK_CAP) {
+    links.push({ text: match[1].trim(), url: match[2].trim() });
+  }
+  return links;
 }
 
 export function extractWikilinks(body: string, heading: "Related" | "Referenced By"): string[] {

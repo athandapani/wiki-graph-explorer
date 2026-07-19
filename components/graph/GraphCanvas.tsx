@@ -11,6 +11,7 @@ export interface GraphNode {
   tags: string[];
   status: string;
   description: string;
+  sourceLinks: { text: string; url: string }[];
   folder: string;
   path: string;
 }
