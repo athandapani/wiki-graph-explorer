@@ -23,6 +23,11 @@ interface SwimLaneCanvasProps {
   searchScores?: Map<string, number> | null;
   relevanceThreshold?: number;
   focusedNodeId?: string | null;
+  // Increment to force-clear the board's highlight even though focusedNodeId's sync below is
+  // deliberately null-blind (TOR-09-a6cppkl: Esc must remove connector lines/selection ring/
+  // dimming from the board, unlike the SidePanel's own Close button, which intentionally leaves
+  // the board's highlight in place per the comment on prevFocusedNodeId below).
+  forceClearSignal?: number;
 }
 
 interface ConnectorPathData {
@@ -95,6 +100,7 @@ export default function SwimLaneCanvas({
   searchScores,
   relevanceThreshold = 0,
   focusedNodeId,
+  forceClearSignal,
 }: SwimLaneCanvasProps) {
   const [activeNodeId, setActiveNodeId] = useState<string | null>(focusedNodeId ?? null);
   const [expandedLaneNames, setExpandedLaneNames] = useState<Set<string>>(new Set());
@@ -113,6 +119,14 @@ export default function SwimLaneCanvas({
     if (focusedNodeId != null) {
       setActiveNodeId(focusedNodeId);
     }
+  }
+
+  // TOR-09-a6cppkl: forceClearSignal is the escape hatch for the null-blind sync above — Esc
+  // needs the board to actually clear, unlike a plain focusedNodeId=null transition.
+  const [prevForceClearSignal, setPrevForceClearSignal] = useState(forceClearSignal);
+  if (forceClearSignal !== prevForceClearSignal) {
+    setPrevForceClearSignal(forceClearSignal);
+    setActiveNodeId(null);
   }
   const [connectorPaths, setConnectorPaths] = useState<ConnectorPathData[]>([]);
   const boardRef = useRef<HTMLDivElement | null>(null);

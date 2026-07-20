@@ -240,6 +240,67 @@ describe("app/graph/page.tsx", () => {
     expect(dualPaneProps).toContain("onLayoutModeChange={setLayoutMode}");
   });
 
+  it("TOR-09-gEPQ6wm/a6cppkl/4BewmC1/L9qGFOu/YrywFkB: wires useEscapeChain with layers in tour → Options popover → search → node-selection priority order", () => {
+    expect(source).toContain('import { useEscapeChain } from "@/hooks/useEscapeChain";');
+    const chainCallIndex = source.indexOf("useEscapeChain([");
+    expect(chainCallIndex).toBeGreaterThan(-1);
+    const chainBlock = source.slice(chainCallIndex, source.indexOf("]);", chainCallIndex));
+    const tourIndex = chainBlock.indexOf("tourStepIndex !== null");
+    const popoverIndex = chainBlock.indexOf("isOptionsOpen, onEscape");
+    const searchIndex = chainBlock.indexOf("isSearchActive,");
+    const selectionIndex = chainBlock.indexOf("selectedNode !== null");
+    expect(tourIndex).toBeGreaterThan(-1);
+    expect(popoverIndex).toBeGreaterThan(tourIndex);
+    expect(searchIndex).toBeGreaterThan(popoverIndex);
+    expect(selectionIndex).toBeGreaterThan(searchIndex);
+    expect(chainBlock).toContain("onEscape: handleTourExit");
+    expect(chainBlock).toContain("setIsOptionsOpen(false)");
+    expect(chainBlock).toContain('setQuery("");');
+    expect(chainBlock).toContain("searchInputRef.current?.blur();");
+    expect(chainBlock).toContain("setSelectedNode(null)");
+  });
+
+  it("TOR-09-a6cppkl: bumps swimLaneClearSignal alongside setSelectedNode(null) in the Esc chain, and forwards it to both SwimLaneCanvas and DualPaneBoard", () => {
+    // SwimLaneCanvas's focusedNodeId sync is deliberately null-blind (tests/swim-lane-canvas.test.tsx:
+    // "does not clear the current highlight when focusedNodeId becomes null") so Esc needs this
+    // explicit signal to actually clear the board — see tests/swim-lane-canvas.test.tsx's
+    // forceClearSignal case.
+    expect(source).toContain("const [swimLaneClearSignal, setSwimLaneClearSignal] = useState(0);");
+    const chainCallIndex = source.indexOf("useEscapeChain([");
+    const chainBlock = source.slice(chainCallIndex, source.indexOf("]);", chainCallIndex));
+    expect(chainBlock).toContain("setSwimLaneClearSignal((count) => count + 1);");
+
+    const swimLaneProps = source.slice(
+      source.indexOf("<SwimLaneCanvas"),
+      source.indexOf("/>", source.indexOf("<SwimLaneCanvas")),
+    );
+    expect(swimLaneProps).toContain("forceClearSignal={swimLaneClearSignal}");
+
+    const dualPaneProps = source.slice(
+      source.indexOf("<DualPaneBoard"),
+      source.indexOf("/>", source.indexOf("<DualPaneBoard")),
+    );
+    expect(dualPaneProps).toContain("swimLaneClearSignal={swimLaneClearSignal}");
+  });
+
+  it("TOR-09-4BewmC1: passes controlled isOpen/onOpenChange props into OptionsPanel", () => {
+    const optionsPanelProps = source.slice(
+      source.indexOf("<OptionsPanel"),
+      source.indexOf("/>", source.indexOf("<OptionsPanel")),
+    );
+    expect(optionsPanelProps).toContain("isOpen={isOptionsOpen}");
+    expect(optionsPanelProps).toContain("onOpenChange={setIsOptionsOpen}");
+  });
+
+  it("TOR-09-gEPQ6wm: forwards searchInputRef into SearchInput", () => {
+    const searchInputProps = source.slice(
+      source.indexOf("<SearchInput"),
+      source.indexOf("/>", source.indexOf("<SearchInput")),
+    );
+    expect(searchInputProps).toContain("ref={searchInputRef}");
+    expect(source).toContain("const searchInputRef = useRef<HTMLInputElement | null>(null);");
+  });
+
   it("TOR-11-73Scw5U: paneCount is not a dependency of the graph-data/vector-index fetch effect, so toggling it never refetches", () => {
     // Reuses the same fetch-count assertions as TOR-06-mvJp8Oa above; this test additionally
     // pins down that the fetch effect's dependency array stays empty even after paneCount exists.

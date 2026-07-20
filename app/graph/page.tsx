@@ -18,6 +18,7 @@ import { SearchInput } from "@/components/graph/SearchInput";
 import { SidePanel } from "@/components/graph/SidePanel";
 import SwimLaneCanvas from "@/components/graph/SwimLaneCanvas";
 import { RELEVANCE_THRESHOLD, useSearchRanking } from "@/components/graph/useSearchRanking";
+import { useEscapeChain } from "@/hooks/useEscapeChain";
 import type { VectorIndexEntry } from "@/lib/embeddings";
 import { TOUR_DEFINITION } from "@/lib/tour-definition";
 
@@ -39,6 +40,8 @@ export default function GraphPage() {
   const [tourStepIndex, setTourStepIndex] = useState<number | null>(null);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("swim-lane");
   const [paneCount, setPaneCount] = useState<PaneCount>(1);
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+  const [swimLaneClearSignal, setSwimLaneClearSignal] = useState(0);
   const [statusFilter, setStatusFilter] = useState(ALL_FILTER_VALUE);
   const [folderFilter, setFolderFilter] = useState(ALL_FILTER_VALUE);
   const [isDark, setIsDark] = useState(() =>
@@ -48,6 +51,7 @@ export default function GraphPage() {
     vectorIndex ?? [],
   );
   const resetViewRef = useRef<(() => void) | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   function handleThemeChange(nextIsDark: boolean): void {
     setIsDark(nextIsDark);
@@ -132,12 +136,39 @@ export default function GraphPage() {
     setTourStepIndex(null);
   }
 
+  // Esc peels exactly one UI layer per press, in this priority order (TOR-09-YrywFkB): an
+  // active tour outranks the Options popover, which outranks an active search query, which
+  // outranks the node selection. handleTourExit is reused as-is so TOR-09-L9qGFOu's "step's node
+  // remains selected" falls out of the same behavior TOR-08-RCP0xbr already established.
+  useEscapeChain([
+    { isActive: tourStepIndex !== null, onEscape: handleTourExit },
+    { isActive: isOptionsOpen, onEscape: () => setIsOptionsOpen(false) },
+    {
+      isActive: isSearchActive,
+      onEscape: () => {
+        setQuery("");
+        searchInputRef.current?.blur();
+      },
+    },
+    {
+      isActive: selectedNode !== null,
+      onEscape: () => {
+        setSelectedNode(null);
+        // SwimLaneCanvas's focusedNodeId sync is deliberately null-blind (keeps the board's
+        // highlight when the panel's own Close button clears selectedNode) — this signal is the
+        // explicit override Esc needs to actually remove the ring/connectors (TOR-09-a6cppkl).
+        setSwimLaneClearSignal((count) => count + 1);
+      },
+    },
+  ]);
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <Header
         tagline="Every page of this wiki in one map — click anything to see what it is and how it connects."
         search={
           <SearchInput
+            ref={searchInputRef}
             value={query}
             onChange={setQuery}
             isActive={isSearchActive}
@@ -156,6 +187,8 @@ export default function GraphPage() {
             />
             <PaneCountControl paneCount={paneCount} onChange={setPaneCount} />
             <OptionsPanel
+              isOpen={isOptionsOpen}
+              onOpenChange={setIsOptionsOpen}
               layoutMode={layoutMode}
               onLayoutModeChange={setLayoutMode}
               isDark={isDark}
@@ -203,6 +236,7 @@ export default function GraphPage() {
                   onResetViewReady={(fn) => {
                     resetViewRef.current = fn;
                   }}
+                  swimLaneClearSignal={swimLaneClearSignal}
                 />
               ) : (
                 <>
@@ -245,6 +279,7 @@ export default function GraphPage() {
                       searchScores={scores}
                       relevanceThreshold={RELEVANCE_THRESHOLD}
                       focusedNodeId={selectedNode?.id ?? null}
+                      forceClearSignal={swimLaneClearSignal}
                     />
                   </div>
                 </>

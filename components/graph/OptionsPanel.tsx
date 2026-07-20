@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { LayoutModeToggle, type LayoutMode } from "./LayoutModeToggle";
 import { ThemeToggle } from "./ThemeToggle";
 
 interface OptionsPanelProps {
+  // Controlled rather than internal state: app/graph/page.tsx's Esc de-escalation chain
+  // (TOR-09-4BewmC1) needs to both read whether the popover is open and close it from outside.
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
   layoutMode: LayoutMode;
   onLayoutModeChange: (mode: LayoutMode) => void;
   isDark: boolean;
@@ -17,6 +20,8 @@ interface OptionsPanelProps {
 }
 
 export function OptionsPanel({
+  isOpen,
+  onOpenChange,
   layoutMode,
   onLayoutModeChange,
   isDark,
@@ -24,15 +29,13 @@ export function OptionsPanel({
   onResetView,
   showResetView = layoutMode === "force-directed",
 }: OptionsPanelProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
   return (
     <div className="relative">
       <button
         type="button"
         aria-expanded={isOpen}
         aria-label="Options & help"
-        onClick={() => setIsOpen((open) => !open)}
+        onClick={() => onOpenChange(!isOpen)}
         className="rounded border border-black/10 p-2 dark:border-white/10"
       >
         <svg
@@ -55,7 +58,7 @@ export function OptionsPanel({
             type="button"
             aria-label="Close options"
             className="fixed inset-0 z-10 cursor-default"
-            onClick={() => setIsOpen(false)}
+            onClick={() => onOpenChange(false)}
           />
           <div className="absolute right-0 z-20 mt-2 max-h-[80vh] w-80 overflow-y-auto rounded border border-black/10 bg-background p-4 text-sm shadow-lg dark:border-white/10">
             <section className="mb-4">

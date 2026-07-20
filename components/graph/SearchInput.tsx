@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { forwardRef, useEffect, useRef } from "react";
 
 interface SearchInputProps {
   value: string;
@@ -17,13 +17,13 @@ function isTextEntryTarget(target: EventTarget | null): boolean {
   return target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
 }
 
-export function SearchInput({
-  value,
-  onChange,
-  isActive,
-  hasResults,
-  matchCount = null,
-}: SearchInputProps) {
+// Forwards the underlying <input> so app/graph/page.tsx's Esc de-escalation chain
+// (TOR-09-gEPQ6wm) can blur() it when clearing the query — the value itself stays controlled
+// via value/onChange, this ref is only for imperative focus management.
+export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(function SearchInput(
+  { value, onChange, isActive, hasResults, matchCount = null },
+  forwardedRef,
+) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -55,7 +55,14 @@ export function SearchInput({
   return (
     <div className="flex w-full max-w-md items-center gap-3">
       <input
-        ref={inputRef}
+        ref={(node) => {
+          inputRef.current = node;
+          if (typeof forwardedRef === "function") {
+            forwardedRef(node);
+          } else if (forwardedRef) {
+            forwardedRef.current = node;
+          }
+        }}
         type="text"
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -76,4 +83,4 @@ export function SearchInput({
       )}
     </div>
   );
-}
+});
