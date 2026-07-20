@@ -46,7 +46,11 @@ full requirements/epic history.
 - **"Why build this" explainer** — a popover on `/graph` explaining the second-brain /
   dynamic-context rationale and walking a visitor through using the filters, edge-count sizing,
   and side panel together to spot a real missing link.
-- **Dark/light theme**, persisted across visits, dark by default.
+- **Theme chooser** — dark/light toggle plus 3 curated font+accent presets (Teal, Indigo, Plum),
+  each with its own independently-validated 8-hue node-color palette so switching presets
+  re-themes the chrome and the graph together, or a 4th "Custom" option to pick an arbitrary
+  accent color for chrome only (with a visible note that it isn't validated for CVD-safety or
+  contrast). Selection persists across visits, dark/Teal by default.
 
 ## Screenshots
 
@@ -70,6 +74,11 @@ deployed site builds against.
 **Dual-pane view** — both layouts side by side:
 
 ![Dual-pane view](docs/images/dual-pane.png)
+
+**Theme chooser** — 3 curated font+accent presets plus a custom accent color option, in the header:
+
+![Theme preset dropdown, Teal active](docs/images/theme-chooser-dropdown.png)
+![Graph re-themed to the Indigo preset — chrome and node colors both switch](docs/images/theme-chooser-indigo.png)
 
 ## Tech Stack
 

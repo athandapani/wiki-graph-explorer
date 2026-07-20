@@ -10,12 +10,25 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+### Changed
+### Fixed
+
+---
+
+## [0.3.0] — 20-Jul-2026
+
+### Added
 - Esc de-escalation chain: pressing Esc on `/graph` reliably undoes the most recent UI state,
   peeling exactly one layer per press in the order guided tour → Options popover → search query →
   node selection. Fixes the previously dead Esc key and the Options popover backdrop swallowing
   the next click after dismissal (issue #4 finding A4). (Epic eMNbiFL)
 - README screenshots and an expanded feature list covering dual-pane view, the guided tour,
   keyboard shortcuts, and responsive behavior at phone width.
+- Theme chooser: header dark/light toggle plus a "Theme presets" dropdown with 3 curated
+  font+accent presets (Teal, Indigo, Plum), each carrying its own independently-validated 8-hue
+  categorical node-color palette so a preset switch re-themes the chrome and the graph together,
+  plus a 4th "Custom" option for an arbitrary accent color (chrome-only, with a visible
+  CVD/contrast disclosure note). Selection persists across visits via localStorage. (Epic 4o1EtWX)
 
 ### Changed
 ### Fixed
