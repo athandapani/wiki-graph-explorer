@@ -65,7 +65,7 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "try{if(localStorage.getItem('theme')==='light'){document.documentElement.classList.remove('dark')}}catch(e){}try{var p=localStorage.getItem('themePreset');var accents={teal:['#0088a3','#109cc6'],indigo:['#2a78d6','#5b93e0'],plum:['#a13d8f','#bd6cb3']};var dark=document.documentElement.classList.contains('dark');if(p){document.documentElement.setAttribute('data-theme-preset',p)}if(p==='custom'){var c=localStorage.getItem('customAccent');if(c){document.documentElement.style.setProperty('--accent',c)}}else if(p&&accents[p]){document.documentElement.style.setProperty('--accent',accents[p][dark?1:0])}}catch(e){}",
+              "try{if(localStorage.getItem('theme')==='light'){document.documentElement.classList.remove('dark')}}catch(e){}try{var p=localStorage.getItem('themePreset');var accents={teal:['#0088a3','#109cc6'],indigo:['#4a3aa7','#9085e9'],plum:['#e87ba4','#d55181']};var dark=document.documentElement.classList.contains('dark');if(p){document.documentElement.setAttribute('data-theme-preset',p)}if(p==='custom'){var c=localStorage.getItem('customAccent');if(c){document.documentElement.style.setProperty('--accent',c)}}else if(p&&accents[p]){document.documentElement.style.setProperty('--accent',accents[p][dark?1:0])}}catch(e){}",
           }}
         />
       </head>
