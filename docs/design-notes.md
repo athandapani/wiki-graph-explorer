@@ -361,7 +361,7 @@ so the move away from `react-force-graph-2d` carries no UX cost and gains clarit
 
 ---
 
-## 23. Low-Connectivity Nodes: Hidden by Default, Revealed on Click (Swim-Lane Mode)
+## 23a. Low-Connectivity Nodes: Hidden by Default, Revealed on Click (Swim-Lane Mode)
 
 **Decision:** In swim-lane mode, nodes are categorized by connectivity degree:
 - **0 edges:** Permanently hidden (these nodes have no connections and are never discovered)
@@ -401,7 +401,7 @@ persistence without a backend; the pattern is robust to private-browsing modes t
 
 ---
 
-## 23. Geist Typeface: Removing Hardcoded Arial Fallback (Epic xvzgc4Z)
+## 23b. Geist Typeface: Removing Hardcoded Arial Fallback (Epic xvzgc4Z)
 
 **Decision:** The Geist font is loaded via `next/font` and bound to the CSS custom property
 `--font-sans`, which is wired to Tailwind's theme. Previously, a hardcoded `font-family: Arial,
@@ -645,6 +645,73 @@ TOR-04-F5cdTRd, TOR-04-9JDfgAA).
 **Decision:** The `/graph` page includes a persistent "Take a tour" control in the header options row that walks visitors through a hand-curated, 5-step tour. Each step focuses a real node via the existing `selectedNode`/`focusedNodeId` mechanism (works identically in force-directed, swim-lane, and dual-pane layouts). A tour caption (specific to each step) renders as a tinted callout in the side panel directly under the node title. Tour steps are validated to be edge-connected at runtime via a pure `validateTourDefinition()` function that checks step count (4–5), non-empty captions, and consecutive-pair connectivity.
 
 **Rationale:** Visitors often need guidance on how to explore a large graph — a guided tour reduces the barrier to first use and demonstrates the value of following edges. The tour is hand-curated against the deployed public vault (`ai-adoption-wiki/wiki`) rather than auto-generated, ensuring it always demonstrates real edges and makes sense narratively. By reusing the existing `selectedNode` focus mechanism (design-notes.md §47), no tour-specific selection logic is needed; the tour works across all layout modes and pane counts without special-case code. Tour captions are deliberately separate from node descriptions, allowing custom instructional text (e.g., "Click Next to see how it holds up its own claims to scrutiny") that guides the visitor's attention without appearing on casual node clicks. The validation function is pure (no side effects) and checks exact data invariants (edge connectivity) at runtime, catching configuration errors before they reach users. See Epic 2Ze47tg handoff for implementation details, test coverage (7 TORs verified), and playwright-cli walkthrough confirming behavior across all layout modes.
+
+---
+
+## 59. Keyboard De-escalation Chain: Ordered Priority for Dismissible UI States (Epic eMNbiFL)
+
+**Decision:** A single `useEscapeChain` hook (`hooks/useEscapeChain.ts`) manages Esc-key precedence
+across the four dismissible UI states on `/graph`: guided tour (highest priority), Options popover,
+active search query, and focused node selection (lowest priority). The hook accepts an ordered
+`{isActive, onEscape}[]` array, maintaining a single `document` keydown listener that peels exactly
+one layer per Esc press in that order, with ref-latest state updates via effect (not during render).
+
+**Rationale:** Visitors need predictable, consistent Esc behavior across stacked UI states — a common
+UI pattern (modals, popovers, search). Rather than hardcoding the order in multiple places, the hook
+abstracts the precedence as a simple, data-driven ordered array, making future additions (new
+dismissible states) trivial: insert another `{isActive, onEscape}` entry at the correct position
+without touching the chain logic itself. The hook's ref-latest pattern (updating refs inside an
+effect rather than during render) satisfies the `react-hooks/exhaustive-deps` lint rule and ensures
+the most recent state is always visible to the listener. One listener (not four separate ones) reduces
+event-handler churn and ensures serial, not parallel, dismissal (preserving the priority order).
+See Epic eMNbiFL handoff for implementation details and live-verified behavior across all layout
+modes (force-directed, swim-lane, dual-pane).
+
+---
+
+## 59a. Controlled OptionsPanel with Immediate Backdrop Unmount
+
+**Decision:** `OptionsPanel.tsx` was converted from an uncontrolled component (internal `useState`)
+to a controlled component, accepting `isOpen: boolean` and `onOpenChange: (open: boolean) => void`
+props. The backdrop (`onClick`) now unmounts immediately when the panel closes, rather than lingering
+on the DOM with an event-swallowing overlay.
+
+**Rationale:** The old behavior allowed the backdrop to intercept clicks on other elements even after
+the panel was visually dismissed, breaking immediate interactions on the graph canvas (issue #4
+finding A4). Converting to controlled and unmounting the backdrop on close (not just hiding it)
+ensures subsequent clicks register on the board without swallowing. The parent (`app/graph/page.tsx`)
+owns the `isOptionsOpen` state, enabling the de-escalation chain to close the panel via `onOpenChange(false)`.
+
+---
+
+## 59b. SearchInput Ref Forwarding for External Focus Control
+
+**Decision:** `SearchInput.tsx` was wrapped in `forwardRef`, merging the forwarded ref with the
+existing internal ref used for Ctrl+K and `/` focus shortcuts. The parent (`app/graph/page.tsx`)
+holds the ref and passes it to the `useEscapeChain` hook so Esc can command focus (e.g., clearing
+a search query without explicit button interaction).
+
+**Rationale:** External components (like the de-escalation chain) sometimes need to interact with
+form inputs programmatically (focus, blur, clear). Forwarding the ref enables this without
+duplicating focus-management logic. The internal shortcut logic (Ctrl+K, `/`) is preserved alongside
+the external forwarded ref, providing both local and remote control.
+
+---
+
+## 59c. Force-Clear Signal Override on Graph Canvases
+
+**Decision:** `SwimLaneCanvas.tsx` and `DualPaneBoard.tsx` accept a `forceClearSignal` prop
+(a number or null). When this signal changes to a non-null value, the canvas clears its internal
+`activeNodeId` state, dismissing any focused-node highlight and connector lines (in swim-lane mode)
+or zoom/pan selection (in force-directed mode).
+
+**Rationale:** The existing `focusedNodeId` prop (design-notes.md §47) is one-way and non-null-only:
+dismissing the side panel (setting `focusedNodeId` to null) does not clear the board's highlight,
+preserving the board state when the panel is closed. However, Esc should actually clear the selection
+(the final de-escalation step), unlike the panel's own Close button. The `forceClearSignal` is an
+additive, explicit override channel for Esc specifically, not a change to the null-blind `focusedNodeId`
+behavior. It's a number (not a boolean) to work around stale-closure issues when multiple Esc presses
+arrive in quick succession — a fresh signal value on each press ensures each press is seen.
 
 ---
 
