@@ -640,6 +640,14 @@ TOR-04-F5cdTRd, TOR-04-9JDfgAA).
 
 ---
 
+## 58. Guided Tour: Hand-Curated Node Path with Step Captions (Epic 2Ze47tg)
+
+**Decision:** The `/graph` page includes a persistent "Take a tour" control in the header options row that walks visitors through a hand-curated, 5-step tour. Each step focuses a real node via the existing `selectedNode`/`focusedNodeId` mechanism (works identically in force-directed, swim-lane, and dual-pane layouts). A tour caption (specific to each step) renders as a tinted callout in the side panel directly under the node title. Tour steps are validated to be edge-connected at runtime via a pure `validateTourDefinition()` function that checks step count (4–5), non-empty captions, and consecutive-pair connectivity.
+
+**Rationale:** Visitors often need guidance on how to explore a large graph — a guided tour reduces the barrier to first use and demonstrates the value of following edges. The tour is hand-curated against the deployed public vault (`ai-adoption-wiki/wiki`) rather than auto-generated, ensuring it always demonstrates real edges and makes sense narratively. By reusing the existing `selectedNode` focus mechanism (design-notes.md §47), no tour-specific selection logic is needed; the tour works across all layout modes and pane counts without special-case code. Tour captions are deliberately separate from node descriptions, allowing custom instructional text (e.g., "Click Next to see how it holds up its own claims to scrutiny") that guides the visitor's attention without appearing on casual node clicks. The validation function is pure (no side effects) and checks exact data invariants (edge connectivity) at runtime, catching configuration errors before they reach users. See Epic 2Ze47tg handoff for implementation details, test coverage (7 TORs verified), and playwright-cli walkthrough confirming behavior across all layout modes.
+
+---
+
 ## 56. Known Issues and Deferred Work
 
 - **Force-directed layout settle time:** Against the real `second-brain` vault (47 nodes, 96 edges),
