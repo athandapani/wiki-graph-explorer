@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { createRef, type ComponentProps } from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SearchInput } from "../components/graph/SearchInput";
@@ -6,7 +7,7 @@ import { SearchInput } from "../components/graph/SearchInput";
 // Real DOM, real key events — the focus and count behavior below cannot be verified by reading
 // source text, which is the gap that let issue #4's search bugs ship.
 
-function renderInput(overrides: Partial<Parameters<typeof SearchInput>[0]> = {}) {
+function renderInput(overrides: Partial<ComponentProps<typeof SearchInput>> = {}) {
   return render(
     <SearchInput
       value=""
@@ -120,5 +121,26 @@ describe("SearchInput focus shortcuts", () => {
     unmount();
     expect(removeSpy).toHaveBeenCalledWith("keydown", expect.any(Function));
     removeSpy.mockRestore();
+  });
+});
+
+describe("SearchInput ref forwarding", () => {
+  it("TOR-09-gEPQ6wm: forwards a ref to the underlying input so a parent can blur() it", () => {
+    const ref = createRef<HTMLInputElement>();
+    render(
+      <SearchInput value="query" onChange={() => {}} isActive hasResults ref={ref} />,
+    );
+    const input = screen.getByLabelText("Search");
+    expect(ref.current).toBe(input);
+
+    // Given the input is focused (e.g. by the visitor typing)
+    ref.current?.focus();
+    expect(document.activeElement).toBe(input);
+
+    // When the parent's Esc handler blurs it via the forwarded ref
+    ref.current?.blur();
+
+    // Then it no longer holds keyboard focus
+    expect(document.activeElement).not.toBe(input);
   });
 });

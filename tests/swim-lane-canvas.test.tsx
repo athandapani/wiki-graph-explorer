@@ -176,4 +176,28 @@ describe("SwimLaneCanvas external focus sync", () => {
 
     expect(pill("Title hub").getAttribute("aria-pressed")).toBe("true");
   });
+
+  it("TOR-09-a6cppkl: clears the highlight when forceClearSignal changes, unlike a plain focusedNodeId=null transition", () => {
+    const nodes = [node("hub"), node("peer")];
+    const edges = wellConnected(["hub", "peer"]);
+
+    const { rerender } = render(
+      <SwimLaneCanvas nodes={nodes} edges={edges} isDark focusedNodeId="hub" forceClearSignal={0} />,
+    );
+    expect(pill("Title hub").getAttribute("aria-pressed")).toBe("true");
+
+    // Esc clears selectedNode (focusedNodeId -> null) and bumps forceClearSignal in the same
+    // update, unlike the panel's own Close button which only does the former.
+    rerender(
+      <SwimLaneCanvas
+        nodes={nodes}
+        edges={edges}
+        isDark
+        focusedNodeId={null}
+        forceClearSignal={1}
+      />,
+    );
+
+    expect(pill("Title hub").getAttribute("aria-pressed")).toBe("false");
+  });
 });

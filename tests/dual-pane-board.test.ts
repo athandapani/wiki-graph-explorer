@@ -48,6 +48,15 @@ describe("components/graph/DualPaneBoard.tsx", () => {
     expect(focusedNodeIdOccurrences).toHaveLength(2);
   });
 
+  it("TOR-09-a6cppkl: forwards swimLaneClearSignal to SwimLaneCanvas's forceClearSignal", () => {
+    expect(source).toContain("swimLaneClearSignal?: number;");
+    const swimLaneCanvasProps = source.slice(
+      source.indexOf("<SwimLaneCanvas"),
+      source.indexOf("/>", source.indexOf("<SwimLaneCanvas")),
+    );
+    expect(swimLaneCanvasProps).toContain("forceClearSignal={swimLaneClearSignal}");
+  });
+
   it("renders EmptyState instead of GraphCanvas when there are zero nodes, matching app/graph/page.tsx's existing single-pane behavior", () => {
     expect(source).toContain("if (nodes.length === 0) return <EmptyState />;");
   });

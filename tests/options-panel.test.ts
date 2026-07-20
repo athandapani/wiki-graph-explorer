@@ -40,6 +40,14 @@ describe("components/graph/OptionsPanel.tsx", () => {
     expect(source).toContain('showResetView = layoutMode === "force-directed",');
   });
 
+  it("TOR-09-4BewmC1: is a controlled component — isOpen/onOpenChange props drive open state, not internal useState", () => {
+    expect(source).toContain("isOpen: boolean;");
+    expect(source).toContain("onOpenChange: (open: boolean) => void;");
+    expect(source).not.toContain("useState");
+    expect(source).toContain("onClick={() => onOpenChange(!isOpen)}");
+    expect(source).toContain("onClick={() => onOpenChange(false)}");
+  });
+
   it("TOR-06-DRtjcOk: renders an icon-only hamburger button with an accessible label, not a text label", () => {
     expect(source).toContain('aria-label="Options & help"');
     expect(source).toContain("<svg");
