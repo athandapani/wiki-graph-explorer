@@ -15,7 +15,12 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.3.0] — 20-Jul-2026
+## [1.0.0] — 20-Jul-2026
+
+MVP complete — all planned epics across all 10 phases shipped. The first stable release: a
+build-time CLI that turns a Karpathy-pattern wiki into `graph-data.json` + `vector-index.json`,
+and a Next.js static-export web app that renders them as an explorable, dual-layout, themeable
+graph with live client-side semantic search.
 
 ### Added
 - Esc de-escalation chain: pressing Esc on `/graph` reliably undoes the most recent UI state,
