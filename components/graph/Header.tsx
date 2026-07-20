@@ -22,7 +22,10 @@ export function Header({ search, tagline, options }: HeaderProps = {}) {
       <div className="flex flex-wrap items-center gap-4">
         <Link href="/" className="flex shrink-0 items-center gap-2">
           <Logo className="h-6 w-6 text-[var(--accent)]" />
-          <span className={`font-heading ${tagline ? "text-xl font-bold" : "text-lg font-semibold"}`}>
+          {/* heading-font (plain CSS rule in globals.css), not Tailwind's font-heading utility
+              class — that utility is baked to Manrope at build time by @theme inline and
+              doesn't respond to a runtime theme-preset change (epic 4o1EtWX). */}
+          <span className={`heading-font ${tagline ? "text-xl font-bold" : "text-lg font-semibold"}`}>
             Wiki Graph Explorer
           </span>
         </Link>

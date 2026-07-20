@@ -68,4 +68,13 @@ describe("components/graph/DualPaneBoard.tsx", () => {
     );
     expect(graphCanvasProps).toContain("onResetViewReady={onResetViewReady}");
   });
+
+  it("TOR-07-VBZZx0f/dttI7qm: forwards paletteVersion to SwimLaneCanvas so its connector colors recompute on a theme-preset change in 2-pane mode", () => {
+    expect(source).toContain("paletteVersion?: number;");
+    const swimLaneCanvasProps = source.slice(
+      source.indexOf("<SwimLaneCanvas"),
+      source.indexOf("/>", source.indexOf("<SwimLaneCanvas")),
+    );
+    expect(swimLaneCanvasProps).toContain("paletteVersion={paletteVersion}");
+  });
 });

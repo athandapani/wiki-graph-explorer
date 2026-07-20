@@ -25,23 +25,51 @@
   --color-foreground: var(--foreground);
   /* TOR-07-37VPhrV Spec Deviation: that requirement mandates Geist specifically. Confirmed
      by the user as an intentional, documented deviation (visual refresh) rather than fixing
-     the requirement first — same pattern as the TOR-05-G72S3H4 deviation. */
+     the requirement first — same pattern as the TOR-05-G72S3H4 deviation. Teal/Manrope/Inter
+     is the "teal" preset default (lib/theme-presets.ts). NOTE: Tailwind v4's `@theme inline`
+     bakes the *literal* referenced value into every utility class it generates from these two
+     tokens (`.font-sans`, `.font-heading`) at build time — confirmed live: those utility
+     classes stay frozen to Inter/Manrope even after the [data-theme-preset] overrides below
+     change the underlying --font-sans/--font-heading custom properties. Do NOT use the
+     `font-sans`/`font-heading` Tailwind utility classes for anything that must re-theme at
+     runtime (epic 4o1EtWX) — use the plain `body`/`h1`-`h6`/`.heading-font` rules below
+     instead, which reference these same custom properties via a live (non-inlined) `var()`
+     and do respond to the runtime overrides. */
   --font-sans: var(--font-inter);
   --font-heading: var(--font-manrope);
+}
+
+/* Theme Chooser (epic 4o1EtWX) — per-preset font pairing. Values mirror lib/theme-presets.ts's
+   THEME_PRESETS; keep both in sync if a preset's fonts change. Slot 0 accent color for these
+   presets is applied at runtime via an inline --accent style (app/graph/page.tsx), not here —
+   see the ACCENT_LIGHT/ACCENT_DARK sync note above. */
+[data-theme-preset="indigo"] {
+  --font-heading: var(--font-space-grotesk);
+  --font-sans: var(--font-ibm-plex-sans);
+}
+
+[data-theme-preset="plum"] {
+  --font-heading: var(--font-fraunces);
+  --font-sans: var(--font-source-sans-3);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  /* Plain rule (not the baked `.font-sans` Tailwind utility — see the @theme inline note
+     above) so body text actually responds to a runtime preset change. */
+  font-family: var(--font-sans);
 }
 
-/* Headings use the Manrope pairing site-wide without touching every component individually. */
+/* Headings use the active preset's heading font site-wide without touching every component
+   individually. Same reasoning as body's font-family above — plain rule, not `.font-heading`. */
 h1,
 h2,
 h3,
 h4,
 h5,
-h6 {
+h6,
+.heading-font {
   font-family: var(--font-heading);
 }
 

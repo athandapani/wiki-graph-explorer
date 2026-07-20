@@ -25,7 +25,7 @@
 // The validator also surfaces two pre-existing floor failures unrelated to any of the above
 // (orange↔magenta in light, red↔magenta in dark) — these predate this change and are a
 // separate, not-yet-addressed finding, not a regression introduced here.
-const LIGHT_PALETTE = [
+let LIGHT_PALETTE = [
   "#0088a3", // teal
   "#1baf7a", // aqua
   "#eda100", // yellow
@@ -36,7 +36,7 @@ const LIGHT_PALETTE = [
   "#eb6834", // orange
 ];
 
-const DARK_PALETTE = [
+let DARK_PALETTE = [
   "#109cc6", // teal
   "#199e70", // aqua
   "#d17d00", // yellow
@@ -47,6 +47,9 @@ const DARK_PALETTE = [
   "#d95926", // orange
 ];
 
+const DEFAULT_LIGHT_SLOT0 = LIGHT_PALETTE[0];
+const DEFAULT_DARK_SLOT0 = DARK_PALETTE[0];
+
 // The interface's shared accent color (header logo, CTA button, focus ring) is drawn from the
 // same palette as the graph nodes rather than an unrelated stock Tailwind color, so the chrome
 // reads as authored around the data it's showing (issue #4 finding B10). Slot 0 (teal, moved
@@ -54,8 +57,22 @@ const DARK_PALETTE = [
 // by deliberate design. Mirrored as the --accent CSS custom property in app/globals.css for use
 // in static/server components that have no isDark prop to thread through — keep both in sync
 // if this slot ever changes.
-export const ACCENT_LIGHT = LIGHT_PALETTE[0];
-export const ACCENT_DARK = DARK_PALETTE[0];
+export let ACCENT_LIGHT = LIGHT_PALETTE[0];
+export let ACCENT_DARK = DARK_PALETTE[0];
+
+// Rewrites slot 0 (the shared chrome/graph accent) for a curated theme preset or a custom
+// accent color. ES module bindings are live, so every importer of ACCENT_LIGHT/ACCENT_DARK sees
+// the update automatically — no separate getter needed.
+export function setPaletteAccent(lightHex: string, darkHex: string): void {
+  LIGHT_PALETTE = [lightHex, ...LIGHT_PALETTE.slice(1)];
+  DARK_PALETTE = [darkHex, ...DARK_PALETTE.slice(1)];
+  ACCENT_LIGHT = lightHex;
+  ACCENT_DARK = darkHex;
+}
+
+export function resetPaletteAccentToDefault(): void {
+  setPaletteAccent(DEFAULT_LIGHT_SLOT0, DEFAULT_DARK_SLOT0);
+}
 
 const GOLDEN_ANGLE_DEGREES = 137.508;
 

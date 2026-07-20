@@ -1,7 +1,6 @@
 "use client";
 
 import { LayoutModeToggle, type LayoutMode } from "./LayoutModeToggle";
-import { ThemeToggle } from "./ThemeToggle";
 
 interface OptionsPanelProps {
   // Controlled rather than internal state: app/graph/page.tsx's Esc de-escalation chain
@@ -10,8 +9,6 @@ interface OptionsPanelProps {
   onOpenChange: (open: boolean) => void;
   layoutMode: LayoutMode;
   onLayoutModeChange: (mode: LayoutMode) => void;
-  isDark: boolean;
-  onThemeChange: (isDark: boolean) => void;
   onResetView?: () => void;
   // Whether the force-directed pane is rendered anywhere on the board right now — true when it's
   // the sole active mode, and also in 2-pane mode where it may be the secondary pane even while
@@ -19,13 +16,15 @@ interface OptionsPanelProps {
   showResetView?: boolean;
 }
 
+// Dark/light and the theme-preset picker moved to standalone header icons (epic 4o1EtWX,
+// ThemeToggle.tsx / ThemePresetPicker.tsx) — this popover no longer owns any theme control, so
+// it's relabeled "Help" (was "Options & help"). Diagram style (layout-mode toggle + reset view)
+// stays here rather than getting its own icon.
 export function OptionsPanel({
   isOpen,
   onOpenChange,
   layoutMode,
   onLayoutModeChange,
-  isDark,
-  onThemeChange,
   onResetView,
   showResetView = layoutMode === "force-directed",
 }: OptionsPanelProps) {
@@ -34,7 +33,7 @@ export function OptionsPanel({
       <button
         type="button"
         aria-expanded={isOpen}
-        aria-label="Options & help"
+        aria-label="Help"
         onClick={() => onOpenChange(!isOpen)}
         className="rounded border border-black/10 p-2 dark:border-white/10"
       >
@@ -78,55 +77,71 @@ export function OptionsPanel({
             </section>
             <section className="mb-4">
               <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-foreground/60">
-                Color theme
+                How to use it
               </h2>
-              <ThemeToggle isDark={isDark} onChange={onThemeChange} />
-            </section>
-            <section className="mb-4">
-              <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-foreground/60">
-                Help
-              </h2>
-              <p className="text-foreground/70">
-                Click any node to open its details, tags, and related pages in the side panel.{" "}
-                <strong>Swim-lane</strong> groups pages into folder lanes and reveals connections
-                when you click a node. <strong>Force-directed</strong> shows the whole graph as a
-                freely explorable, physics-based network. Use the search box to highlight
-                matching pages.
-              </p>
+              <ul className="list-disc space-y-1 pl-4 text-foreground/70">
+                <li>Click any node to open its details, tags, and related pages in the side panel.</li>
+                <li>
+                  <strong>Swim-lane</strong> groups pages into folder lanes and reveals
+                  connections when you click a node.
+                </li>
+                <li>
+                  <strong>Force-directed</strong> shows the whole graph as a freely explorable,
+                  physics-based network.
+                </li>
+                <li>Use the search box to highlight matching pages.</li>
+              </ul>
             </section>
             {/* TOR-05-G72S3H4 Spec Deviation: that requirement specifies the explainer is
                 revealed by scrolling. User-confirmed intentional deviation (visual refresh) —
                 folded in here instead of a below-the-fold scroll section. TOR-05-OMWVZWL (name
-                the correct layout mode per affordance) still holds; the copy is unchanged. */}
-            <section>
+                the correct layout mode per affordance) still holds; the copy was rewritten for
+                scannability (epic 4o1EtWX) but keeps the same substance. */}
+            <section className="mb-4">
               <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-foreground/60">
-                Why build this
+                Why this exists
               </h2>
               <p className="text-foreground/70">
-                A second-brain wiki only stays useful if an LLM (or a human) can load fresh,
-                relevant context on demand instead of re-reading everything from scratch. The
-                Karpathy pattern — raw sources compiled into a maintained wiki, backlinked page to
-                page — is what makes that dynamic context possible. But a folder of Markdown files
-                hides its own structure: you can&apos;t see which pages are richly connected and
-                which ones are quietly isolated just by browsing a file tree.
+                A second-brain wiki only stays useful if it can surface relevant, dynamic context
+                on demand — for a person or an LLM — instead of forcing a re-read of everything
+                from scratch. A folder of Markdown files hides its own structure: you can&apos;t
+                see which pages are richly connected and which are quietly isolated just by
+                browsing a file tree. Rendering the backlink structure as a graph makes it
+                visible — dense clusters show where the wiki&apos;s thinking connects well; thin
+                or missing edges surface a content gap before it becomes a blind spot.
               </p>
               <p className="mt-2 text-foreground/70">
-                Rendering the same backlink structure as a graph makes that structure visible.
-                Dense clusters show where the wiki&apos;s thinking is well-connected; thin or
-                missing edges show where a concept was written down but never linked back to the
-                ideas it logically relates to — a content gap an LLM (or a person) would otherwise
-                silently work around instead of surfacing.
+                <strong>Try it:</strong> in force-directed mode, use the status and folder filters
+                above the graph to isolate a cluster, then look for a node visibly smaller than
+                its neighbors — a page with fewer connections than its peers. Click it and check
+                the side panel&apos;s related-pages list — a short list on a page that should
+                connect to more of the wiki is a missing link made concrete.
               </p>
-              <h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-foreground/60">
-                Try it yourself
-              </h3>
+            </section>
+            <section>
+              <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-foreground/60">
+                Build this for your own wiki
+              </h2>
+              <p className="text-foreground/70">
+                This project is open source and works with any Markdown wiki that links pages to
+                each other (the &quot;Karpathy pattern&quot;: raw notes compiled into a
+                maintained, cross-linked wiki). Point the build script at your vault and it emits
+                a static graph plus a semantic search index — no server required:
+              </p>
+              <code className="mt-2 block overflow-x-auto rounded bg-black/10 px-2 py-1 text-xs dark:bg-white/10">
+                npm run build:graph -- --vault &lt;path-to-your-wiki&gt;
+              </code>
               <p className="mt-2 text-foreground/70">
-                In <strong>force-directed</strong> mode, use the status and folder filters above
-                the graph to isolate a cluster, then look for a node that&apos;s visibly smaller
-                than its neighbors — that&apos;s a page with markedly fewer connections than its
-                peers. Click it and check the side panel&apos;s related-pages list: a short list
-                on a page that reads like it should connect to more of the wiki is a missing link
-                made concrete, not just a claim.
+                See the{" "}
+                <a
+                  href="https://github.com/athandapani/wiki-graph-explorer#readme"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline hover:text-[var(--accent)]"
+                >
+                  project README
+                </a>{" "}
+                for setup details.
               </p>
             </section>
           </div>

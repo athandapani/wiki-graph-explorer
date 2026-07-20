@@ -14,8 +14,6 @@ function renderPanel(overrides: Partial<Parameters<typeof OptionsPanel>[0]> = {}
       onOpenChange={() => {}}
       layoutMode="swim-lane"
       onLayoutModeChange={() => {}}
-      isDark={false}
-      onThemeChange={() => {}}
       {...overrides}
     />,
   );
@@ -28,7 +26,7 @@ describe("OptionsPanel controlled open state", () => {
     const onOpenChange = vi.fn();
     renderPanel({ isOpen: false, onOpenChange });
 
-    fireEvent.click(screen.getByLabelText("Options & help"));
+    fireEvent.click(screen.getByLabelText("Help"));
 
     expect(onOpenChange).toHaveBeenCalledWith(true);
   });
@@ -54,8 +52,6 @@ describe("OptionsPanel controlled open state", () => {
         onOpenChange={() => {}}
         layoutMode="swim-lane"
         onLayoutModeChange={() => {}}
-        isDark={false}
-        onThemeChange={() => {}}
       />,
     );
 
