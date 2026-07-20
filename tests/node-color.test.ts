@@ -3,9 +3,10 @@ import {
   ACCENT_DARK,
   ACCENT_LIGHT,
   getFolderColor,
+  PRESET_PALETTES,
   resetFolderColors,
-  resetPaletteAccentToDefault,
-  setPaletteAccent,
+  resetPaletteToDefault,
+  setActivePreset,
 } from "../components/graph/nodeColor";
 
 describe("getFolderColor", () => {
@@ -14,7 +15,7 @@ describe("getFolderColor", () => {
   });
 
   afterEach(() => {
-    resetPaletteAccentToDefault();
+    resetPaletteToDefault();
   });
 
   it("TOR-02-AyzgOJs: given two nodes with the same folder value, when colored, then they render in the same color", () => {
@@ -37,42 +38,58 @@ describe("getFolderColor", () => {
     expect(ACCENT_DARK).toBe(getFolderColor("__first-folder-slot__", true));
   });
 
-  it("TOR-07-VBZZx0f: setPaletteAccent rewrites slot 0 only, leaving the other 7 fixed hues unchanged", () => {
-    // getFolderColor assigns slots in first-seen order, so "first"/"second" land in slot 0/1
-    // respectively as long as folderSlots isn't reset between the two calls in each pair.
+  it("TOR-07-VBZZx0f: setActivePreset swaps the ENTIRE 8-hue palette, not just slot 0", () => {
     resetFolderColors();
-    getFolderColor("__first-folder-slot__", false); // claims slot 0
-    const originalSlot1Light = getFolderColor("__second-folder-slot__", false); // claims slot 1
+    const originalSlots = Array.from({ length: 8 }, (_, i) => getFolderColor(`__slot-${i}__`, false));
 
     resetFolderColors();
-    getFolderColor("__first-folder-slot__", true);
-    const originalSlot1Dark = getFolderColor("__second-folder-slot__", true);
+    setActivePreset("indigo");
+    const indigoSlots = Array.from({ length: 8 }, (_, i) => getFolderColor(`__slot-${i}__`, false));
 
-    setPaletteAccent("#2a78d6", "#5b93e0");
-
-    resetFolderColors();
-    expect(getFolderColor("__first-folder-slot__", false)).toBe("#2a78d6");
-    expect(getFolderColor("__second-folder-slot__", false)).toBe(originalSlot1Light);
-
-    resetFolderColors();
-    expect(getFolderColor("__first-folder-slot__", true)).toBe("#5b93e0");
-    expect(getFolderColor("__second-folder-slot__", true)).toBe(originalSlot1Dark);
+    expect(indigoSlots).toEqual(PRESET_PALETTES.indigo.light);
+    // the whole array changed, not just slot 0 — this is the point of the rework (previously
+    // only slot 0 ever differed between presets). Individual slots may coincidentally share a
+    // hex across presets (both orderings draw from the same 8 validated hue families), so the
+    // meaningful assertion is on the array as a whole, not a per-slot inequality.
+    expect(indigoSlots).not.toEqual(originalSlots);
   });
 
-  it("TOR-07-VBZZx0f: setPaletteAccent updates ACCENT_LIGHT/ACCENT_DARK via live module bindings", () => {
-    setPaletteAccent("#a13d8f", "#bd6cb3");
-    expect(ACCENT_LIGHT).toBe("#a13d8f");
-    expect(ACCENT_DARK).toBe("#bd6cb3");
+  it("TOR-07-VBZZx0f: setActivePreset updates ACCENT_LIGHT/ACCENT_DARK via live module bindings", () => {
+    setActivePreset("indigo");
+    expect(ACCENT_LIGHT).toBe(PRESET_PALETTES.indigo.light[0]);
+    expect(ACCENT_DARK).toBe(PRESET_PALETTES.indigo.dark[0]);
   });
 
-  it("TOR-07-dttI7qm: resetPaletteAccentToDefault restores the original teal slot-0 hexes", () => {
-    setPaletteAccent("#2a78d6", "#5b93e0");
-    resetPaletteAccentToDefault();
+  it("TOR-07-dttI7qm: resetPaletteToDefault restores all 8 teal slots (light and dark), not just slot 0", () => {
+    setActivePreset("plum");
+    resetPaletteToDefault();
 
-    expect(ACCENT_LIGHT).toBe("#0088a3");
-    expect(ACCENT_DARK).toBe("#109cc6");
-    expect(getFolderColor("__first-folder-slot__", false)).toBe("#0088a3");
+    expect(ACCENT_LIGHT).toBe(PRESET_PALETTES.teal.light[0]);
+    expect(ACCENT_DARK).toBe(PRESET_PALETTES.teal.dark[0]);
+
     resetFolderColors();
-    expect(getFolderColor("__first-folder-slot__", true)).toBe("#109cc6");
+    const lightSlots = Array.from({ length: 8 }, (_, i) => getFolderColor(`__slot-${i}__`, false));
+    resetFolderColors();
+    const darkSlots = Array.from({ length: 8 }, (_, i) => getFolderColor(`__slot-${i}__`, true));
+
+    expect(lightSlots).toEqual(PRESET_PALETTES.teal.light);
+    expect(darkSlots).toEqual(PRESET_PALETTES.teal.dark);
+  });
+});
+
+describe("PRESET_PALETTES", () => {
+  it("each preset has an 8-entry light and dark array of valid, distinct hex values", () => {
+    for (const id of ["teal", "indigo", "plum"] as const) {
+      const { light, dark } = PRESET_PALETTES[id];
+      expect(light).toHaveLength(8);
+      expect(dark).toHaveLength(8);
+
+      for (const hex of [...light, ...dark]) {
+        expect(hex).toMatch(/^#[0-9a-f]{6}$/i);
+      }
+
+      expect(new Set(light).size).toBe(8);
+      expect(new Set(dark).size).toBe(8);
+    }
   });
 });

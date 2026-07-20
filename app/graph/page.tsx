@@ -22,7 +22,7 @@ import { ThemeToggle } from "@/components/graph/ThemeToggle";
 import { RELEVANCE_THRESHOLD, useSearchRanking } from "@/components/graph/useSearchRanking";
 import { useEscapeChain } from "@/hooks/useEscapeChain";
 import type { VectorIndexEntry } from "@/lib/embeddings";
-import { setPaletteAccent } from "@/components/graph/nodeColor";
+import { setActivePreset } from "@/components/graph/nodeColor";
 import {
   readStoredCustomAccent,
   readStoredPreset,
@@ -66,10 +66,7 @@ export default function GraphPage() {
     // data-theme-preset attribute (it can't reach into this JS module), so this closes the loop
     // for the graph's own node colors.
     if (stored !== "custom") {
-      const preset = THEME_PRESETS.find((candidate) => candidate.id === stored);
-      if (preset) {
-        setPaletteAccent(preset.accentLight, preset.accentDark);
-      }
+      setActivePreset(stored);
     }
     return stored;
   });
@@ -123,7 +120,7 @@ export default function GraphPage() {
     if (!preset) {
       return;
     }
-    setPaletteAccent(preset.accentLight, preset.accentDark);
+    setActivePreset(id);
     document.documentElement.style.setProperty("--accent", isDark ? preset.accentDark : preset.accentLight);
     setCustomAccent(null);
     setPaletteVersion((version) => version + 1);
@@ -131,7 +128,7 @@ export default function GraphPage() {
 
   function handleCustomAccentChange(hex: string): void {
     // TOR-07-p18cpcx: chrome only — the graph's node palette is deliberately left untouched, so
-    // no setPaletteAccent call and no paletteVersion bump here.
+    // no setActivePreset call and no paletteVersion bump here.
     setCustomAccent(hex);
     document.documentElement.style.setProperty("--accent", hex);
     writeStoredCustomAccent(hex);

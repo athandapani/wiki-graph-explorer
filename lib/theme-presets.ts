@@ -1,3 +1,5 @@
+import { PRESET_PALETTES } from "@/components/graph/nodeColor";
+
 export type ThemePresetId = "teal" | "indigo" | "plum" | "custom";
 
 export interface ThemePreset {
@@ -9,33 +11,32 @@ export interface ThemePreset {
   fontBodyVar: string;
 }
 
-// Each accent was run through the dataviz skill's validate_palette.js as a full 8-slot palette
-// (this accent in slot 0 + the 7 existing fixed hues) in both light and dark mode, and compared
-// against the shipped teal palette as baseline — none introduce a new pass/warn/fail beyond what
-// teal already has (see docs/implementation-plan/phase-9-dual-pane-and-theming's session handoff
-// for the validator output). Keep in sync with components/graph/nodeColor.ts's slot 0 defaults.
+// accentLight/accentDark are derived from PRESET_PALETTES[id]'s own slot 0 (nodeColor.ts) rather
+// than independently hardcoded, so chrome and the graph's slot-0 folder color can never drift
+// apart — each preset's full 8-hue palette (chrome accent + the other 7 graph hues) is validated
+// together as one set (see nodeColor.ts's PRESET_PALETTES doc comment for the validator results).
 export const THEME_PRESETS: ThemePreset[] = [
   {
     id: "teal",
     label: "Teal",
-    accentLight: "#0088a3",
-    accentDark: "#109cc6",
+    accentLight: PRESET_PALETTES.teal.light[0],
+    accentDark: PRESET_PALETTES.teal.dark[0],
     fontHeadingVar: "var(--font-manrope)",
     fontBodyVar: "var(--font-inter)",
   },
   {
     id: "indigo",
     label: "Indigo",
-    accentLight: "#2a78d6",
-    accentDark: "#5b93e0",
+    accentLight: PRESET_PALETTES.indigo.light[0],
+    accentDark: PRESET_PALETTES.indigo.dark[0],
     fontHeadingVar: "var(--font-space-grotesk)",
     fontBodyVar: "var(--font-ibm-plex-sans)",
   },
   {
     id: "plum",
     label: "Plum",
-    accentLight: "#a13d8f",
-    accentDark: "#bd6cb3",
+    accentLight: PRESET_PALETTES.plum.light[0],
+    accentDark: PRESET_PALETTES.plum.dark[0],
     fontHeadingVar: "var(--font-fraunces)",
     fontBodyVar: "var(--font-source-sans-3)",
   },
