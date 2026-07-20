@@ -15,27 +15,61 @@ full requirements/epic history.
 ## Features
 
 - **Two graph layout modes**, toggled instantly with no data refetch or lost view state:
-  - **Force-directed** (default) — a physics-based `react-force-graph-2d` canvas. Nodes are
-    colored by folder/taxonomy cluster, sized by edge count relative to their cluster's
-    best-connected peer (so under-connected "missing link" nodes visibly stand out), and carry a
-    small status dot (active / revisiting / dormant). Clicking a node animates a ~900ms
-    center-and-zoom.
-  - **Swim-lane** — a static board (no camera pan/zoom) grouping nodes into up to 4 horizontal
-    lanes by folder/taxonomy (overflow collapses into a shared "Other" lane), rendered as labeled
-    pill shapes. Edges are hidden until a node is clicked, at which point animated curved
-    connector lines draw from it to each related node, unconnected pills dim, and low-connectivity
-    peripheral nodes reveal themselves with a dashed border.
+  - **Swim-lane** (default) — a static board (no camera pan/zoom) grouping nodes into up to 4
+    horizontal lanes by folder/taxonomy (overflow collapses into a shared "Other" lane), rendered
+    as labeled pill shapes. Edges are hidden until a node is clicked, at which point animated
+    curved connector lines draw from it to each related node, unconnected pills dim, and
+    low-connectivity peripheral nodes reveal themselves with a dashed border.
+  - **Force-directed** — a physics-based `react-force-graph-2d` canvas. Nodes are colored by
+    folder/taxonomy cluster, sized by edge count relative to their cluster's best-connected peer
+    (so under-connected "missing link" nodes visibly stand out), and carry a small status dot
+    (active / revisiting / dormant). Clicking a node animates a ~900ms center-and-zoom.
+- **Dual-pane view** — show both layout modes side by side at once, each independently
+  interactive, with the last-interacted pane remembered when collapsing back to one.
 - **Live semantic search** — a typed query is embedded client-side and ranked against every page's
   precomputed embedding by cosine similarity, live-filtering and dimming the graph as you type —
   not a keyword filter.
 - **Status and folder filters** (force-directed mode) — dropdown filters derived from the live
   dataset dim any node that doesn't match the selected status or folder/taxonomy cluster.
 - **Side panel** — clicking any node opens page detail (title, tags, status, full related-node
-  list) plus a "View source on GitHub" link to the raw Markdown, without losing graph/view state.
-- **"Why build this" explainer** — a static section on `/graph` explaining the second-brain /
+  list, cited sources, and description) plus a "View source on GitHub" link to the raw Markdown,
+  without losing graph/view state. On narrow viewports it appears as a bottom sheet instead of a
+  side column.
+- **Guided tour** — a hand-curated, edge-connected walk through the public demo vault's most
+  interesting pages, with captions explaining what each stop shows.
+- **Keyboard-first interaction** — `Ctrl+K` or `/` jumps focus to search from anywhere on the
+  page; `Esc` reliably undoes the most recent thing you did, peeling exactly one layer per press
+  in order: exit the tour, then close the Options popover, then clear the search query, then
+  deselect the current node.
+- **Responsive down to 390px** — the graph board, header, and search input stay usable at phone
+  width; the side panel becomes a bottom sheet instead of a fixed column.
+- **"Why build this" explainer** — a popover on `/graph` explaining the second-brain /
   dynamic-context rationale and walking a visitor through using the filters, edge-count sizing,
   and side panel together to spot a real missing link.
 - **Dark/light theme**, persisted across visits, dark by default.
+
+## Screenshots
+
+All screenshots below are from the public demo vault
+([`ai-adoption-wiki`](https://github.com/athandapani/ai-adoption-wiki)) — the same dataset the
+deployed site builds against.
+
+**Swim-lane view (default)** — folder-lane layout with connector lines revealed on click:
+
+![Swim-lane view](docs/images/swim-lane-default.png)
+![Swim-lane view with a node selected](docs/images/swim-lane-node-selected.png)
+
+**Force-directed view** — physics-based, freely explorable network:
+
+![Force-directed view](docs/images/force-directed.png)
+
+**Live semantic search** — typing a query dims everything except the closest-matching pages:
+
+![Semantic search filtering the graph](docs/images/semantic-search.png)
+
+**Dual-pane view** — both layouts side by side:
+
+![Dual-pane view](docs/images/dual-pane.png)
 
 ## Tech Stack
 

@@ -10,6 +10,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Esc de-escalation chain: pressing Esc on `/graph` reliably undoes the most recent UI state,
+  peeling exactly one layer per press in the order guided tour → Options popover → search query →
+  node selection. Fixes the previously dead Esc key and the Options popover backdrop swallowing
+  the next click after dismissal (issue #4 finding A4). (Epic eMNbiFL)
+- README screenshots and an expanded feature list covering dual-pane view, the guided tour,
+  keyboard shortcuts, and responsive behavior at phone width.
+
 ### Changed
 ### Fixed
 
