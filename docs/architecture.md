@@ -153,12 +153,27 @@ Data fetching:
 
 ### Shell and Theme Architecture
 
-- **Geist typeface:** The Geist font is loaded via `next/font` and bound to `--font-sans` CSS variable. Previously, a hardcoded `font-family: Arial, Helvetica, sans-serif;` rule in `body` was silently overriding the font binding; this rule was removed, so Geist now renders correctly throughout the site.
-- **Accent color system:** A shared `--accent` CSS custom property (defined in `:root` and `.dark` in `app/globals.css`) mirrors the `ACCENT_LIGHT` and `ACCENT_DARK` values exported by `components/graph/nodeColor.ts` (palette slot 0, a blue from the validated categorical folder-color palette). This connection ensures the header logo, CTA button, and focus ring all use the same folder-color-derived accent instead of an unrelated stock Tailwind color, making the interface visually coherent with the data it displays. The CSS variable approach enables static/server components (like the home page) to use the accent without threading an `isDark` prop.
-- **Focus ring with protected visibility:** A global `:focus-visible` rule applies a 2px solid outline in the accent color with `outline-offset: -2px`. The negative offset draws the ring inside the element's own box rather than outside it, ensuring keyboard-focused elements inside ancestor containers with `overflow-hidden` (like the swim-lane board's lane containers) still show a visible ring instead of having it clipped.
-- **Dark-theme-by-default:** `app/layout.tsx` sets `dark` class on the `<html>` root element by default, with `suppressHydrationWarning` to avoid hydration mismatch during theme restoration.
-- **Anti-flash script:** An inline script in `<head>` runs before paint, reading `localStorage.getItem("theme")` and removing the `dark` class if a stored "light" preference exists. This prevents a flash of dark theme on page load for users with a light preference saved from a prior session.
-- **Dynamic theme updates:** When the user toggles the theme, the UI updates `document.documentElement.classList.toggle("dark")` and persists the choice to localStorage.
+**Typeface and Font Loading:**
+- Six Google Fonts are loaded upfront in `app/layout.tsx` (`next/font/google`): `Inter` (body-default), `Manrope` (heading-default), `Space_Grotesk`, `IBM_Plex_Sans`, `Fraunces`, and `Source_Sans_3`. All are bound to CSS custom properties (`--font-*`) so they can be selected at runtime via the theme preset system (Epic 4o1EtWX). Previously, a hardcoded `font-family: Arial, Helvetica, sans-serif;` rule in `body` was silently overriding the intended `--font-sans` binding; this rule was removed, allowing the selected font to render correctly throughout the site.
+
+**Theme Chooser and Presets (Epic 4o1EtWX):**
+The header includes two theme controls:
+- **Dark/Light Toggle (`ThemeToggle.tsx`):** Icon-only sun/moon button toggling dark mode via `document.documentElement.classList` and persisting to `localStorage` as `{ "theme": "light" | "dark" }`. Dark is the default.
+- **Theme Preset Picker (`ThemePresetPicker.tsx`):** Header dropdown offering 3 curated presets (Teal/Manrope+Inter, Indigo/Space Grotesk+IBM Plex Sans, Plum/Fraunces+Source Sans 3) plus a 4th "Custom" option with a color picker. Selecting a curated preset re-themes the page chrome (font + accent) and the entire graph's 8-hue node color palette simultaneously; selecting Custom applies only a custom accent to chrome, not to the graph palette (Custom accents carry no CVD/contrast guarantee).
+
+**Categorical Node-Color Palettes by Preset:**
+Each of the 3 curated presets carries its own complete, independently-validated 8-hue categorical palette (one `PalettePair` per preset in `components/graph/nodeColor.ts`'s `PRESET_PALETTES`), not a shared base with a swappable accent slot. Switching presets re-colors the entire folder taxonomy at once. All 3 presets reuse the same 8 validated hue families (teal, aqua, yellow, violet, green, red, magenta, orange) but in different orders — the dataviz skill's method treats hue order as a separable "theme" on fixed, already-safe anchors. Each preset promotes a different hue to slot 0 (the shared chrome/graph accent): teal→teal (#0088a3/#109cc6), indigo→violet (#4a3aa7/#9085e9), plum→magenta (#e87ba4/#d55181).
+
+**Accent Color System:**
+A shared `--accent` CSS custom property (defined in `:root` and `.dark` in `app/globals.css`) mirrors the active preset's `ACCENT_LIGHT` and `ACCENT_DARK` exported from `components/graph/nodeColor.ts` (palette slot 0). This connection ensures the header logo, CTA button, and focus ring all use the same folder-color-derived accent, making the interface visually coherent with the data it displays. The CSS variable approach enables static/server components (like the home page) to apply the accent without threading an `isDark` prop.
+
+**Focus Ring with Protected Visibility:**
+A global `:focus-visible` rule applies a 2px solid outline in the accent color with `outline-offset: -2px`. The negative offset draws the ring inside the element's own box rather than outside it, ensuring keyboard-focused elements inside ancestor containers with `overflow-hidden` (like swim-lane lane containers) still show a visible ring instead of being clipped.
+
+**Dark-Theme-By-Default with Anti-Flash and Preset Restoration:**
+- `app/layout.tsx` sets the `dark` class on the `<html>` root element by default, with `suppressHydrationWarning` to avoid hydration mismatch during theme restoration.
+- An inline `<script>` in `<head>` runs before paint, reading `localStorage` and applying any stored light preference, theme preset, or custom accent before the page is rendered. The script: (1) removes the `dark` class if `localStorage.getItem("theme")` is `"light"`; (2) sets `data-theme-preset` attribute if a preset is stored; (3) applies `--accent` CSS variable for either a custom-picked color or the preset's slot-0 accent. This prevents a flash of default (dark, teal) theme on load. The preset→accent map is duplicated from `lib/theme-presets.ts` (necessary because the script runs before module imports); a regression-guard test ties this duplicate to the live export to catch drift.
+- When the user toggles the theme or selects a preset, the UI updates `document.documentElement` and persists choices to localStorage.
 
 ### Design Notes
 

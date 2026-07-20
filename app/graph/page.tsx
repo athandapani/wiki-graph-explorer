@@ -17,9 +17,20 @@ import { type PaneCount, PaneCountControl } from "@/components/graph/PaneCountCo
 import { SearchInput } from "@/components/graph/SearchInput";
 import { SidePanel } from "@/components/graph/SidePanel";
 import SwimLaneCanvas from "@/components/graph/SwimLaneCanvas";
+import { ThemePresetPicker } from "@/components/graph/ThemePresetPicker";
+import { ThemeToggle } from "@/components/graph/ThemeToggle";
 import { RELEVANCE_THRESHOLD, useSearchRanking } from "@/components/graph/useSearchRanking";
 import { useEscapeChain } from "@/hooks/useEscapeChain";
 import type { VectorIndexEntry } from "@/lib/embeddings";
+import { setActivePreset } from "@/components/graph/nodeColor";
+import {
+  readStoredCustomAccent,
+  readStoredPreset,
+  THEME_PRESETS,
+  type ThemePresetId,
+  writeStoredCustomAccent,
+  writeStoredPreset,
+} from "@/lib/theme-presets";
 import { TOUR_DEFINITION } from "@/lib/tour-definition";
 
 // react-force-graph-2d touches canvas/window at module scope, which breaks Next's build-time
@@ -41,17 +52,48 @@ export default function GraphPage() {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("swim-lane");
   const [paneCount, setPaneCount] = useState<PaneCount>(1);
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+  const [isThemePickerOpen, setIsThemePickerOpen] = useState(false);
   const [swimLaneClearSignal, setSwimLaneClearSignal] = useState(0);
   const [statusFilter, setStatusFilter] = useState(ALL_FILTER_VALUE);
   const [folderFilter, setFolderFilter] = useState(ALL_FILTER_VALUE);
   const [isDark, setIsDark] = useState(() =>
     typeof document === "undefined" ? true : document.documentElement.classList.contains("dark"),
   );
+  const [themePreset, setThemePreset] = useState<ThemePresetId>(() => {
+    const stored = readStoredPreset() ?? "teal";
+    // Sync nodeColor.ts's module-level palette to a stored non-default preset before first
+    // paint. The layout.tsx anti-flash script already set the --accent CSS var and
+    // data-theme-preset attribute (it can't reach into this JS module), so this closes the loop
+    // for the graph's own node colors.
+    if (stored !== "custom") {
+      setActivePreset(stored);
+    }
+    return stored;
+  });
+  const [customAccent, setCustomAccent] = useState<string | null>(() => readStoredCustomAccent());
+  const [paletteVersion, setPaletteVersion] = useState(0);
   const { query, setQuery, scores, isSearchActive, hasResults, matchCount } = useSearchRanking(
     vectorIndex ?? [],
   );
   const resetViewRef = useRef<(() => void) | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Applies the currently active accent (a curated preset's light/dark value, or the custom hex,
+  // which is theme-independent) to the --accent CSS custom property. Called both when the accent
+  // itself changes and when dark/light flips, so toggling dark/light never silently reverts a
+  // non-default preset/custom accent back to the CSS default teal.
+  function applyAccentForCurrentTheme(preset: ThemePresetId, custom: string | null, dark: boolean): void {
+    if (preset === "custom") {
+      if (custom) {
+        document.documentElement.style.setProperty("--accent", custom);
+      }
+      return;
+    }
+    const found = THEME_PRESETS.find((candidate) => candidate.id === preset);
+    if (found) {
+      document.documentElement.style.setProperty("--accent", dark ? found.accentDark : found.accentLight);
+    }
+  }
 
   function handleThemeChange(nextIsDark: boolean): void {
     setIsDark(nextIsDark);
@@ -61,6 +103,35 @@ export default function GraphPage() {
     } catch {
       // localStorage unavailable (private browsing, etc.) — theme still applies for this session
     }
+    applyAccentForCurrentTheme(themePreset, customAccent, nextIsDark);
+  }
+
+  function handleThemePresetChange(id: ThemePresetId): void {
+    setThemePreset(id);
+    document.documentElement.setAttribute("data-theme-preset", id);
+    writeStoredPreset(id);
+
+    if (id === "custom") {
+      // TOR-07-LquSsD5: selecting Custom only reveals the picker — no accent/palette change yet.
+      return;
+    }
+
+    const preset = THEME_PRESETS.find((candidate) => candidate.id === id);
+    if (!preset) {
+      return;
+    }
+    setActivePreset(id);
+    document.documentElement.style.setProperty("--accent", isDark ? preset.accentDark : preset.accentLight);
+    setCustomAccent(null);
+    setPaletteVersion((version) => version + 1);
+  }
+
+  function handleCustomAccentChange(hex: string): void {
+    // TOR-07-p18cpcx: chrome only — the graph's node palette is deliberately left untouched, so
+    // no setActivePreset call and no paletteVersion bump here.
+    setCustomAccent(hex);
+    document.documentElement.style.setProperty("--accent", hex);
+    writeStoredCustomAccent(hex);
   }
 
   useEffect(() => {
@@ -137,11 +208,14 @@ export default function GraphPage() {
   }
 
   // Esc peels exactly one UI layer per press, in this priority order (TOR-09-YrywFkB): an
-  // active tour outranks the Options popover, which outranks an active search query, which
-  // outranks the node selection. handleTourExit is reused as-is so TOR-09-L9qGFOu's "step's node
-  // remains selected" falls out of the same behavior TOR-08-RCP0xbr already established.
+  // active tour outranks the theme-preset picker and the Options/Help popover (same tier as each
+  // other — epic 4o1EtWX added the theme picker as a header popover alongside Options), which
+  // outrank an active search query, which outranks the node selection. handleTourExit is reused
+  // as-is so TOR-09-L9qGFOu's "step's node remains selected" falls out of the same behavior
+  // TOR-08-RCP0xbr already established.
   useEscapeChain([
     { isActive: tourStepIndex !== null, onEscape: handleTourExit },
+    { isActive: isThemePickerOpen, onEscape: () => setIsThemePickerOpen(false) },
     { isActive: isOptionsOpen, onEscape: () => setIsOptionsOpen(false) },
     {
       isActive: isSearchActive,
@@ -186,13 +260,20 @@ export default function GraphPage() {
               onExit={handleTourExit}
             />
             <PaneCountControl paneCount={paneCount} onChange={setPaneCount} />
+            <ThemeToggle isDark={isDark} onChange={handleThemeChange} />
+            <ThemePresetPicker
+              isOpen={isThemePickerOpen}
+              onOpenChange={setIsThemePickerOpen}
+              activePreset={themePreset}
+              customAccent={customAccent}
+              onPresetChange={handleThemePresetChange}
+              onCustomAccentChange={handleCustomAccentChange}
+            />
             <OptionsPanel
               isOpen={isOptionsOpen}
               onOpenChange={setIsOptionsOpen}
               layoutMode={layoutMode}
               onLayoutModeChange={setLayoutMode}
-              isDark={isDark}
-              onThemeChange={handleThemeChange}
               onResetView={() => resetViewRef.current?.()}
               showResetView={layoutMode === "force-directed" || paneCount === 2}
             />
@@ -237,6 +318,7 @@ export default function GraphPage() {
                     resetViewRef.current = fn;
                   }}
                   swimLaneClearSignal={swimLaneClearSignal}
+                  paletteVersion={paletteVersion}
                 />
               ) : (
                 <>
@@ -280,6 +362,7 @@ export default function GraphPage() {
                       relevanceThreshold={RELEVANCE_THRESHOLD}
                       focusedNodeId={selectedNode?.id ?? null}
                       forceClearSignal={swimLaneClearSignal}
+                      paletteVersion={paletteVersion}
                     />
                   </div>
                 </>

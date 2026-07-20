@@ -140,4 +140,11 @@ describe("components/graph/SwimLaneCanvas.tsx", () => {
     expect(source).toContain('backgroundColor: `${accent}${isDark ? "1a" : "0f"}`');
     expect(source).toMatch(/\{totalCount\} page\{totalCount === 1 \? "" : "s"\} total/);
   });
+
+  it("TOR-07-VBZZx0f/dttI7qm: accepts a paletteVersion prop and includes it in the connectorPaths effect's dependency array, so connector colors recompute on a theme-preset change alone", () => {
+    expect(source).toContain("paletteVersion?: number;");
+    const effectStart = source.indexOf("setConnectorPaths(paths);");
+    const depsBlock = source.slice(effectStart, source.indexOf(";", source.indexOf("]);", effectStart)));
+    expect(depsBlock).toContain("paletteVersion");
+  });
 });

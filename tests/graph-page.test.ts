@@ -194,9 +194,9 @@ describe("app/graph/page.tsx", () => {
 
   // TOR-05-G72S3H4 Spec Deviation: that requirement specifies the explainer is revealed by
   // scrolling. User-confirmed intentional deviation — the explainer content now lives inside
-  // the Options & help popover instead (see tests/options-panel.test.ts for the content
-  // assertions). With no more below-the-fold content, the page dropped the two-level
-  // scroll/fixed wrapper it used to need.
+  // the Help popover instead (see tests/options-panel.test.ts for the content assertions).
+  // With no more below-the-fold content, the page dropped the two-level scroll/fixed wrapper
+  // it used to need.
   it("TOR-05-G72S3H4 (Spec Deviation): no longer renders a separate below-the-fold ExplainerSection", () => {
     expect(source).not.toContain("<ExplainerSection");
     expect(source).not.toContain("ExplainerSection");
@@ -240,20 +240,23 @@ describe("app/graph/page.tsx", () => {
     expect(dualPaneProps).toContain("onLayoutModeChange={setLayoutMode}");
   });
 
-  it("TOR-09-gEPQ6wm/a6cppkl/4BewmC1/L9qGFOu/YrywFkB: wires useEscapeChain with layers in tour → Options popover → search → node-selection priority order", () => {
+  it("TOR-09-gEPQ6wm/a6cppkl/4BewmC1/L9qGFOu/YrywFkB: wires useEscapeChain with layers in tour → theme picker → Options popover → search → node-selection priority order", () => {
     expect(source).toContain('import { useEscapeChain } from "@/hooks/useEscapeChain";');
     const chainCallIndex = source.indexOf("useEscapeChain([");
     expect(chainCallIndex).toBeGreaterThan(-1);
     const chainBlock = source.slice(chainCallIndex, source.indexOf("]);", chainCallIndex));
     const tourIndex = chainBlock.indexOf("tourStepIndex !== null");
+    const themePickerIndex = chainBlock.indexOf("isThemePickerOpen, onEscape");
     const popoverIndex = chainBlock.indexOf("isOptionsOpen, onEscape");
     const searchIndex = chainBlock.indexOf("isSearchActive,");
     const selectionIndex = chainBlock.indexOf("selectedNode !== null");
     expect(tourIndex).toBeGreaterThan(-1);
-    expect(popoverIndex).toBeGreaterThan(tourIndex);
+    expect(themePickerIndex).toBeGreaterThan(tourIndex);
+    expect(popoverIndex).toBeGreaterThan(themePickerIndex);
     expect(searchIndex).toBeGreaterThan(popoverIndex);
     expect(selectionIndex).toBeGreaterThan(searchIndex);
     expect(chainBlock).toContain("onEscape: handleTourExit");
+    expect(chainBlock).toContain("setIsThemePickerOpen(false)");
     expect(chainBlock).toContain("setIsOptionsOpen(false)");
     expect(chainBlock).toContain('setQuery("");');
     expect(chainBlock).toContain("searchInputRef.current?.blur();");
@@ -290,6 +293,43 @@ describe("app/graph/page.tsx", () => {
     );
     expect(optionsPanelProps).toContain("isOpen={isOptionsOpen}");
     expect(optionsPanelProps).toContain("onOpenChange={setIsOptionsOpen}");
+  });
+
+  it("(epic 4o1EtWX) OptionsPanel no longer receives isDark/onThemeChange — theme controls moved to header icons", () => {
+    const optionsPanelProps = source.slice(
+      source.indexOf("<OptionsPanel"),
+      source.indexOf("/>", source.indexOf("<OptionsPanel")),
+    );
+    expect(optionsPanelProps).not.toContain("isDark=");
+    expect(optionsPanelProps).not.toContain("onThemeChange=");
+  });
+
+  it("(epic 4o1EtWX) renders ThemeToggle and ThemePresetPicker in the header options slot, between PaneCountControl and OptionsPanel", () => {
+    const optionsSlot = source.slice(source.indexOf("options={"), source.indexOf("<OptionsPanel"));
+    const paneControlIndex = optionsSlot.indexOf("<PaneCountControl");
+    const themeToggleIndex = optionsSlot.indexOf("<ThemeToggle");
+    const themePresetPickerIndex = optionsSlot.indexOf("<ThemePresetPicker");
+    expect(paneControlIndex).toBeGreaterThan(-1);
+    expect(themeToggleIndex).toBeGreaterThan(paneControlIndex);
+    expect(themePresetPickerIndex).toBeGreaterThan(themeToggleIndex);
+
+    const themeToggleProps = source.slice(
+      source.indexOf("<ThemeToggle"),
+      source.indexOf("/>", source.indexOf("<ThemeToggle")),
+    );
+    expect(themeToggleProps).toContain("isDark={isDark}");
+    expect(themeToggleProps).toContain("onChange={handleThemeChange}");
+
+    const themePresetPickerProps = source.slice(
+      source.indexOf("<ThemePresetPicker"),
+      source.indexOf("/>", source.indexOf("<ThemePresetPicker")),
+    );
+    expect(themePresetPickerProps).toContain("isOpen={isThemePickerOpen}");
+    expect(themePresetPickerProps).toContain("onOpenChange={setIsThemePickerOpen}");
+    expect(themePresetPickerProps).toContain("activePreset={themePreset}");
+    expect(themePresetPickerProps).toContain("customAccent={customAccent}");
+    expect(themePresetPickerProps).toContain("onPresetChange={handleThemePresetChange}");
+    expect(themePresetPickerProps).toContain("onCustomAccentChange={handleCustomAccentChange}");
   });
 
   it("TOR-09-gEPQ6wm: forwards searchInputRef into SearchInput", () => {

@@ -7,9 +7,9 @@ interface PaneCountControlProps {
   onChange: (paneCount: PaneCount) => void;
 }
 
-// Independent of LayoutModeToggle (TOR-11-45utBRH) and rendered beside the Options & help
-// hamburger, not inside its popover — unlike LayoutModeToggle, which lives inside OptionsPanel.
-// A single icon button toggles between 1 and 2 panes (rather than two separate buttons), mirroring
+// Independent of LayoutModeToggle (TOR-11-45utBRH) and rendered beside the Help hamburger, not
+// inside its popover — unlike LayoutModeToggle, which lives inside OptionsPanel. A single icon
+// button toggles between 1 and 2 panes (rather than two separate buttons), mirroring
 // OptionsPanel's icon-only hamburger. Hidden below the wide-screen breakpoint (`xl`, 1280px) via
 // pure CSS, matching the existing 390px responsive-floor precedent (SidePanel.tsx's `md:` classes)
 // rather than a JS resize listener — the board falls back to 1-pane automatically for the same

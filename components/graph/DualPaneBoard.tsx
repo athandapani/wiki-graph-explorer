@@ -34,6 +34,9 @@ interface DualPaneBoardProps {
   // Forwarded to SwimLaneCanvas's forceClearSignal (TOR-09-a6cppkl) so Esc clears the swim-lane
   // pane's board highlight even in 2-pane mode.
   swimLaneClearSignal?: number;
+  // Forwarded to SwimLaneCanvas's paletteVersion (epic 4o1EtWX) so its connector-line colors
+  // recompute on a theme-preset change even in 2-pane mode.
+  paletteVersion?: number;
 }
 
 // Renders both layout modes simultaneously (TOR-11-6XjR1qm), swim-lane fixed on the left and
@@ -57,6 +60,7 @@ export function DualPaneBoard({
   radiusScaleByNodeId,
   onResetViewReady,
   swimLaneClearSignal,
+  paletteVersion,
 }: DualPaneBoardProps) {
   function paneClickHandler(mode: LayoutMode) {
     return (node: GraphNode) => {
@@ -93,6 +97,7 @@ export function DualPaneBoard({
         relevanceThreshold={relevanceThreshold}
         focusedNodeId={selectedNode?.id ?? null}
         forceClearSignal={swimLaneClearSignal}
+        paletteVersion={paletteVersion}
       />
     );
   }

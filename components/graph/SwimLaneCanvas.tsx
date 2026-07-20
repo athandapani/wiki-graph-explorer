@@ -28,6 +28,11 @@ interface SwimLaneCanvasProps {
   // dimming from the board, unlike the SidePanel's own Close button, which intentionally leaves
   // the board's highlight in place per the comment on prevFocusedNodeId below).
   forceClearSignal?: number;
+  // Increment when the theme-preset chrome/graph accent changes (epic 4o1EtWX). Connector-line
+  // colors are computed via getFolderColor inside a useEffect with a fixed dependency list that
+  // doesn't otherwise include anything palette-related, so a preset change alone wouldn't
+  // recompute them without this signal — see the connectorPaths effect below.
+  paletteVersion?: number;
 }
 
 interface ConnectorPathData {
@@ -101,6 +106,7 @@ export default function SwimLaneCanvas({
   relevanceThreshold = 0,
   focusedNodeId,
   forceClearSignal,
+  paletteVersion,
 }: SwimLaneCanvasProps) {
   const [activeNodeId, setActiveNodeId] = useState<string | null>(focusedNodeId ?? null);
   const [expandedLaneNames, setExpandedLaneNames] = useState<Set<string>>(new Set());
@@ -281,7 +287,16 @@ export default function SwimLaneCanvas({
     }
 
     setConnectorPaths(paths);
-  }, [activeNodeId, edges, nodesById, isDark, revealableIds, laneNodes, expandedLaneNames]);
+  }, [
+    activeNodeId,
+    edges,
+    nodesById,
+    isDark,
+    revealableIds,
+    laneNodes,
+    expandedLaneNames,
+    paletteVersion,
+  ]);
 
   if (nodes.length === 0) {
     return <EmptyState />;

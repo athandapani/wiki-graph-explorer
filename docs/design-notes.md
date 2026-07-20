@@ -382,22 +382,50 @@ by name, or revealed via the lane's "+N more" button. The dashed border visually
 
 ---
 
-## 24. Dark-Theme-By-Default with Persistent localStorage Toggle
+## 24. Dark-Theme-By-Default with Persistent localStorage Toggle and Preset Restoration
 
 **Decision:** The application defaults to dark mode at load time (`app/layout.tsx` sets `dark` class
-on `<html>` by default). An anti-flash inline script in `<head>` runs before paint, checking
-`localStorage.getItem("theme")` and removing the `dark` class if a stored "light" preference exists.
-The `ThemeToggle` component updates the theme by mutating `document.documentElement.classList` and
-persists the choice to `localStorage` as `{ "theme": "light" | "dark" }`. The choice persists
-across browser sessions.
+on `<html>` by default). An anti-flash inline script in `<head>` runs before paint, performing three
+restorals: (1) removes the `dark` class if `localStorage.getItem("theme")` is `"light"`; (2) sets
+`data-theme-preset` attribute if a preset is stored in `localStorage.getItem("themePreset")`; (3) applies
+the `--accent` CSS variable for either a custom-picked color or the stored preset's slot-0 accent (using
+a duplicated preset→accent hex map from `lib/theme-presets.ts`). The `ThemeToggle` component updates the
+light/dark theme by mutating `document.documentElement.classList` and persists to `localStorage`. Theme
+preference persists across browser sessions.
 
 **Rationale:** Dark mode is the portfolio-appropriate default (professional, reduces eye strain,
-aligns with modern design norms). The anti-flash pattern prevents a visible flash of light theme on
-reload for users with a light preference, which would be jarring. The `suppressHydrationWarning` on
-the `<html>` element is necessary because the anti-flash script mutates the DOM before React hydrates,
+aligns with modern design norms). The anti-flash pattern prevents a visible flash of light theme or
+mismatched accent on reload for users with a stored preference, which would be jarring. The extended
+script (§60) also restores theme presets and custom accents before paint. The `suppressHydrationWarning`
+on the `<html>` element is necessary because the anti-flash script mutates the DOM before React hydrates,
 creating an expected (intentional) client/server HTML mismatch. localStorage provides lightweight
 persistence without a backend; the pattern is robust to private-browsing modes that reject localStorage
-(theme still applies for that session, just doesn't persist).
+(theme still applies for that session, just doesn't persist). The preset→accent map is duplicated from
+`lib/theme-presets.ts` (necessary because the script runs before module imports); a regression-guard test
+ties this duplicate to the live export to catch drift.
+
+---
+
+## 60. Theme Presets: 3 Curated Font+Accent Combinations with Per-Preset Palettes (Epic 4o1EtWX)
+
+**Decision:** A header-level "Theme presets" dropdown offers 3 curated presets (Teal/Manrope+Inter,
+Indigo/Space Grotesk+IBM Plex Sans, Plum/Fraunces+Source Sans 3) plus a 4th "Custom" option with
+a visitor-supplied color picker. Selecting a curated preset simultaneously re-themes the page chrome
+(font family + accent color) and the graph's entire 8-hue node taxonomy palette. Selecting Custom
+applies only a custom accent to chrome, never to the graph palette (because arbitrary visitor-chosen
+colors carry no CVD/contrast guarantee). Selection persists across reloads via `localStorage` with
+a regression-guard test ensuring the anti-flash script's duplicated preset→accent map stays in sync
+with the live `PRESET_PALETTES` export.
+
+**Rationale:** Curated presets allow visitors to adopt a visual theme with coordinated, professionally-designed fonts and accent colors, providing visual exploration options without requiring design expertise. Retheming the graph's full 8-hue palette per preset (not just swapping slot 0) ensures the entire data visualization adapts coherently rather than appearing partially refreshed. Each preset's palette is independently validated via the dataviz skill's palette validator (CVD separation, chroma floor, lightness band, surface contrast all checked in both light and dark themes). Custom accent is deliberately chrome-only because an arbitrary color has no guarantee of accessible contrast with the background — this limitation is disclosed visibly to users. The anti-flash pattern from §24 is extended to also restore the stored theme preset and custom accent before paint, preventing a flash of default theme on returning visitors' reloads. The regression-guard test (tests/layout.test.ts) builds its expected substring from the live `PRESET_PALETTES` export, so any future preset-change that forgets to update the duplicated anti-flash map fails immediately instead of silently drifting. See Epic 4o1EtWX handoff for implementation details and end-to-end verification.
+
+---
+
+## 61. Per-Preset Categorical Palettes: Full Re-Palette on Preset Switch
+
+**Decision:** Each of the 3 curated presets (Teal, Indigo, Plum) carries its own complete, independently-validated 8-hue categorical palette (`PalettePair` in `components/graph/nodeColor.ts#PRESET_PALETTES`), stored as separate `light` and `dark` arrays. Switching presets via `setActivePreset(id)` swaps the entire active palette, not just slot 0. All 3 presets reuse the same 8 underlying validated hue families (teal, aqua, yellow, violet, green, red, magenta, orange) but in different orders — the dataviz skill's method treats hue order as a separable "theme" on fixed, already-safe hue anchors. Each preset promotes a different hue to slot 0 (the chrome/graph accent): Teal→teal (#0088a3 light/#109cc6 dark), Indigo→violet (#4a3aa7 light/#9085e9 dark), Plum→magenta (#e87ba4 light/#d55181 dark). The overflow behavior for folders beyond 8 slots remains a golden-angle HSL ramp (unchanged from prior design).
+
+**Rationale:** An earlier draft tried a shared 8-hue base with a swappable slot-0 accent, which only re-themed 1 of 8 folder colors per preset — switching presets barely changed the graph visually and felt incomplete. Full per-preset reordering ensures every folder's color changes, creating a visually coherent re-theme that justifies the preset switch. Reusing proven-safe hue families (rather than inventing new ones per preset) keeps the validation scope tractable — each new order is validated independently, but the hue calibration doesn't change. This approach treats "hue family definitions" and "hue order per preset" as separable concerns, matching how the dataviz skill's own palette validation method is structured. Indigo and Plum clear all validation checks with no FAILs (improving on Teal's one accepted normal-vision-floor FAIL documented in §13). See Epic 4o1EtWX handoff and components/graph/nodeColor.ts for implementation details, hue-order comments, and per-preset validation results.
 
 ---
 
