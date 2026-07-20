@@ -12,22 +12,17 @@ Local Environment / build commands describe the intended layout to be created in
 
 ## Tech Stack
 
+See `package.json` for the framework, package manager, styling, test runner, and lint/format
+tooling in use.
+
 | Layer | Technology |
 |---|---|
-| Framework | Next.js (static export, `output: 'export'`) + React, TypeScript |
-| Package manager | npm |
 | Graph visualization | `react-force-graph` (chosen over `sigma.js`/`Cosmograph` — Cosmograph is CC BY-NC 4.0, unsuitable for a job-seeking site) |
-| Styling | Tailwind CSS |
-| Test runner | Vitest |
-| Lint / format | ESLint + Prettier |
 | Build-time embeddings | **Open risk, undecided** — client-side query embedding (ConOps §8) needs a spike (e.g. transformers.js/WASM) before semantic search (Scenario 2) is buildable as specified |
-| Deployment | GitHub Pages (static export via GitHub Actions) |
 
 ## Local Environment
 
-- Next.js dev server: `npm run dev` (http://localhost:3000)
 - Build graph/search assets from a vault path: `npm run build:graph -- --vault <path>`
-- Test suite: `npm test` (`vitest run`)
 - There is no live backend API — the "backend" is the build-time script that emits
   `graph-data.json` and `vector-index.json` as static assets fetched client-side.
 - **Prefer live data over fixtures during verification.** Point local builds at the private
@@ -190,40 +185,5 @@ git add <files> && git commit -m "feat: ..."         # Commit after verification
 
 ## Release Protocol
 
-**Prerequisites:** Must be on `develop` branch with a clean working tree.
-
-**Steps:**
-
-1. **Finalize CHANGELOG** — Change `[X.Y.Z] - UNDER DEVELOPMENT` → `[X.Y.Z] - DD-MMM-YYYY` in `CHANGELOG.md`
-   - Commit: `chore: release vX.Y.Z`
-
-2. **Merge to main**
-   ```bash
-   git checkout main && git pull origin main
-   git merge develop --no-ff -m "Merge branch 'develop' into main for release vX.Y.Z"
-   ```
-
-3. **Tag the release** (on main)
-   ```bash
-   git tag -a vX.Y.Z -m "Release vX.Y.Z - Brief description"
-   git push origin vX.Y.Z
-   ```
-
-4. **Merge back to develop**
-   ```bash
-   git checkout develop && git merge main --no-ff
-   ```
-
-5. **Post-release version bump** (on develop)
-   - Bump `package.json`: `"version": "X.Y.Z"` → next version
-   - Add `## [X.Y+1.0] - UNDER DEVELOPMENT` to `CHANGELOG.md`
-   - Commit: `chore: bump version for next development cycle`
-
-6. **Push** (ASK USER FIRST)
-   ```bash
-   git push origin main && git push origin develop
-   ```
-
-**Note:** Deployment target is GitHub Pages — a GitHub Actions workflow (not yet created, see
-Repo Hygiene audit) should build the static export and publish `out/` to `gh-pages` on push to
-`main` (and on tag push).
+See the `release-protocol` skill (`.claude/skills/release-protocol/SKILL.md`) for the full
+step-by-step checklist.
