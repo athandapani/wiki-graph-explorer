@@ -1,0 +1,9 @@
+{
+  "_comment": "Hand-copied edges from a real build of ../ai-adoption-wiki/wiki (captured 2026-07-19, 110 nodes/553 edges) — just the 4 real edges connecting the 5 nodes in lib/tour-definition.ts's TOUR_DEFINITION. This is a hermetic CI-safe proxy for validating the shipped tour path without depending on the external ai-adoption-wiki sibling repo at test time.",
+  "edges": [
+    { "source": "digital-second-brain", "target": "attribution-problems-in-the-playbook" },
+    { "source": "attribution-problems-in-the-playbook", "target": "ai-spending-benchmarks" },
+    { "source": "ai-spending-benchmarks", "target": "roi-measurement-problem" },
+    { "source": "roi-measurement-problem", "target": "adoption-is-a-leadership-problem" }
+  ]
+}

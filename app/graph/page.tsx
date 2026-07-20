@@ -9,6 +9,7 @@ import { ALL_FILTER_VALUE, computeFilteredOutNodeIds, FilterControls } from "@/c
 import { Footer } from "@/components/graph/Footer";
 import type { GraphEdge, GraphNode } from "@/components/graph/GraphCanvas";
 import { computeRadiusScale } from "@/components/graph/edgeCountIndicator";
+import { GuidedTour } from "@/components/graph/GuidedTour";
 import { Header } from "@/components/graph/Header";
 import { type LayoutMode } from "@/components/graph/LayoutModeToggle";
 import { OptionsPanel } from "@/components/graph/OptionsPanel";
@@ -18,6 +19,7 @@ import { SidePanel } from "@/components/graph/SidePanel";
 import SwimLaneCanvas from "@/components/graph/SwimLaneCanvas";
 import { RELEVANCE_THRESHOLD, useSearchRanking } from "@/components/graph/useSearchRanking";
 import type { VectorIndexEntry } from "@/lib/embeddings";
+import { TOUR_DEFINITION } from "@/lib/tour-definition";
 
 // react-force-graph-2d touches canvas/window at module scope, which breaks Next's build-time
 // prerender pass even inside a "use client" file — ssr: false keeps it out of that pass.
@@ -34,6 +36,7 @@ export default function GraphPage() {
   const [vectorIndex, setVectorIndex] = useState<VectorIndexEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [tourStepIndex, setTourStepIndex] = useState<number | null>(null);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("swim-lane");
   const [paneCount, setPaneCount] = useState<PaneCount>(1);
   const [statusFilter, setStatusFilter] = useState(ALL_FILTER_VALUE);
@@ -94,6 +97,41 @@ export default function GraphPage() {
     }
   }, [layoutMode, paneCount]);
 
+  // Drives the guided tour through the exact same selection path a SidePanel chip click uses
+  // (design-notes.md §47) — setting selectedNode focuses the node in whichever layout
+  // mode/pane-count is active, with no tour-specific selection logic needed. Done directly in
+  // these user-triggered handlers rather than an effect watching tourStepIndex, to avoid the
+  // react-hooks/set-state-in-effect cascading-render pattern (same rule noted in design-notes.md
+  // §47 for the analogous SwimLaneCanvas sync).
+  function focusTourStep(index: number): void {
+    if (!graphData) {
+      return;
+    }
+    const step = TOUR_DEFINITION[index];
+    const stepNode = graphData.nodes.find((candidate) => candidate.id === step?.nodeId);
+    if (stepNode) {
+      setSelectedNode(stepNode);
+    }
+    setTourStepIndex(index);
+  }
+
+  function handleTourStart(): void {
+    focusTourStep(0);
+  }
+
+  function handleTourNext(): void {
+    if (tourStepIndex === null) {
+      return;
+    }
+    focusTourStep(tourStepIndex + 1);
+  }
+
+  function handleTourExit(): void {
+    // Deliberately does not touch selectedNode — the previously-focused node and its side
+    // panel detail remain exactly as they were (TOR-08-RCP0xbr).
+    setTourStepIndex(null);
+  }
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <Header
@@ -109,6 +147,13 @@ export default function GraphPage() {
         }
         options={
           <div className="flex items-center gap-2">
+            <GuidedTour
+              tourDefinition={TOUR_DEFINITION}
+              stepIndex={tourStepIndex}
+              onStart={handleTourStart}
+              onNext={handleTourNext}
+              onExit={handleTourExit}
+            />
             <PaneCountControl paneCount={paneCount} onChange={setPaneCount} />
             <OptionsPanel
               layoutMode={layoutMode}
@@ -214,6 +259,7 @@ export default function GraphPage() {
           isDark={isDark}
           onClose={() => setSelectedNode(null)}
           onSelectNode={setSelectedNode}
+          tourCaption={tourStepIndex !== null ? (TOUR_DEFINITION[tourStepIndex]?.caption ?? null) : null}
         />
       </div>
       {graphData ? (

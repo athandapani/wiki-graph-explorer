@@ -335,3 +335,42 @@ describe("SidePanel start-anywhere card", () => {
     expect(screen.getByText("Start anywhere")).toBeTruthy();
   });
 });
+
+describe("SidePanel tour caption", () => {
+  it("TOR-08-5Vj2zkG: displays the tour caption alongside the selected node's detail", () => {
+    const selected = node({ id: "a", title: "Digital Second Brain" });
+
+    render(
+      <SidePanel
+        node={selected}
+        edges={[]}
+        allNodes={[selected]}
+        isDark={false}
+        onClose={() => {}}
+        onSelectNode={() => {}}
+        tourCaption="This whole map is a Digital Second Brain."
+      />,
+    );
+
+    expect(screen.getByText("This whole map is a Digital Second Brain.")).toBeTruthy();
+    expect(screen.getByText("Digital Second Brain")).toBeTruthy();
+  });
+
+  it("TOR-08-5Vj2zkG: omits the caption block when tourCaption is null", () => {
+    const selected = node({ id: "a" });
+
+    render(
+      <SidePanel
+        node={selected}
+        edges={[]}
+        allNodes={[selected]}
+        isDark={false}
+        onClose={() => {}}
+        onSelectNode={() => {}}
+        tourCaption={null}
+      />,
+    );
+
+    expect(screen.getByText(selected.title)).toBeTruthy();
+  });
+});

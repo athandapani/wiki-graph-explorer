@@ -14,6 +14,7 @@ interface SidePanelProps {
   isDark: boolean;
   onClose: () => void;
   onSelectNode: (node: GraphNode) => void;
+  tourCaption?: string | null;
 }
 
 type EdgeEndpoint = string | { id: string };
@@ -51,7 +52,15 @@ export function groupNodesByFolder(nodes: GraphNode[]): { folder: string; nodes:
   return order.map((folder) => ({ folder, nodes: grouped.get(folder) ?? [] }));
 }
 
-export function SidePanel({ node, edges, allNodes, isDark, onClose, onSelectNode }: SidePanelProps) {
+export function SidePanel({
+  node,
+  edges,
+  allNodes,
+  isDark,
+  onClose,
+  onSelectNode,
+  tourCaption = null,
+}: SidePanelProps) {
   const relatedNodes = node
     ? getRelatedNodeIds(node.id, edges)
         .map((id) => allNodes.find((candidate) => candidate.id === id))
@@ -84,6 +93,11 @@ export function SidePanel({ node, edges, allNodes, isDark, onClose, onSelectNode
             Close
           </button>
           <h2 className="text-lg font-semibold">{node.title}</h2>
+          {tourCaption ? (
+            <p className="mt-2 rounded border-l-2 border-[var(--accent)] bg-black/5 p-2 text-sm dark:bg-white/10">
+              {tourCaption}
+            </p>
+          ) : null}
           <div className="mt-2 flex items-center gap-2">
             <StatusDot status={node.status} />
             <span className="text-sm">{node.status}</span>
