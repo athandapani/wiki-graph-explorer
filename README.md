@@ -136,3 +136,7 @@ reference, and publishes the static export to GitHub Pages on push to `master`.
 - `docs/architecture.md` / `docs/design-notes.md` — as-built architecture and design decisions
 - `docs/requirements/` — the TOR requirements baseline (Gherkin feature files)
 - `docs/implementation-plan/` — epic history and per-epic completion handoffs
+
+## License
+
+MIT — see [LICENSE](LICENSE).
