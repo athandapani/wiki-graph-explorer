@@ -30,8 +30,11 @@ function writeDistPackageJson(repoRoot: string, distDir: string, root: RootPacka
     description:
       "Build-time CLI that turns a Karpathy-pattern wiki's backlink structure into graph-data.json + vector-index.json for wiki-graph-explorer.",
     license: "MIT",
+    // No leading "./" — npm's publish-time bin validation silently strips a leading "./" and
+    // drops the whole entry as "invalid" (confirmed via `npm pkg fix`, which produces this exact
+    // form), which would ship the package with no working `wiki-graph-explorer` command at all.
     bin: {
-      "wiki-graph-explorer": "./scripts/build-graph.js",
+      "wiki-graph-explorer": "scripts/build-graph.js",
     },
     engines: {
       node: ">=20",
