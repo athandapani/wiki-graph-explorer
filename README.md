@@ -54,6 +54,10 @@ full requirements/epic history.
   re-themes the chrome and the graph together, or a 4th "Custom" option to pick an arbitrary
   accent color for chrome only (with a visible note that it isn't validated for CVD-safety or
   contrast). Selection persists across visits, dark/Teal by default.
+- **Installable CLI, no clone required** — `npx wiki-graph-explorer --vault <path>` builds
+  `graph-data.json`/`vector-index.json` for your own wiki on its own, tiny install (only the
+  CLI's real dependencies, not the web app's). Add `--serve` and it opens the graph straight in
+  your browser, live now on npm — see [Getting Started](#getting-started) below.
 
 ## Screenshots
 
