@@ -15,6 +15,18 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.1.0] — 24-Jul-2026
+
+### Added
+- The build-graph CLI is now installable directly via `npx wiki-graph-explorer --vault <path>`,
+  without cloning this repo. Published as a trimmed subpackage (`npm run prepublish:cli` compiles
+  just the CLI's own files with a scoped `tsconfig.cli.json` and assembles a minimal
+  `package.json` with only the CLI's real dependencies — `@huggingface/transformers` and
+  `gray-matter` — so installing it never pulls in the Next.js web app's dependencies). The root
+  package stays `"private": true`; only the generated `dist/` subpackage is ever published.
+
+---
+
 ## [1.0.0] — 20-Jul-2026
 
 MVP complete — all planned epics across all 10 phases shipped. The first stable release: a

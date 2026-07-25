@@ -1,6 +1,6 @@
 {
   "name": "wiki-graph-explorer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "MIT",
   "private": true,
   "scripts": {
@@ -8,6 +8,8 @@
     "build": "next build",
     "start": "next start",
     "build:graph": "tsx scripts/build-graph.ts",
+    "build:cli": "tsc -p tsconfig.cli.json",
+    "prepublish:cli": "npm run build:cli && tsx scripts/prepare-publish.ts",
     "check:vault-safety": "tsx scripts/check-no-second-brain-path.ts",
     "test": "vitest run",
     "lint": "eslint",

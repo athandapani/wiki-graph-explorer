@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["es2020"],
+    "outDir": "dist",
+    "rootDir": ".",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "declaration": false,
+    "sourceMap": false
+  },
+  "include": [
+    "scripts/build-graph.ts",
+    "lib/cli.ts",
+    "lib/embeddings.ts",
+    "lib/vector-index-writer.ts",
+    "lib/graph-data-writer.ts",
+    "lib/vault-walker.ts",
+    "lib/frontmatter-parser.ts",
+    "lib/graph-builder.ts",
+    "lib/logger.ts"
+  ]
+}

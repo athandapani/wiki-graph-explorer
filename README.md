@@ -108,6 +108,17 @@ and `## Related` / `## Referenced By` wikilinks, computes an embedding per page,
 `graph-data.json` + `vector-index.json`. Every run fully regenerates both files — there is no
 incremental/partial update, and `--vault` has no fallback (no env var, no cached path).
 
+**Just want the build tool, not the web app?** It's installable on its own, no clone required:
+
+```bash
+npx wiki-graph-explorer --vault <path-to-a-Karpathy-pattern-wiki>
+```
+
+This publishes only the CLI's own dependencies (`@huggingface/transformers`, `gray-matter`), not
+the web app's. On Windows, run it from a reasonably short path — `@huggingface/transformers`'
+native ONNX runtime backend can fail to load the model file under a deeply nested path once the
+full path exceeds Windows' 260-character `MAX_PATH` limit.
+
 **For local dev iteration against a richer, real dataset**, point `--vault` at your private
 `second-brain` vault (a sibling directory, e.g. `../second-brain`) per the project's dogfooding
 workflow — this output is gitignored and must never be committed or deployed. Only builds against
