@@ -122,6 +122,17 @@ the web app's. On Windows, run it from a reasonably short path — `@huggingface
 native ONNX runtime backend can fail to load the model file under a deeply nested path once the
 full path exceeds Windows' 260-character `MAX_PATH` limit.
 
+**Want to actually see the graph, not just the JSON?** Add `--serve` (optionally `--port <n>`,
+default `4173`) and it opens straight in your browser — no separate clone of the web app needed,
+since a pre-built copy of it ships inside the package:
+
+```bash
+npx wiki-graph-explorer --vault <path-to-a-Karpathy-pattern-wiki> --serve
+```
+
+Note this makes the install meaningfully bigger (~27MB vs. a few KB for the build-only path),
+since it bundles the whole static web app. `--serve` keeps running until you stop it with Ctrl+C.
+
 **For local dev iteration against a richer, real dataset**, point `--vault` at your private
 `second-brain` vault (a sibling directory, e.g. `../second-brain`) per the project's dogfooding
 workflow — this output is gitignored and must never be committed or deployed. Only builds against

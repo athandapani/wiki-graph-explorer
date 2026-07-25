@@ -33,18 +33,61 @@ describe("parseArgs", () => {
     expect("vaultPath" in noVaultResult).toBe(false);
   });
 
-  it("given a valid --vault <path>, when parsed, then mode is run with that path and the default outDir", () => {
+  it("given a valid --vault <path>, when parsed, then mode is run with that path, the default outDir, and serve disabled with the default port", () => {
     const result = parseArgs(["--vault", "/some/path"]);
-    expect(result).toEqual({ mode: "run", vaultPath: "/some/path", outDir: "local-build" });
+    expect(result).toEqual({
+      mode: "run",
+      vaultPath: "/some/path",
+      outDir: "local-build",
+      serve: false,
+      port: 4173,
+    });
   });
 
   it("given --vault <path> --out <dir>, when parsed, then mode is run with the given outDir", () => {
     const result = parseArgs(["--vault", "/some/path", "--out", "public"]);
-    expect(result).toEqual({ mode: "run", vaultPath: "/some/path", outDir: "public" });
+    expect(result).toEqual({
+      mode: "run",
+      vaultPath: "/some/path",
+      outDir: "public",
+      serve: false,
+      port: 4173,
+    });
   });
 
   it("given --version, when parsed, then mode is version", () => {
     const result = parseArgs(["--version"]);
     expect(result).toEqual({ mode: "version" });
+  });
+
+  it("given --vault <path> --serve, when parsed, then mode is run with serve enabled and the default port", () => {
+    const result = parseArgs(["--vault", "/some/path", "--serve"]);
+    expect(result).toEqual({
+      mode: "run",
+      vaultPath: "/some/path",
+      outDir: "local-build",
+      serve: true,
+      port: 4173,
+    });
+  });
+
+  it("given --vault <path> --serve --port <n>, when parsed, then mode is run with that port", () => {
+    const result = parseArgs(["--vault", "/some/path", "--serve", "--port", "5000"]);
+    expect(result).toEqual({
+      mode: "run",
+      vaultPath: "/some/path",
+      outDir: "local-build",
+      serve: true,
+      port: 5000,
+    });
+  });
+
+  it("given --vault <path> --port <non-numeric>, when parsed, then it is an invalid invocation (exit code 2)", () => {
+    const result = parseArgs(["--vault", "/some/path", "--port", "not-a-number"]);
+    expect(result.mode).toBe("error");
+    if (result.mode === "error") {
+      expect(result.message).toContain("--port requires a positive integer");
+      expect(result.exitCode).toBe(2);
+    }
   });
 });

@@ -22,6 +22,7 @@
     "lib/vault-walker.ts",
     "lib/frontmatter-parser.ts",
     "lib/graph-builder.ts",
-    "lib/logger.ts"
+    "lib/logger.ts",
+    "lib/preview-server.ts"
   ]
 }

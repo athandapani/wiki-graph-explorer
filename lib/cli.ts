@@ -1,10 +1,11 @@
 export type ParsedArgs =
   | { mode: "version" }
   | { mode: "error"; exitCode: 1 | 2; message: string }
-  | { mode: "run"; vaultPath: string; outDir: string };
+  | { mode: "run"; vaultPath: string; outDir: string; serve: boolean; port: number };
 
-const RECOGNIZED_FLAGS = new Set(["--version", "--vault", "--out"]);
+const RECOGNIZED_FLAGS = new Set(["--version", "--vault", "--out", "--serve", "--port"]);
 const DEFAULT_OUT_DIR = "local-build";
+const DEFAULT_PORT = 4173;
 
 export function parseArgs(argv: string[]): ParsedArgs {
   for (const arg of argv) {
@@ -42,5 +43,22 @@ export function parseArgs(argv: string[]): ParsedArgs {
   const outFlagIndex = argv.indexOf("--out");
   const outDir = outFlagIndex === -1 ? DEFAULT_OUT_DIR : argv[outFlagIndex + 1] || DEFAULT_OUT_DIR;
 
-  return { mode: "run", vaultPath, outDir };
+  const serve = argv.includes("--serve");
+
+  const portFlagIndex = argv.indexOf("--port");
+  let port = DEFAULT_PORT;
+  if (portFlagIndex !== -1) {
+    const portValue = argv[portFlagIndex + 1];
+    const parsedPort = Number(portValue);
+    if (!portValue || !Number.isInteger(parsedPort) || parsedPort <= 0) {
+      return {
+        mode: "error",
+        exitCode: 2,
+        message: `Error: --port requires a positive integer. Got '${portValue ?? ""}'.`,
+      };
+    }
+    port = parsedPort;
+  }
+
+  return { mode: "run", vaultPath, outDir, serve, port };
 }

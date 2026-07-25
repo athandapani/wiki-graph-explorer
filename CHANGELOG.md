@@ -15,6 +15,21 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.0] — 24-Jul-2026
+
+### Added
+- `--serve` (optionally `--port <n>`, default `4173`) on the npm CLI: builds `graph-data.json`/
+  `vector-index.json` as usual, then opens the graph directly in the browser — no separate clone
+  of the web app needed. A pre-built copy of the static web app (`dist/site/`, ~27MB) now ships
+  inside the npm package for this purpose; `npm run prepublish:cli` builds it with an explicitly
+  empty `NEXT_PUBLIC_BASE_PATH` and neutral placeholder data (the visitor's real
+  `graph-data.json`/`vector-index.json` always overwrite those placeholders before serving), then
+  runs the existing private-vault-path safety check (`lib/second-brain-path-check.ts`) against
+  the bundled site as a hard gate before publish — closing a leakage route the pre-existing
+  `check:vault-safety` script (which only scans git-tracked files) couldn't reach.
+
+---
+
 ## [1.1.0] — 24-Jul-2026
 
 ### Added
