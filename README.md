@@ -1,5 +1,7 @@
 # wiki-graph-explorer
 
+[![npm version](https://img.shields.io/npm/v/wiki-graph-explorer.svg)](https://www.npmjs.com/package/wiki-graph-explorer)
+
 A generic, point-at-a-repo tool that turns a Karpathy-pattern wiki's backlink structure into a
 clickable, explorable graph — plus a live semantic search demo over the same content. Built as a
 verifiable artifact: instead of a case-study screenshot claiming "I built a personal knowledge
