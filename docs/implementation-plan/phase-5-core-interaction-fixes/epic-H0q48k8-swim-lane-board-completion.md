@@ -37,15 +37,31 @@ they finally ship.
 | TOR-06-BxA7IRn | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall display a "+N more" affordance in each swim-lane whose hidden low-connectivity nodes number at least one, reporting the exact count hidden from that lane |
 | TOR-06-YjETzyC | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall render every hidden low-connectivity node of a lane onto the board when a visitor activates that lane's "+N more" affordance |
 | TOR-06-ihpx0Ya | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall omit the "+N more" affordance from any swim-lane that has no hidden nodes |
-| TOR-06-cSCqVtt | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall size each swim-lane pill to fit its node's full title text, rendering no ellipsis truncation |
+| ~~TOR-06-cSCqVtt~~ | `docs/requirements/06-swim-lane-layout.feature.md` | **Superseded — see note below.** Current scenario title: The /graph page shall truncate a swim-lane pill's title text with an ellipsis when it exceeds approximately 25 characters, surfacing the full title via the pill's tooltip and the side panel |
 | TOR-06-JuNSwaW | `docs/requirements/06-swim-lane-layout.feature.md` | The /graph page shall render each swim-lane as a tinted rounded container carrying its folder/taxonomy heading and a short lane descriptor |
 | TOR-05-OMWVZWL | `docs/requirements/05-explainer-and-discovery.feature.md` | The /graph page's explainer section shall name the layout mode in which each affordance it describes actually exists, and shall not describe an affordance as available in a mode that does not offer it |
+
+> **Note (2026-07-27) — `TOR-06-cSCqVtt` superseded, coverage withdrawn.**
+> This epic shipped the requirement as it then read: size each pill to its full title, no
+> ellipsis truncation. A `/peak-workflow:capture-requirements` change-control event amended it
+> in place — it now requires truncation at ~25 characters (with the full title reachable via
+> the pill's tooltip and the side panel), because unrestricted-width pills were crowding
+> neighbors and breaking lane layout at default viewport size (TOR-06-0ZRtILL).
+>
+> This epic's shipped code therefore satisfies a requirement that no longer exists, and does
+> **not** satisfy the amended one. `TOR-06-cSCqVtt` has been removed from this epic's status
+> sidecar `requirements:` field so `/peak-workflow:status` stops reporting it as covered, and
+> reassigned to **Epic XZj8HYu** (Phase 11 — Swim-Lane Pill Truncation & Lane Selection Fix) for
+> re-implementation. Nothing about this epic's other 5 TORs changed; its `status: Complete`
+> stands for those. Do not treat the strikethrough row above as implementable work — the
+> current requirement text lives only in the feature file and Epic XZj8HYu's spec.
 
 ## Key Components
 
 ### Frontend
 
 - `components/graph/SwimLaneCanvas.tsx` — per-lane hidden-node count, "+N more" reveal, tinted lane containers with descriptors
-- `components/graph/PillNode.tsx` — width sized to full label text, no ellipsis truncation
+- `components/graph/PillNode.tsx` — width sized to full label text at time of shipping; truncation
+  behavior superseded, see note above and Epic XZj8HYu
 - `lib/lane-assignment.ts` — expose per-lane hidden-node counts to the renderer
 - `components/graph/ExplainerSection.tsx` — per-mode copy accuracy
