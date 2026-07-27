@@ -223,3 +223,27 @@ Scenario: [TOR-08-RCP0xbr] The guided tour shall leave the current step's node s
     When the visitor exits the tour via its close control
     Then the tour's captions and step indicator should no longer be displayed
     And node A should remain the selected node, with the side panel still showing node A's detail
+
+
+# --------------------------------------------------------------------------------------------------
+# Tour Adaptation for Non-Demo Vaults (added 2026-07-27)
+# --------------------------------------------------------------------------------------------------
+#
+# TOR-08-8EHbtf3 binds the tour to a static, hand-curated set of node ids specific to the demo
+# vault. The npm-distributed CLI's `--serve` mode (and any local build) can point graph-data.json
+# at a completely different vault, in which case none of the tour's curated node ids exist in
+# the loaded data. Starting the tour anyway would advance through steps that can never resolve to
+# a real node — a broken feature masquerading as a working one, the same failure class the
+# Hidden-Node Transparency section of docs/requirements/06-swim-lane-layout.feature.md exists to
+# avoid.
+#
+
+Scenario: [TOR-08-6uTWvws] The /graph page shall omit its "Take a tour" control when one or more node ids in the static tour definition are absent from the loaded graph-data.json
+    Given graph-data.json does not contain a node id referenced by the static tour definition
+    When the /graph page finishes rendering
+    Then the "Take a tour" control described in TOR-08-NtvwEKk should not be displayed
+
+Scenario: [TOR-08-rfVJZHR] The /graph page shall display its "Take a tour" control normally when every node id in the static tour definition is present in the loaded graph-data.json
+    Given graph-data.json contains every node id referenced by the static tour definition
+    When the /graph page finishes rendering
+    Then the "Take a tour" control described in TOR-08-NtvwEKk should be displayed and function as specified

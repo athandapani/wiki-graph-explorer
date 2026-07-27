@@ -331,6 +331,24 @@
           }
         ]
       }
+    },
+    {
+      "id": "TOR-08-6uTWvws",
+      "title": "The /graph page shall omit its \"Take a tour\" control when one or more node ids in the static tour definition are absent from the loaded graph-data.json",
+      "traces_to": {
+        "vision": [],
+        "conops": []
+      },
+      "source": "user-stated requirement (guided-tour --serve mismatch), not present in product-vision.md or concept-of-operations.md"
+    },
+    {
+      "id": "TOR-08-rfVJZHR",
+      "title": "The /graph page shall display its \"Take a tour\" control normally when every node id in the static tour definition is present in the loaded graph-data.json",
+      "traces_to": {
+        "vision": [],
+        "conops": []
+      },
+      "source": "user-stated requirement (guided-tour --serve mismatch), not present in product-vision.md or concept-of-operations.md"
     }
   ],
   "coverage_gaps": []

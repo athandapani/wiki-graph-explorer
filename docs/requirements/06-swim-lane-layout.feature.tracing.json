@@ -371,22 +371,16 @@
     },
     {
       "id": "TOR-06-cSCqVtt",
-      "title": "The /graph page shall size each swim-lane pill to fit its node's full title text, rendering no ellipsis truncation",
+      "title": "The /graph page shall truncate a swim-lane pill's title text with an ellipsis when it exceeds approximately 25 characters, surfacing the full title via the pill's tooltip and the side panel",
+      "amended": {
+        "date": "2026-07-27",
+        "reason": "Requirement was inverted: the original 'no truncation ever' approach made pills unreadably large and crowded neighbors. The new requirement truncates at ~25 characters but preserves full text via tooltip and side panel, balancing board readability with lossless information access."
+      },
       "traces_to": {
-        "vision": [
-          {
-            "section": "§9 — Design Direction",
-            "paraphrase": "Pills sized to their full label text with no ellipsis truncation keep the swim-lane board readable, fixing issue #4 finding B5."
-          }
-        ],
-        "conops": [
-          {
-            "scenario": "S7",
-            "step": 3,
-            "paraphrase": "When a pill renders with a long title, it expands to display the complete text without truncation or ellipsis."
-          }
-        ]
-      }
+        "vision": [],
+        "conops": []
+      },
+      "source": "user-stated requirement (pill truncation / empty Raw lane), not present in product-vision.md or concept-of-operations.md"
     },
     {
       "id": "TOR-06-JuNSwaW",
@@ -406,6 +400,24 @@
           }
         ]
       }
+    },
+    {
+      "id": "TOR-06-yzcZ7CL",
+      "title": "The /graph page shall render a swim-lane pill's title in full, without an ellipsis, when that title is within approximately 25 characters",
+      "traces_to": {
+        "vision": [],
+        "conops": []
+      },
+      "source": "user-stated requirement (pill truncation / empty Raw lane), not present in product-vision.md or concept-of-operations.md"
+    },
+    {
+      "id": "TOR-06-KruzYET",
+      "title": "The /graph page shall exclude a folder/taxonomy value from the \"4 largest\" lane-selection ranking when every one of its nodes is hidden from the board by default",
+      "traces_to": {
+        "vision": [],
+        "conops": []
+      },
+      "source": "user-stated requirement (pill truncation / empty Raw lane), not present in product-vision.md or concept-of-operations.md"
     }
   ],
   "coverage_gaps": []

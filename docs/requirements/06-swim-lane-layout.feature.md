@@ -195,15 +195,30 @@ Scenario: [TOR-06-ihpx0Ya] The /graph page shall omit the "+N more" affordance f
 # Pill and Lane Presentation (added 2026-07-15, Cycle 2 — issue #4 findings B5, B6)
 # --------------------------------------------------------------------------------------------------
 
-Scenario: [TOR-06-cSCqVtt] The /graph page shall size each swim-lane pill to fit its node's full title text, rendering no ellipsis truncation
+Scenario: [TOR-06-cSCqVtt] The /graph page shall truncate a swim-lane pill's title text with an ellipsis when it exceeds approximately 25 characters, surfacing the full title via the pill's tooltip and the side panel
     #
-    # Note:
-    #   1. This strengthens TOR-06-hCQUwZW (pill displays the node's title as inline text) by
-    #      binding the title to render in full. Issue #4 finding B5: truncated pills made the board
-    #      unreadable and forced a click to learn what a node even was.
+    # Note: amended 2026-07-27 — change-control event, user-approved during
+    # /peak-workflow:capture-requirements.
     #
-    Given graph-data.json contains a node whose title is long relative to other node titles in its lane
-    When the swim-lane board renders that node
+    # This requirement originally read: "The /graph page shall size each swim-lane pill to fit
+    # its node's full title text, rendering no ellipsis truncation" (issue #4 finding B5: fully
+    # untruncated pills made the board unreadable and forced a click to learn what a node even
+    # was). In practice, sizing pills to fit arbitrarily long titles produced a different failure:
+    # oversized pills crowded out neighbors and broke lane layout at default viewport size
+    # (TOR-06-0ZRtILL). This reverses the "no truncation" mandate in favor of a fixed truncation
+    # point, but the original concern still holds — no information is actually lost, only
+    # deferred by one interaction, since the full title remains reachable via the pill's native
+    # tooltip and, on click, the side panel (TOR-06-n4fJkbK).
+    #
+    Given graph-data.json contains a node whose title exceeds approximately 25 characters
+    When the swim-lane board renders that node's pill
+    Then the pill's visible text should be truncated to approximately 25 characters with an ellipsis marker
+    And the pill's tooltip (title attribute) should expose the node's full untruncated title
+    And selecting that node should display its full untruncated title in the side panel
+
+Scenario: [TOR-06-yzcZ7CL] The /graph page shall render a swim-lane pill's title in full, without an ellipsis, when that title is within approximately 25 characters
+    Given graph-data.json contains a node whose title is within approximately 25 characters
+    When the swim-lane board renders that node's pill
     Then the pill should display that node's complete title text
     And the rendered pill text should contain no ellipsis or truncation marker
 
@@ -212,3 +227,29 @@ Scenario: [TOR-06-JuNSwaW] The /graph page shall render each swim-lane as a tint
     When the board renders
     Then each lane should render within a rounded container with a background tint distinguishing it from the board background
     And each lane container should display its folder/taxonomy name as a heading alongside a short descriptor of what that lane holds
+
+
+# --------------------------------------------------------------------------------------------------
+# Lane Selection & Visible-Node Weighting (added 2026-07-27)
+# --------------------------------------------------------------------------------------------------
+#
+# Layered on top of TOR-06-6dbr9Jn/TOR-06-a3pVfbc rather than modifying them: those TORs rank
+# folder/taxonomy values by raw node count for the 4 primary lane slots. A value whose nodes are
+# entirely zero-degree is hidden in full by TOR-06-nQ4vXsD (unlike the exactly-one-edge case
+# TOR-06-Zk8pLwR covers, nothing links to a zero-degree node, so no click can ever reveal it) —
+# so such a value could win one of the 4 visible slots by raw count and still render with no
+# visible pills at all, reading as broken rather than merely sparse.
+#
+
+Scenario: [TOR-06-KruzYET] The /graph page shall exclude a folder/taxonomy value from the "4 largest" lane-selection ranking when every one of its nodes is hidden from the board by default
+    #
+    # Note:
+    #   1. A value excluded by this rule folds into the shared "Other" lane, same as any value
+    #      beyond the 4 largest under TOR-06-a3pVfbc.
+    #
+    Given graph-data.json contains a folder/taxonomy value whose nodes are all zero-degree, and that value would otherwise rank among the 4 largest by node count
+    And a 5th folder/taxonomy value exists with at least one non-zero-degree node
+    When a visitor switches to swim-lane mode
+    Then the zero-degree-only value should not occupy one of the 4 primary lanes
+    And the next-largest folder/taxonomy value containing at least one non-zero-degree node should occupy that lane slot instead
+    And the zero-degree-only value's nodes should render within the shared "Other" lane
