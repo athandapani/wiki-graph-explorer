@@ -201,3 +201,26 @@ describe("SwimLaneCanvas external focus sync", () => {
     expect(pill("Title hub").getAttribute("aria-pressed")).toBe("false");
   });
 });
+
+describe("SwimLaneCanvas lane ranking", () => {
+  it("TOR-06-KruzYET: an all-zero-degree folder does not occupy a named lane; the next-largest real folder does", () => {
+    // "raw" has the most total nodes (6) but none of them have any edges, so every one is
+    // zero-degree and permanently hidden from the board. Without the fix, its inflated raw count
+    // would win a named slot and bump "delta" (1 node) out to "Other" instead.
+    const rawNodes = ["r1", "r2", "r3", "r4", "r5", "r6"].map((id) => node(id, "raw"));
+    const alpha = [node("a1", "alpha"), node("a2", "alpha")];
+    const bravo = [node("b1", "bravo")];
+    const charlie = [node("c1", "charlie")];
+    const delta = [node("d1", "delta")];
+    const nodes = [...rawNodes, ...alpha, ...bravo, ...charlie, ...delta];
+    const edges = wellConnected(["a1", "a2", "b1", "c1", "d1"]);
+
+    render(<SwimLaneCanvas nodes={nodes} edges={edges} isDark />);
+
+    // "raw"'s compact-empty-lane heading form is the bare folder name with no count suffix
+    // (SwimLaneCanvas.tsx's isCompactEmptyLane branch) — its absence means it didn't win a slot.
+    expect(screen.queryByText("raw")).toBeNull();
+    expect(screen.getByText("delta (1)")).toBeTruthy();
+    expect(screen.getByText("Other")).toBeTruthy();
+  });
+});

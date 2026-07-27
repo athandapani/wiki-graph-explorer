@@ -10,7 +10,7 @@ describe("components/graph/SwimLaneCanvas.tsx", () => {
 
   it("TOR-06-6dbr9Jn: is a client component that groups nodes into lanes via assignLanes", () => {
     expect(source).toContain('"use client"');
-    expect(source).toContain("assignLanes(laneNodes, hiddenCandidateNodes)");
+    expect(source).toContain("assignLanes(laneNodes, hiddenCandidateNodes, zeroDegreeOnlyFolders)");
   });
 
   it("TOR-06-0ZRtILL: stacks lanes vertically as full-width bands, wrapping each lane's pills within the viewport with no scrollbars", () => {

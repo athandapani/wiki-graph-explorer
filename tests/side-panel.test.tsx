@@ -58,6 +58,26 @@ describe("SidePanel folder badge", () => {
   });
 });
 
+describe("SidePanel title", () => {
+  it("TOR-06-cSCqVtt: displays a node's full, untruncated title even when it exceeds the pill's ~25-character truncation length", () => {
+    const longTitle = "A Title That Is Definitely Longer Than Twenty Five Characters";
+    const selected = node({ id: "a", title: longTitle });
+
+    render(
+      <SidePanel
+        node={selected}
+        edges={[]}
+        allNodes={[selected]}
+        isDark={false}
+        onClose={() => {}}
+        onSelectNode={() => {}}
+      />,
+    );
+
+    expect(screen.getByText(longTitle)).toBeTruthy();
+  });
+});
+
 describe("SidePanel description", () => {
   it("TOR-04-0igGafN: displays the node's description when non-empty", () => {
     const selected = node({ id: "a", description: "A short summary." });
