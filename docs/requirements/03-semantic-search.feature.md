@@ -111,3 +111,46 @@ Scenario: [TOR-03-1LlqKF1] The /graph page shall display a count of how many pag
     Then the page should display a visible result count reporting 7 matching pages
     And the count should update as the visitor edits the query
     And the count should disappear or reset when the visitor clears the search input
+
+
+# --------------------------------------------------------------------------------------------------
+# Ranked Results & Semantic Neighbors (added 2026-07-27)
+# --------------------------------------------------------------------------------------------------
+#
+# Prior scenarios bind dimming/highlighting and a bare result count (TOR-03-UH4yx26,
+# TOR-03-1LlqKF1) but never bind a visitor's ability to see WHICH pages matched, ranked by
+# relevance, or to discover semantically related pages starting from a page they're already
+# reading rather than from the search box. These scenarios close both gaps.
+#
+
+Scenario: [TOR-03-pP3y0uV] The /graph page shall display a ranked list of the top matching pages, ordered by descending similarity score, when a search query is active
+    Given a visitor types a query matching multiple pages at varying similarity scores
+    When the ranking updates
+    Then a list of the top matching pages should be visible
+    And the list should be ordered from highest to lowest similarity score
+
+Scenario: [TOR-03-buN9A2Q] The /graph page shall select a node in the graph and open its side panel detail when a visitor activates an entry in the ranked results list
+    Given a visitor has an active search query displaying a ranked results list
+    When the visitor activates an entry in that list
+    Then the corresponding node should become the selected node in the graph
+    And the side panel should display that node's detail
+
+Scenario: [TOR-03-zOzfWVb] The side panel shall display a "Semantically similar pages" panel listing other pages ranked by embedding cosine similarity to the currently selected node
+    #
+    # Note:
+    #   1. This is distinct from the side panel's existing "Connected pages" list (TOR-04-xeqtJpo
+    #      per docs/requirements/04-side-panel.feature.md), which reflects explicit Related/
+    #      Referenced By wikilinks. This panel surfaces pages the vault author never linked but
+    #      whose content is embedding-close to the selected page — the same "not a keyword
+    #      filter" proof point as search itself (TOR-03-82mnBKb), applied starting from a page
+    #      instead of a typed query.
+    #
+    Given a visitor has selected a node
+    When the side panel renders that node's detail
+    Then the side panel should display a "Semantically similar pages" panel
+    And that panel should list other pages ordered by descending cosine similarity to the selected node's embedding, computed client-side from vector-index.json
+
+Scenario: [TOR-03-bTe5Zva] The side panel shall omit the "Semantically similar pages" panel when no other page's similarity score to the selected node meets the relevance threshold
+    Given a visitor selects a node whose embedding has no other page within the relevance threshold
+    When the side panel renders that node's detail
+    Then the "Semantically similar pages" panel should not be displayed

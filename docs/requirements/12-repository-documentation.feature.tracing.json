@@ -1,0 +1,27 @@
+{
+  "feature_id": "12",
+  "feature_file": "12-repository-documentation.feature.md",
+  "generated": "2026-07-27",
+  "generator": "haiku-sub-agent via /peak-workflow:capture-requirements",
+  "requirements": [
+    {
+      "id": "TOR-12-a4ESHYa",
+      "title": "The README shall embed an animated demo (GIF or video) positioned before the \"Getting Started\" section, showing the /graph page's core click-to-explore interaction",
+      "traces_to": {
+        "vision": [],
+        "conops": []
+      },
+      "source": "user-stated requirement (README demo GIF/video), not present in product-vision.md or concept-of-operations.md"
+    },
+    {
+      "id": "TOR-12-T1Bb2fG",
+      "title": "The README shall reference only demo media assets that exist in the repository, with no broken embed links",
+      "traces_to": {
+        "vision": [],
+        "conops": []
+      },
+      "source": "user-stated requirement (README demo GIF/video), not present in product-vision.md or concept-of-operations.md"
+    }
+  ],
+  "coverage_gaps": []
+}

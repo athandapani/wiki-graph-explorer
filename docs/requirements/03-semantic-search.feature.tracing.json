@@ -211,6 +211,42 @@
           }
         ]
       }
+    },
+    {
+      "id": "TOR-03-pP3y0uV",
+      "title": "The /graph page shall display a ranked list of the top matching pages, ordered by descending similarity score, when a search query is active",
+      "traces_to": {
+        "vision": [],
+        "conops": []
+      },
+      "source": "user-stated requirement (search upgrade), not present in product-vision.md or concept-of-operations.md"
+    },
+    {
+      "id": "TOR-03-buN9A2Q",
+      "title": "The /graph page shall select a node in the graph and open its side panel detail when a visitor activates an entry in the ranked results list",
+      "traces_to": {
+        "vision": [],
+        "conops": []
+      },
+      "source": "user-stated requirement (search upgrade), not present in product-vision.md or concept-of-operations.md"
+    },
+    {
+      "id": "TOR-03-zOzfWVb",
+      "title": "The side panel shall display a \"Semantically similar pages\" panel listing other pages ranked by embedding cosine similarity to the currently selected node",
+      "traces_to": {
+        "vision": [],
+        "conops": []
+      },
+      "source": "user-stated requirement (search upgrade), not present in product-vision.md or concept-of-operations.md"
+    },
+    {
+      "id": "TOR-03-bTe5Zva",
+      "title": "The side panel shall omit the \"Semantically similar pages\" panel when no other page's similarity score to the selected node meets the relevance threshold",
+      "traces_to": {
+        "vision": [],
+        "conops": []
+      },
+      "source": "user-stated requirement (search upgrade), not present in product-vision.md or concept-of-operations.md"
     }
   ],
   "coverage_gaps": []
