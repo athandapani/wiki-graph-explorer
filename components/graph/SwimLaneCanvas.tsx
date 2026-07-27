@@ -50,11 +50,13 @@ interface ConnectorPathData {
 // rather than an always-visible node.
 const LOW_DEGREE_THRESHOLD = 1;
 
-// Every lane gets this much height guaranteed (heading + descriptor + one row of pills) before
-// the remaining space is distributed proportionally by node count — otherwise a lane with only a
-// few (or zero) visible nodes gets starved down to a sliver by lanes with many more, clipping its
-// own heading/descriptor or "+N more" affordance.
-const MIN_LANE_HEIGHT_PX = 84;
+// A lane's pill area is sized to however many rows its own content actually needs (2 rows stays
+// 2 rows, 6 needs stays 6), not a proportional share of a shared height budget — the old
+// flex-grow-by-node-count split gave small lanes more room than their content used while
+// starving large lanes below what theirs needed. MAX_VISIBLE_ROWS is a hard ceiling per lane so
+// one very large folder can't push the board past the viewport (TOR-06-0ZRtILL).
+const PILL_ROW_HEIGHT_PX = 24;
+const MAX_VISIBLE_ROWS = 12;
 
 function ConnectorPath({
   d,
@@ -312,7 +314,7 @@ export default function SwimLaneCanvas({
   }
 
   return (
-    <div ref={boardRef} className="relative flex h-full flex-col gap-2 overflow-hidden p-2">
+    <div ref={boardRef} className="relative flex h-full flex-col gap-1.5 overflow-hidden p-1.5">
       <svg className="pointer-events-none absolute inset-0 -z-10 h-full w-full">
         {activeNodeId != null &&
           connectorPaths.map(({ targetId, d, color, isRevealed }) => (
@@ -328,27 +330,52 @@ export default function SwimLaneCanvas({
         const isExpanded = expandedLaneNames.has(lane.name);
         const visibleIds = isExpanded ? [...lane.nodeIds, ...lane.hiddenNodeIds] : lane.nodeIds;
         const totalCount = lane.nodeIds.length + lane.hiddenNodeIds.length;
-        const accent = getFolderColor(lane.name, isDark);
+        // A lane with nothing rendered but a "+N more" affordance (e.g. a raw/ ingestion folder
+        // whose pages sit outside the interlinked wikilink graph entirely) gets a one-line header
+        // instead of the usual heading+descriptor pair — same content-based sizing as every other
+        // lane below naturally collapses it to a slim strip with no forced minimum height.
+        const isCompactEmptyLane = visibleIds.length === 0;
 
         return (
           <div
             key={lane.name}
-            className="flex min-h-0 flex-col overflow-hidden rounded-lg px-3 py-2"
+            className="flex min-h-0 flex-col overflow-hidden rounded-lg px-2 py-1"
             style={{
-              flexGrow: visibleIds.length,
-              flexBasis: MIN_LANE_HEIGHT_PX,
-              backgroundColor: `${accent}${isDark ? "1a" : "0f"}`,
+              // Content-based, not proportional: every lane takes exactly the height its own
+              // pills need (capped per-lane below), so a folder with few pills doesn't get
+              // stretched and a folder with many doesn't get starved by its neighbors.
+              flexGrow: 0,
+              flexShrink: 0,
+              flexBasis: "auto",
+              // Flat and folder-agnostic (not tinted per lane) so color reads only on the pills
+              // themselves, and so the connector-line layer beneath the pills stays legible
+              // against a plain backdrop instead of a translucent color wash.
+              backgroundColor: isDark ? "rgba(0, 0, 0, 0.45)" : "rgba(0, 0, 0, 0.035)",
             }}
           >
-            <div className="mb-1 shrink-0">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-foreground/60">
-                {lane.name} ({visibleIds.length})
-              </h3>
-              <p className="text-[11px] text-foreground/50">
-                {totalCount} page{totalCount === 1 ? "" : "s"} total
-              </p>
-            </div>
-            <div className="relative z-0 flex flex-1 flex-wrap content-start gap-1 overflow-hidden">
+            {isCompactEmptyLane ? (
+              <div className="flex shrink-0 items-baseline gap-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-foreground/60">
+                  {lane.name}
+                </h3>
+                <p className="text-[11px] text-foreground/40">
+                  {totalCount} page{totalCount === 1 ? "" : "s"}, not interlinked
+                </p>
+              </div>
+            ) : (
+              <div className="mb-0.5 flex shrink-0 items-baseline gap-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-foreground/60">
+                  {lane.name} ({visibleIds.length})
+                </h3>
+                <p className="text-[11px] text-foreground/50">
+                  {totalCount} page{totalCount === 1 ? "" : "s"} total
+                </p>
+              </div>
+            )}
+            <div
+              className="relative z-0 flex flex-wrap content-start gap-x-1 gap-y-0.5 overflow-hidden"
+              style={{ maxHeight: MAX_VISIBLE_ROWS * PILL_ROW_HEIGHT_PX }}
+            >
               {visibleIds
                 .map((id) => nodesById.get(id))
                 .filter((candidate): candidate is GraphNode => candidate !== undefined)
@@ -363,9 +390,14 @@ export default function SwimLaneCanvas({
                       searchRevealedIds.has(node.id) ||
                       lane.hiddenNodeIds.includes(node.id)
                     }
-                    isDimmed={
-                      (highlightedIds != null && !highlightedIds.has(node.id)) ||
-                      searchDimmedIds.has(node.id)
+                    isDimmed={searchDimmedIds.has(node.id)}
+                    isHiddenBySelection={
+                      highlightedIds != null && !highlightedIds.has(node.id)
+                    }
+                    isConnected={
+                      highlightedIds != null &&
+                      node.id !== activeNodeId &&
+                      highlightedIds.has(node.id)
                     }
                     onClick={handlePillClick}
                     pillRef={(el) => {

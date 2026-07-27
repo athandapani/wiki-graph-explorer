@@ -77,18 +77,24 @@ describe("components/graph/SwimLaneCanvas.tsx", () => {
     expect(source).toContain("getFolderColor(targetNode.folder, isDark)");
   });
 
-  it("dims nodes that are not the active node and not directly connected to it", () => {
+  it("hides nodes that are not the active node and not directly connected to it", () => {
     expect(source).toContain(
       "new Set([activeNodeId, ...getRelatedNodeIds(activeNodeId, edges)])",
     );
     expect(source).toContain("highlightedIds != null && !highlightedIds.has(node.id)");
   });
 
-  it("TOR-03-Z3ApPfB: dims by search score as well as by selection, without either erasing the other", () => {
-    // Both dimming sources OR together — a search-dimmed pill must stay dimmed while a node is
-    // selected, and vice versa. Behavior is covered for real in tests/swim-lane-canvas.test.tsx.
+  it("TOR-03-Z3ApPfB: dims by search score when no selection is active, and hides by selection (fully invisible, not merely dimmed) once a node is clicked", () => {
+    // isDimmed (partial fade — TOR-03-Z3ApPfB's "dimmed") is search-only, so a pure search query
+    // with no active selection still reads as dimmed, not hidden. isHiddenBySelection (fully
+    // invisible) is selection-only and takes visual precedence once a node is clicked — the board
+    // enters a focus mode where cluster-exclusion supersedes search-relevance fading. Behavior is
+    // covered for real in tests/swim-lane-canvas.test.tsx.
     expect(source).toContain("computeSearchDimmedNodeIds(nodes, searchScores ?? null, relevanceThreshold)");
-    expect(source).toMatch(/isDimmed=\{[\s\S]*?highlightedIds[\s\S]*?\|\|[\s\S]*?searchDimmedIds\.has\(node\.id\)[\s\S]*?\}/);
+    expect(source).toContain("isDimmed={searchDimmedIds.has(node.id)}");
+    expect(source).toMatch(
+      /isHiddenBySelection=\{[\s\S]*?highlightedIds != null && !highlightedIds\.has\(node\.id\)[\s\S]*?\}/,
+    );
   });
 
   it("renders the connector-line svg behind the pill nodes (negative z-index)", () => {
@@ -100,7 +106,7 @@ describe("components/graph/SwimLaneCanvas.tsx", () => {
     // unambiguous stacking-context member above the connector lines, regardless of any future
     // change to pill or lane styling — a pill's text must never be visually covered by a line.
     expect(source).toContain(
-      'className="relative z-0 flex flex-1 flex-wrap content-start gap-1 overflow-hidden"',
+      'className="relative z-0 flex flex-wrap content-start gap-x-1 gap-y-0.5 overflow-hidden"',
     );
   });
 
@@ -137,7 +143,11 @@ describe("components/graph/SwimLaneCanvas.tsx", () => {
 
   it("TOR-06-JuNSwaW: renders each lane as a tinted rounded container with a heading and a page-count descriptor", () => {
     expect(source).toContain("rounded-lg");
-    expect(source).toContain('backgroundColor: `${accent}${isDark ? "1a" : "0f"}`');
+    // Flat, folder-agnostic tint (not per-folder accent) — still a background distinguishing the
+    // lane from the board background, just uniform across lanes so color reads only on pills.
+    expect(source).toContain(
+      'backgroundColor: isDark ? "rgba(0, 0, 0, 0.45)" : "rgba(0, 0, 0, 0.035)"',
+    );
     expect(source).toMatch(/\{totalCount\} page\{totalCount === 1 \? "" : "s"\} total/);
   });
 
