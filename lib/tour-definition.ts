@@ -36,6 +36,11 @@ export const TOUR_DEFINITION: TourStep[] = [
   },
 ];
 
+export function isTourAvailable(tour: TourStep[], nodeIds: Set<string> | string[]): boolean {
+  const ids = nodeIds instanceof Set ? nodeIds : new Set(nodeIds);
+  return tour.every((step) => ids.has(step.nodeId));
+}
+
 export interface TourValidationResult {
   valid: boolean;
   errors: string[];

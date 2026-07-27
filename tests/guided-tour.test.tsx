@@ -22,6 +22,40 @@ describe("GuidedTour", () => {
     render(
       <GuidedTour
         tourDefinition={tourDefinition}
+        available={true}
+        stepIndex={null}
+        onStart={onStart}
+        onNext={() => {}}
+        onExit={() => {}}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("Take a tour"));
+    expect(onStart).toHaveBeenCalledOnce();
+  });
+
+  it("TOR-08-6uTWvws: renders nothing when available is false and no tour is active", () => {
+    const { container } = render(
+      <GuidedTour
+        tourDefinition={tourDefinition}
+        available={false}
+        stepIndex={null}
+        onStart={() => {}}
+        onNext={() => {}}
+        onExit={() => {}}
+      />,
+    );
+
+    expect(screen.queryByText("Take a tour")).toBeNull();
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('TOR-08-rfVJZHR: renders the "Take a tour" control normally when available is true', () => {
+    const onStart = vi.fn();
+    render(
+      <GuidedTour
+        tourDefinition={tourDefinition}
+        available={true}
         stepIndex={null}
         onStart={onStart}
         onNext={() => {}}
@@ -37,6 +71,7 @@ describe("GuidedTour", () => {
     render(
       <GuidedTour
         tourDefinition={tourDefinition}
+        available={true}
         stepIndex={1}
         onStart={() => {}}
         onNext={() => {}}
@@ -52,6 +87,7 @@ describe("GuidedTour", () => {
     render(
       <GuidedTour
         tourDefinition={tourDefinition}
+        available={true}
         stepIndex={1}
         onStart={() => {}}
         onNext={onNext}
@@ -69,6 +105,7 @@ describe("GuidedTour", () => {
     render(
       <GuidedTour
         tourDefinition={tourDefinition}
+        available={true}
         stepIndex={4}
         onStart={() => {}}
         onNext={() => {}}
@@ -86,6 +123,7 @@ describe("GuidedTour", () => {
     render(
       <GuidedTour
         tourDefinition={tourDefinition}
+        available={true}
         stepIndex={2}
         onStart={() => {}}
         onNext={() => {}}

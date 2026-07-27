@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TOUR_DEFINITION, validateTourDefinition } from "../lib/tour-definition";
+import { isTourAvailable, TOUR_DEFINITION, validateTourDefinition } from "../lib/tour-definition";
 import tourEdgesFixture from "./fixtures/tour-edges.json";
 
 describe("TOUR_DEFINITION shape", () => {
@@ -74,5 +74,22 @@ describe("validateTourDefinition", () => {
   it("TOR-08-CE4svkF: the shipped TOUR_DEFINITION validates against a real fixture of its actual graph edges", () => {
     const result = validateTourDefinition(TOUR_DEFINITION, tourEdgesFixture.edges);
     expect(result).toEqual({ valid: true, errors: [] });
+  });
+});
+
+describe("isTourAvailable", () => {
+  const tour = [
+    { nodeId: "a", caption: "A" },
+    { nodeId: "b", caption: "B" },
+    { nodeId: "c", caption: "C" },
+    { nodeId: "d", caption: "D" },
+  ];
+
+  it("TOR-08-rfVJZHR: returns true when every tour node id is present", () => {
+    expect(isTourAvailable(tour, ["a", "b", "c", "d", "extra"])).toBe(true);
+  });
+
+  it("TOR-08-6uTWvws: returns false when one tour node id is absent", () => {
+    expect(isTourAvailable(tour, ["a", "b", "c"])).toBe(false);
   });
 });

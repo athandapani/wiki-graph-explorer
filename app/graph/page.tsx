@@ -31,7 +31,7 @@ import {
   writeStoredCustomAccent,
   writeStoredPreset,
 } from "@/lib/theme-presets";
-import { TOUR_DEFINITION } from "@/lib/tour-definition";
+import { isTourAvailable, TOUR_DEFINITION } from "@/lib/tour-definition";
 
 // react-force-graph-2d touches canvas/window at module scope, which breaks Next's build-time
 // prerender pass even inside a "use client" file — ssr: false keeps it out of that pass.
@@ -75,6 +75,15 @@ export default function GraphPage() {
   const { query, setQuery, scores, isSearchActive, hasResults, matchCount } = useSearchRanking(
     vectorIndex ?? [],
   );
+  // TOR-08-6uTWvws/TOR-08-rfVJZHR: the curated tour is hand-bound to the demo vault's node ids
+  // (ConOps §8) — a --serve/local build pointed at a different vault won't have them, so the
+  // control hides itself rather than offering a tour that can't resolve to real nodes.
+  const tourAvailable = graphData
+    ? isTourAvailable(
+        TOUR_DEFINITION,
+        graphData.nodes.map((node) => node.id),
+      )
+    : false;
   const resetViewRef = useRef<(() => void) | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -254,6 +263,7 @@ export default function GraphPage() {
           <div className="flex items-center gap-2">
             <GuidedTour
               tourDefinition={TOUR_DEFINITION}
+              available={tourAvailable}
               stepIndex={tourStepIndex}
               onStart={handleTourStart}
               onNext={handleTourNext}
