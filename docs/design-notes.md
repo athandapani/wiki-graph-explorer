@@ -676,6 +676,14 @@ TOR-04-F5cdTRd, TOR-04-9JDfgAA).
 
 ---
 
+## 58a. Tour Availability Guard: Hide Control When Vault Doesn't Match Tour Definition (Epic dSVLDfm)
+
+**Decision:** The "Take a tour" control automatically hides itself when the loaded `graph-data.json` doesn't contain every node id referenced by the static `TOUR_DEFINITION`. An `isTourAvailable(tour: TourDefinition, nodeIds: Set<string>): boolean` helper function in `lib/tour-definition.ts` checks each tour step's node id against the loaded node set. When `available` is false and no tour is active, `GuidedTour.tsx` renders `null` (no button); when `available` is false but a tour is already running, the component leaves it alone (in-progress tours complete undisturbed). When `available` is true, the "Take a tour" button renders normally.
+
+**Rationale:** The tour is hand-curated for the deployed public vault (`ai-adoption-wiki/wiki`) and references specific node ids (e.g., 5 nodes in the current tour). When a developer uses the CLI's `--serve` flag or builds locally against a different vault, those node ids may not exist, causing the tour to crash when stepped or when the user clicks "Next". The guard prevents the button from appearing at all in such cases, eliminating silent failures. The check is pure (no side effects) and runs once at `/graph` page load, after `graph-data.json` is fetched. An already-active tour (mid-walk) is deliberately left alone — users who initiated the tour before the mismatch becomes apparent should be able to complete what they started. See Epic dSVLDfm handoff for TOR coverage (TOR-08-6uTWvws, TOR-08-rfVJZHR) and live-verified behavior via `playwright-cli`.
+
+---
+
 ## 59. Keyboard De-escalation Chain: Ordered Priority for Dismissible UI States (Epic eMNbiFL)
 
 **Decision:** A single `useEscapeChain` hook (`hooks/useEscapeChain.ts`) manages Esc-key precedence
