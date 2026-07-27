@@ -1,5 +1,5 @@
-status: Implemented
+status: Complete
 implemented: 2026-07-27
-completed: —
-handoff: session-handoffs/epic-dSVLDfm-implemented.md
+completed: 2026-07-27
+handoff: session-handoffs/epic-dSVLDfm-complete.md
 requirements: TOR-08-6uTWvws, TOR-08-rfVJZHR
