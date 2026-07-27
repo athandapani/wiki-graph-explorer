@@ -1,16 +1,20 @@
 "use client";
 
+import { cosineSimilarity } from "../../lib/cosine-similarity";
+import type { VectorIndexEntry } from "../../lib/embeddings";
 import { getGithubSourceUrl } from "../../lib/github-source-link";
 import type { GraphEdge, GraphNode } from "./GraphCanvas";
 import { Legend } from "./Legend";
 import { getFolderColor } from "./nodeColor";
 import { PillNode } from "./PillNode";
 import { StatusDot } from "./StatusDot";
+import { MAX_RESULTS, RELEVANCE_THRESHOLD } from "./useSearchRanking";
 
 interface SidePanelProps {
   node: GraphNode | null;
   edges: GraphEdge[];
   allNodes: GraphNode[];
+  vectorIndex?: VectorIndexEntry[];
   isDark: boolean;
   onClose: () => void;
   onSelectNode: (node: GraphNode) => void;
@@ -39,6 +43,30 @@ export function getRelatedNodeIds(nodeId: string, edges: GraphEdge[]): string[] 
   return relatedIds;
 }
 
+// Distinct from getRelatedNodeIds (explicit Related/Referenced By wikilinks) — this surfaces
+// pages the vault author never linked but whose content is embedding-close to the selected page,
+// ordered by similarity rather than grouped by folder (grouping would discard that order).
+export function getSimilarNodes(
+  nodeId: string,
+  vectorIndex: VectorIndexEntry[],
+  allNodes: GraphNode[],
+  threshold: number,
+  limit: number,
+): GraphNode[] {
+  const target = vectorIndex.find((entry) => entry.id === nodeId);
+  if (!target) {
+    return [];
+  }
+  return vectorIndex
+    .filter((entry) => entry.id !== nodeId)
+    .map((entry) => ({ id: entry.id, score: cosineSimilarity(target.embedding, entry.embedding) }))
+    .filter((entry) => entry.score >= threshold)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map((entry) => allNodes.find((candidate) => candidate.id === entry.id))
+    .filter((candidate): candidate is GraphNode => candidate !== undefined);
+}
+
 export function groupNodesByFolder(nodes: GraphNode[]): { folder: string; nodes: GraphNode[] }[] {
   const order: string[] = [];
   const grouped = new Map<string, GraphNode[]>();
@@ -56,6 +84,7 @@ export function SidePanel({
   node,
   edges,
   allNodes,
+  vectorIndex = [],
   isDark,
   onClose,
   onSelectNode,
@@ -65,6 +94,10 @@ export function SidePanel({
     ? getRelatedNodeIds(node.id, edges)
         .map((id) => allNodes.find((candidate) => candidate.id === id))
         .filter((candidate): candidate is GraphNode => candidate !== undefined)
+    : [];
+
+  const similarNodes = node
+    ? getSimilarNodes(node.id, vectorIndex, allNodes, RELEVANCE_THRESHOLD, MAX_RESULTS)
     : [];
 
   // Below md (768px), the panel is always a `fixed` bottom-sheet overlay rather than a
@@ -151,6 +184,22 @@ export function SidePanel({
           ) : (
             <p className="mt-1 text-sm text-foreground/60">No connected pages.</p>
           )}
+          {similarNodes.length > 0 ? (
+            <>
+              <h3 className="mt-4 text-sm font-semibold">Semantically similar pages</h3>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {similarNodes.map((similar) => (
+                  <PillNode
+                    key={similar.id}
+                    node={similar}
+                    isActive={false}
+                    isDark={isDark}
+                    onClick={onSelectNode}
+                  />
+                ))}
+              </div>
+            </>
+          ) : null}
           {node.sourceLinks.length > 0 ? (
             <>
               <h3 className="mt-4 text-sm font-semibold">Cited sources</h3>

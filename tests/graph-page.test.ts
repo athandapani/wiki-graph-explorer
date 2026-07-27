@@ -103,6 +103,27 @@ describe("app/graph/page.tsx", () => {
     expect(source).toContain("hasResults={hasResults}");
   });
 
+  it("TOR-03-pP3y0uV: computes ranked results and wires them into SearchInput", () => {
+    expect(source).toContain(
+      "getRankedResults(scores, graphData?.nodes ?? [], RELEVANCE_THRESHOLD, MAX_RESULTS)",
+    );
+    expect(source).toContain("results={rankedResults}");
+  });
+
+  it("TOR-03-buN9A2Q: wires a results-list click into the same selected-node state as SidePanel", () => {
+    expect(source).toContain("onSelectResult={handleSelectResult}");
+    expect(source).toContain("function handleSelectResult(id: string): void {");
+    expect(source).toContain("graphData?.nodes.find((candidate) => candidate.id === id)");
+  });
+
+  it("TOR-03-zOzfWVb: wires the loaded vectorIndex into SidePanel", () => {
+    const sidePanelProps = source.slice(
+      source.indexOf("<SidePanel"),
+      source.indexOf("/>", source.indexOf("<SidePanel")),
+    );
+    expect(sidePanelProps).toContain("vectorIndex={vectorIndex ?? []}");
+  });
+
   it("TOR-06-DRtjcOk: renders a persistent OptionsPanel wired to layoutMode state, defaulting to swim-lane", () => {
     expect(source).toContain("<OptionsPanel");
     expect(source).toContain('useState<LayoutMode>("swim-lane")');

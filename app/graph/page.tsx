@@ -19,7 +19,12 @@ import { SidePanel } from "@/components/graph/SidePanel";
 import SwimLaneCanvas from "@/components/graph/SwimLaneCanvas";
 import { ThemePresetPicker } from "@/components/graph/ThemePresetPicker";
 import { ThemeToggle } from "@/components/graph/ThemeToggle";
-import { RELEVANCE_THRESHOLD, useSearchRanking } from "@/components/graph/useSearchRanking";
+import {
+  getRankedResults,
+  MAX_RESULTS,
+  RELEVANCE_THRESHOLD,
+  useSearchRanking,
+} from "@/components/graph/useSearchRanking";
 import { useEscapeChain } from "@/hooks/useEscapeChain";
 import type { VectorIndexEntry } from "@/lib/embeddings";
 import { setActivePreset } from "@/components/graph/nodeColor";
@@ -75,6 +80,7 @@ export default function GraphPage() {
   const { query, setQuery, scores, isSearchActive, hasResults, matchCount } = useSearchRanking(
     vectorIndex ?? [],
   );
+  const rankedResults = getRankedResults(scores, graphData?.nodes ?? [], RELEVANCE_THRESHOLD, MAX_RESULTS);
   // TOR-08-6uTWvws/TOR-08-rfVJZHR: the curated tour is hand-bound to the demo vault's node ids
   // (ConOps §8) — a --serve/local build pointed at a different vault won't have them, so the
   // control hides itself rather than offering a tour that can't resolve to real nodes.
@@ -199,6 +205,13 @@ export default function GraphPage() {
     setTourStepIndex(index);
   }
 
+  function handleSelectResult(id: string): void {
+    const found = graphData?.nodes.find((candidate) => candidate.id === id);
+    if (found) {
+      setSelectedNode(found);
+    }
+  }
+
   function handleTourStart(): void {
     focusTourStep(0);
   }
@@ -257,6 +270,8 @@ export default function GraphPage() {
             isActive={isSearchActive}
             hasResults={hasResults}
             matchCount={matchCount}
+            results={rankedResults}
+            onSelectResult={handleSelectResult}
           />
         }
         options={
@@ -384,6 +399,7 @@ export default function GraphPage() {
           node={selectedNode}
           edges={graphData?.edges ?? []}
           allNodes={graphData?.nodes ?? []}
+          vectorIndex={vectorIndex ?? []}
           isDark={isDark}
           onClose={() => setSelectedNode(null)}
           onSelectNode={setSelectedNode}
