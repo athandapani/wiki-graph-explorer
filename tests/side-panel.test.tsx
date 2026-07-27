@@ -336,6 +336,119 @@ describe("SidePanel start-anywhere card", () => {
   });
 });
 
+describe("SidePanel semantically similar pages", () => {
+  it("TOR-03-zOzfWVb: displays the panel listing another page within the relevance threshold", () => {
+    const selected = node({ id: "a" });
+    const similar = node({ id: "b", title: "Similar Page" });
+
+    render(
+      <SidePanel
+        node={selected}
+        edges={[]}
+        allNodes={[selected, similar]}
+        vectorIndex={[
+          { id: "a", embedding: [1, 0] },
+          { id: "b", embedding: [0.99, 0.01] },
+        ]}
+        isDark={false}
+        onClose={() => {}}
+        onSelectNode={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("Semantically similar pages")).toBeTruthy();
+    expect(screen.getByText("Similar Page")).toBeTruthy();
+  });
+
+  it("TOR-03-zOzfWVb: orders multiple qualifying pages from highest to lowest similarity", () => {
+    const selected = node({ id: "a" });
+    const high = node({ id: "high", title: "High Similarity" });
+    const low = node({ id: "low", title: "Low Similarity" });
+
+    render(
+      <SidePanel
+        node={selected}
+        edges={[]}
+        allNodes={[selected, high, low]}
+        vectorIndex={[
+          { id: "a", embedding: [1, 0] },
+          { id: "low", embedding: [0.7, 0.3] },
+          { id: "high", embedding: [0.99, 0.01] },
+        ]}
+        isDark={false}
+        onClose={() => {}}
+        onSelectNode={() => {}}
+      />,
+    );
+
+    const pills = screen.getAllByText(/Similarity$/);
+    expect(pills.map((pill) => pill.textContent)).toEqual(["High Similarity", "Low Similarity"]);
+  });
+
+  it("TOR-03-zOzfWVb: caps the list at 10 pages even when more qualify (avoids a wall of pills in a densely-related vault)", () => {
+    const selected = node({ id: "a" });
+    const others = Array.from({ length: 15 }, (_, i) => node({ id: `p${i}`, title: `Page ${i}` }));
+
+    render(
+      <SidePanel
+        node={selected}
+        edges={[]}
+        allNodes={[selected, ...others]}
+        vectorIndex={[
+          { id: "a", embedding: [1, 0] },
+          ...others.map((other) => ({ id: other.id, embedding: [0.99, 0.01] })),
+        ]}
+        isDark={false}
+        onClose={() => {}}
+        onSelectNode={() => {}}
+      />,
+    );
+
+    expect(screen.getAllByText(/^Page \d+$/)).toHaveLength(10);
+  });
+
+  it("TOR-03-bTe5Zva: omits the panel when no other page meets the relevance threshold, while the rest of the panel renders normally", () => {
+    const selected = node({ id: "a", title: "Selected Page" });
+    const unrelated = node({ id: "b", title: "Unrelated Page" });
+
+    render(
+      <SidePanel
+        node={selected}
+        edges={[]}
+        allNodes={[selected, unrelated]}
+        vectorIndex={[
+          { id: "a", embedding: [1, 0] },
+          { id: "b", embedding: [0, 1] },
+        ]}
+        isDark={false}
+        onClose={() => {}}
+        onSelectNode={() => {}}
+      />,
+    );
+
+    expect(screen.queryByText("Semantically similar pages")).toBeNull();
+    expect(screen.getByText("Selected Page")).toBeTruthy();
+    expect(screen.getByText("Connected pages")).toBeTruthy();
+  });
+
+  it("omits the panel when vectorIndex is not provided", () => {
+    const selected = node({ id: "a" });
+
+    render(
+      <SidePanel
+        node={selected}
+        edges={[]}
+        allNodes={[selected]}
+        isDark={false}
+        onClose={() => {}}
+        onSelectNode={() => {}}
+      />,
+    );
+
+    expect(screen.queryByText("Semantically similar pages")).toBeNull();
+  });
+});
+
 describe("SidePanel tour caption", () => {
   it("TOR-08-5Vj2zkG: displays the tour caption alongside the selected node's detail", () => {
     const selected = node({ id: "a", title: "Digital Second Brain" });

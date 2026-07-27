@@ -751,6 +751,36 @@ arrive in quick succession — a fresh signal value on each press ensures each p
 
 ---
 
+## 62. Ranked Search Results and Semantic Neighbors: Reusing Embedding-Space Similarity (Epic wle4Fpe)
+
+**Decision:** The search results dropdown and the "Semantically similar pages" side-panel section both
+use cosine-similarity scoring against the same embedding space. The `getRankedResults()` function
+(in `useSearchRanking.ts`) joins live query-similarity scores with node titles, filters by
+`RELEVANCE_THRESHOLD = 0.3`, sorts descending by score, and caps at `MAX_RESULTS = 10` for rendering
+in the search results dropdown in `SearchInput.tsx`. The `getSimilarNodes()` function (in
+`SidePanel.tsx`) applies identical scoring and capping logic to the currently-selected node,
+computing its cosine similarity against every other page's precomputed embedding (from
+`vector-index.json`), and rendering the results as flat (non-grouped) clickable pills in descending-
+similarity order. Both features reuse the same `RELEVANCE_THRESHOLD` and `MAX_RESULTS` constants
+and the same `cosineSimilarity()` utility from `lib/cosine-similarity.ts`, guaranteeing consistent
+filtering and ranking behavior. The similarity computation for "semantically similar pages" is
+identical to search scoring, differing only in the query source: search uses a live-typed-and-
+embedded query, while semantic neighbors use the target node's own precomputed embedding.
+
+**Rationale:** Embeddings from `@huggingface/transformers` are the ground truth for semantic
+similarity (design-notes.md §4, §19). Reusing the same similarity metric across both the search
+results dropdown and the semantic-neighbors panel ensures visitors see consistent, predictable
+behavior. The flat (non-grouped) rendering of semantic neighbors contrasts with the folder-grouped
+"Connected pages" section, emphasizing that similarity is a different relation type than explicit
+wikilinks. Capping both at `MAX_RESULTS = 10` keeps the UI legible while still providing meaningful
+recommendations — live verification against real vaults showed that lowering this cap below 10
+missed relevant results, while raising it beyond 10 overwhelmed users with too many suggestions
+(Epic wle4Fpe handoff). The shared constants ensure that any future tuning of the threshold or
+limit applies uniformly to both features. See Epic wle4Fpe handoff for live-verification detail
+(154-page vault, dense embedding similarity, threshold and cap validation).
+
+---
+
 ## 56. Known Issues and Deferred Work
 
 - **Force-directed layout settle time:** Against the real `second-brain` vault (47 nodes, 96 edges),

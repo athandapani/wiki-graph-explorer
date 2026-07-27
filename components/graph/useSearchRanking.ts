@@ -6,6 +6,7 @@ import type { VectorIndexEntry } from "../../lib/embeddings";
 
 export const RELEVANCE_THRESHOLD = 0.3;
 export const SEARCH_DEBOUNCE_MS = 250;
+export const MAX_RESULTS = 10;
 
 export function rankBySimilarity(
   queryEmbedding: number[],
@@ -55,6 +56,25 @@ export function computeMatchCount(
     }
   }
   return count;
+}
+
+// Joins the raw id->score ranking with node titles so the results list has something readable
+// to render (rankBySimilarity only ever sees ids + embeddings, never titles).
+export function getRankedResults(
+  scores: Map<string, number> | null,
+  nodes: Array<{ id: string; title: string }>,
+  threshold: number,
+  limit: number,
+): Array<{ id: string; title: string; score: number }> {
+  if (scores == null) {
+    return [];
+  }
+  const titleById = new Map(nodes.map((node) => [node.id, node.title]));
+  return Array.from(scores.entries())
+    .filter(([, score]) => score >= threshold)
+    .map(([id, score]) => ({ id, title: titleById.get(id) ?? id, score }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
 }
 
 interface UseSearchRankingResult {

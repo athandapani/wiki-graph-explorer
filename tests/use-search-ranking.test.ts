@@ -5,6 +5,7 @@ import type { VectorIndexEntry } from "../lib/embeddings";
 import {
   computeMatchCount,
   computeSearchDimmedNodeIds,
+  getRankedResults,
   rankBySimilarity,
 } from "../components/graph/useSearchRanking";
 
@@ -82,6 +83,44 @@ describe("computeMatchCount", () => {
 
   it("TOR-03-1LlqKF1: returns 0 when a ranking exists but nothing clears the threshold", () => {
     expect(computeMatchCount(new Map([["a", 0.05]]), 0.3)).toBe(0);
+  });
+});
+
+describe("getRankedResults", () => {
+  const nodes = [
+    { id: "a", title: "Page A" },
+    { id: "b", title: "Page B" },
+    { id: "c", title: "Page C" },
+  ];
+
+  it("TOR-03-pP3y0uV: returns only above-threshold entries sorted from highest to lowest score", () => {
+    const scores = new Map([
+      ["a", 0.5],
+      ["b", 0.9],
+      ["c", 0.1],
+    ]);
+
+    const results = getRankedResults(scores, nodes, 0.3, 10);
+
+    expect(results.map((r) => r.id)).toEqual(["b", "a"]);
+    expect(results.map((r) => r.title)).toEqual(["Page B", "Page A"]);
+  });
+
+  it("returns an empty list when scores is null (query cleared / not yet ranked)", () => {
+    expect(getRankedResults(null, nodes, 0.3, 10)).toEqual([]);
+  });
+
+  it("respects limit, returning at most that many entries even when more qualify", () => {
+    const scores = new Map([
+      ["a", 0.9],
+      ["b", 0.8],
+      ["c", 0.7],
+    ]);
+
+    const results = getRankedResults(scores, nodes, 0.3, 2);
+
+    expect(results).toHaveLength(2);
+    expect(results.map((r) => r.id)).toEqual(["a", "b"]);
   });
 });
 

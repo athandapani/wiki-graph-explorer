@@ -61,6 +61,39 @@ describe("SearchInput result count", () => {
   });
 });
 
+describe("SearchInput ranked results", () => {
+  const results = [
+    { id: "b", title: "Page B", score: 0.9 },
+    { id: "a", title: "Page A", score: 0.5 },
+  ];
+
+  it("TOR-03-pP3y0uV: renders result titles in the given (descending-score) order", () => {
+    renderInput({ value: "query", isActive: true, results });
+
+    const buttons = screen.getAllByRole("button");
+    expect(buttons.map((button) => button.textContent)).toEqual(["Page B", "Page A"]);
+  });
+
+  it("TOR-03-buN9A2Q: clicking a result invokes onSelectResult with that result's id", () => {
+    const onSelectResult = vi.fn();
+    renderInput({ value: "query", isActive: true, results, onSelectResult });
+
+    fireEvent.click(screen.getByText("Page A"));
+
+    expect(onSelectResult).toHaveBeenCalledWith("a");
+  });
+
+  it("omits the results dropdown when isActive is false", () => {
+    renderInput({ value: "query", isActive: false, results });
+    expect(screen.queryByText("Page B")).toBeNull();
+  });
+
+  it("omits the results dropdown when results is empty", () => {
+    renderInput({ value: "query", isActive: true, results: [] });
+    expect(screen.queryByRole("button")).toBeNull();
+  });
+});
+
 describe("SearchInput focus shortcuts", () => {
   it("TOR-09-O0Wu0vg: Ctrl+K focuses the search input from outside any text input", () => {
     // Given focus is outside any text input
