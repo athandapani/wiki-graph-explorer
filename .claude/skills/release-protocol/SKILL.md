@@ -47,7 +47,23 @@ releases are cut and tagged on `master` too.
    git push origin vX.Y.Z
    ```
 
+7. **Publish to npm** (ASK USER FIRST — this is a real, public, irreversible publish) — from the
+   clean `master` checkout just pushed (which now matches tag `vX.Y.Z`):
+   ```bash
+   npm whoami          # confirm logged in as the package owner before publishing
+   npm publish
+   ```
+   There is no CI workflow that does this — `.github/workflows/deploy.yml` only builds and
+   deploys the GitHub Pages site (see the Note below). Publishing to npm is a separate, manual
+   step that is easy to forget after a release, silently leaving the registry version behind
+   `package.json`/the git tag. Confirm afterward:
+   ```bash
+   npm view wiki-graph-explorer version   # should now equal X.Y.Z
+   ```
+
 **Note:** Deployment target is GitHub Pages via a GitHub Actions workflow
 (`.github/workflows/deploy.yml`) that builds the static export and publishes it on every push to
 `master` — pushing the release commit in step 6 triggers a real deploy automatically; no
-separate publish step is needed. Check `gh run list --limit 5` to confirm the run succeeded.
+separate publish step is needed for the site. Check `gh run list --limit 5` to confirm the run
+succeeded. This is distinct from the npm publish in step 7, which does need a separate manual
+step.
