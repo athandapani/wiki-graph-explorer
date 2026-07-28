@@ -15,6 +15,27 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.3.0] — 28-Jul-2026
+
+### Added
+- Ranked, clickable search results list (top 10 matches, descending similarity score) beneath the
+  search input — each entry selects the node and opens its side panel detail. A complementary
+  "Semantically similar pages" panel on the side panel runs the same embedding-similarity
+  machinery starting from the currently selected node instead of a typed query, surfacing pages
+  the vault author never linked but whose content is embedding-close to the page being viewed.
+  (Epic wle4Fpe)
+- An animated demo GIF near the top of the README, before "Getting Started," showing the real
+  `/graph` page's click-to-explore interaction. (Epic 1wZdm1k)
+
+### Fixed
+- Swim-lane pill titles now truncate at ~25 characters with an ellipsis (full title still
+  reachable via the pill's tooltip and the side panel), preventing oversized pills from crowding
+  neighbors and breaking lane layout at default viewport size. A folder/taxonomy value whose nodes
+  are all zero-degree (permanently hidden from the board) no longer wins one of the 4 primary
+  lane slots by raw node count alone — it now folds into "Other" instead. (Epic XZj8HYu)
+
+---
+
 ## [1.2.0] — 24-Jul-2026
 
 ### Added
