@@ -59,6 +59,13 @@ full requirements/epic history.
   CLI's real dependencies, not the web app's). Add `--serve` and it opens the graph straight in
   your browser, live now on npm — see [Getting Started](#getting-started) below.
 
+## Demo
+
+Click a page, then click a related page — the side panel updates and the connector lines
+animate to show how they're linked. This is the real `/graph` page, not a mockup:
+
+![Clicking through the graph: a node opens the side panel, then a connected page's node updates it again](docs/images/graph-demo.gif)
+
 ## Screenshots
 
 All screenshots below are from the public demo vault
