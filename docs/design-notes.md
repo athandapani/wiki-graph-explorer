@@ -971,3 +971,34 @@ light, red↔magenta dark) persist, untouched.
 
 ---
 
+## 63. README Demo GIF: Ephemeral Recording Pipeline, No New Project Dependencies (Epic 1wZdm1k)
+
+**Decision:** The animated demo GIF embedded in `README.md` (`docs/images/graph-demo.gif`) was
+produced entirely outside the project's own dependency tree. A standalone Playwright script (run
+from a scratch directory, never committed) launched Chromium against the running `/graph` page
+and recorded a `.webm` via `context.recordVideo` while performing the click-to-explore sequence
+(click a pill → side panel opens → click a connected pill → panel updates with connector-line
+animation). Playwright's own bundled `ffmpeg` binary (the same one Playwright uses internally for
+its own video pipeline, found under its browser cache directory) decoded that `.webm` into an
+8fps, 720px-wide PNG frame sequence — that particular ffmpeg build has no GIF encoder or palette
+filters compiled in, so it can decode but not produce the final GIF. A throwaway Node project
+(its own `package.json`, `gif-encoder-2` + `pngjs`, installed and discarded in the scratch
+directory) assembled those frames into the final animated GIF. Only the finished `.gif` was
+copied into `docs/images/`; the recording, frame sequence, and temp Node project were never
+committed and left no trace in the repo.
+
+**Rationale:** No system-wide `ffmpeg` was available, and adding a heavyweight media-encoding
+dependency (`ffmpeg-static`, `gif-encoder-2`, etc.) to the project's actual `package.json` for a
+one-time asset-generation task would be a poor tradeoff — those packages would sit unused in
+every future `npm install` for a task that, if ever repeated (e.g., after a UI redesign), can
+just as easily be redone from scratch the same way. Playwright's `recordVideo` and its bundled
+ffmpeg were already present (installed for `playwright-cli` verification work elsewhere in this
+project) and needed no new install; `gif-encoder-2`/`pngjs` are small, pure-JS, no native
+compilation required, making them safe and fast to install/discard in an isolated temp project.
+This decision is recorded here specifically so that regenerating the demo GIF in the future
+doesn't require re-deriving the same "no ffmpeg, no permanent new deps" approach from scratch —
+the pipeline (record → decode via Playwright's ffmpeg → encode via a throwaway gif-encoder-2
+project) is the reusable playbook. See Epic 1wZdm1k handoff for full step-by-step detail.
+
+---
+
