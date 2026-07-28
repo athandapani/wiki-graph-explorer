@@ -15,6 +15,19 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.3.1] — 28-Jul-2026
+
+### Fixed
+- Added the missing `repository`/`homepage`/`bugs` fields to `package.json`. Without them, npm's
+  registry page couldn't resolve the README's relative screenshot paths (`docs/images/...`) to
+  `raw.githubusercontent.com`, so every screenshot rendered broken on
+  npmjs.com/package/wiki-graph-explorer even though the same README displays correctly on GitHub.
+- Removed a stray `"private": true` left over from the original `create-next-app` scaffold, which
+  had been silently blocking `npm publish` outright (prior releases apparently stripped it
+  locally, published, and never committed the removal — this is now fixed permanently).
+
+---
+
 ## [1.3.0] — 28-Jul-2026
 
 ### Added
