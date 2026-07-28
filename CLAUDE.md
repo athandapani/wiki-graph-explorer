@@ -145,7 +145,9 @@ Before marking an epic complete, run:
 
 ## Git Workflow
 
-- Branch strategy: `develop` for active work, `main` for releases.
+- Branch strategy: `master` only — there is no `develop`/`main` split. All epic and hotfix work
+  branches off `master` and merges back into it directly; releases are cut and tagged on `master`
+  too (see the `release-protocol` skill).
 - Epic feature branches: `feature/epic-<id>-<short-name>`, where `<id>` is either a legacy
   integer (pre-v2.0.0 epics) or a 7-character alphanumeric ID (v2.0.0+), and `<short-name>` is
   derived from the epic spec filename.
