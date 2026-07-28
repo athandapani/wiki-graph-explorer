@@ -163,6 +163,25 @@ export default function SwimLaneCanvas({
     return ids;
   }, [nodes, degreeById]);
 
+  // TOR-06-KruzYET: a folder/taxonomy value whose nodes are *all* zero-degree is permanently
+  // hidden from the board (nothing links to any of its nodes, so a click can never reveal one) —
+  // it shouldn't win one of the 4 primary lane slots by raw node count alone. Scans the full
+  // `nodes` prop, not just what's currently on the board, so it's correct regardless of reveal
+  // state.
+  const zeroDegreeOnlyFolders = useMemo(() => {
+    const hasNonZeroDegreeByFolder = new Map<string, boolean>();
+    for (const node of nodes) {
+      const isZeroDegree = (degreeById.get(node.id) ?? 0) === 0;
+      const alreadyHasNonZero = hasNonZeroDegreeByFolder.get(node.folder) ?? false;
+      hasNonZeroDegreeByFolder.set(node.folder, alreadyHasNonZero || !isZeroDegree);
+    }
+    const folders = new Set<string>();
+    for (const [folder, hasNonZero] of hasNonZeroDegreeByFolder) {
+      if (!hasNonZero) folders.add(folder);
+    }
+    return folders;
+  }, [nodes, degreeById]);
+
   const { baseNodes, revealableIds } = useMemo(() => {
     const revealable = new Set<string>();
     const base: GraphNode[] = [];
@@ -248,8 +267,8 @@ export default function SwimLaneCanvas({
   }, [zeroDegreeIds, revealableIds, laneNodes, nodesById]);
 
   const lanes = useMemo(
-    () => assignLanes(laneNodes, hiddenCandidateNodes),
-    [laneNodes, hiddenCandidateNodes],
+    () => assignLanes(laneNodes, hiddenCandidateNodes, zeroDegreeOnlyFolders),
+    [laneNodes, hiddenCandidateNodes, zeroDegreeOnlyFolders],
   );
 
   useLayoutEffect(() => {

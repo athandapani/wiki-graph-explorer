@@ -4,6 +4,16 @@ import { getFolderColor } from "./nodeColor";
 import { StatusDot } from "./StatusDot";
 import type { GraphNode } from "./GraphCanvas";
 
+// TOR-06-cSCqVtt: ~25 chars keeps a pill from crowding neighbors/breaking lane layout at default
+// viewport size; the full title stays reachable via the button's native title tooltip and the
+// side panel (SidePanel.tsx renders node.title untouched, so no change needed there).
+const PILL_TITLE_TRUNCATE_LENGTH = 25;
+
+function truncateTitle(title: string): string {
+  if (title.length <= PILL_TITLE_TRUNCATE_LENGTH) return title;
+  return `${title.slice(0, PILL_TITLE_TRUNCATE_LENGTH)}…`;
+}
+
 interface PillNodeProps {
   node: GraphNode;
   isActive: boolean;
@@ -48,7 +58,8 @@ export function PillNode({
       type="button"
       onClick={() => onClick(node)}
       aria-pressed={isActive}
-      className={`relative flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium leading-tight transition-all duration-300 ${
+      title={node.title}
+      className={`relative flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium leading-tight transition-all duration-300 ${
         isRevealed ? "border-dashed" : ""
       } ${isHiddenBySelection ? "pointer-events-none opacity-0" : isDimmed ? "opacity-30" : ""} ${isActive || isConnected ? "z-10" : ""}`}
       style={{
@@ -69,7 +80,7 @@ export function PillNode({
       }}
     >
       <StatusDot status={node.status} size={6} />
-      <span>{node.title}</span>
+      <span>{truncateTitle(node.title)}</span>
     </button>
   );
 }

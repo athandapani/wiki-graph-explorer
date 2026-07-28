@@ -332,7 +332,7 @@ using real DOM text for pill titles (not canvas-based rendering), CSS flexbox fo
 standard SVG `<path>` elements for connector lines. Each lane is a rounded container with a folder-tinted
 background (10% opacity via `{folderColor}1a` dark or `{folderColor}0f` light), an `<h3>` folder heading
 (uppercase, smaller font), and a "{N} pages total" page-count descriptor in a smaller, dimmed font. Pill
-buttons display full titles with `whitespace-nowrap` (no text truncation). A minimum lane height of 84px
+buttons display truncated titles with ellipsis at ~25 characters to prevent crowding neighbors and breaking lane layout, with full titles reachable via the button's native `title` attribute tooltip and the side panel. A minimum lane height of 84px
 ensures the heading, descriptor, and affordances are never clipped; remaining vertical space is
 distributed proportionally to lanes by their visible node count. Connector-line SVG is positioned
 absolutely with `z-index: -10` so lines render behind pill buttons and their text labels, preventing
@@ -353,8 +353,9 @@ more performant for static layouts, and provides exact control over interaction 
 the 950ms curved connector-line animation, variable line styles for revealed vs. normal connectors,
 z-index layering to keep lines non-occluding, and explicit folder headings/descriptors). The tinted
 backgrounds and headings make the folder taxonomy visible at a glance, helping visitors understand
-the vault's structure without requiring clicks. Full-title pill buttons (no truncation) keep page names
-legible at a glance. The "+N more" affordance surfaces the count of hidden peripheral nodes per lane
+the vault's structure without requiring clicks. Pill buttons truncate titles to ~25 characters (with
+full titles reachable via tooltip and side panel) to prevent crowding neighbors and breaking lane layout,
+keeping the board legible and responsive. The "+N more" affordance surfaces the count of hidden peripheral nodes per lane
 without requiring a side-panel lookup or search, making discovery explicit rather than silent (satisfies
 TOR-06-BxA7IRn and TOR-06-YjETzyC, Epic H0q48k8). No pan/zoom is needed in swim-lane mode (fixed layout),
 so the move away from `react-force-graph-2d` carries no UX cost and gains clarity and control.

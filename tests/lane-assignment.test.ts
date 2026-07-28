@@ -98,6 +98,36 @@ describe("assignLanes", () => {
     expect(namedLanes).not.toContain("delta");
   });
 
+  it("TOR-06-KruzYET: excludes an all-zero-degree folder from the 4 largest, folding it into 'Other'", () => {
+    const visible = [
+      { id: "a1", folder: "alpha" },
+      { id: "a2", folder: "alpha" },
+      { id: "b1", folder: "bravo" },
+      { id: "c1", folder: "charlie" },
+      { id: "d1", folder: "delta" },
+    ];
+    // "raw" has more total nodes than any other folder, but every one of them is hidden
+    // (zero-degree) — the caller marks it excludeFromRanking, so it must not win a named slot
+    // even though its raw count would otherwise place it above "delta".
+    const hidden = [
+      { id: "r1", folder: "raw" },
+      { id: "r2", folder: "raw" },
+      { id: "r3", folder: "raw" },
+      { id: "r4", folder: "raw" },
+    ];
+
+    const lanes = assignLanes(visible, hidden, new Set(["raw"]));
+
+    const namedLanes = lanes.slice(0, 4).map((lane) => lane.name);
+    expect(namedLanes).not.toContain("raw");
+    expect(namedLanes).toEqual(["alpha", "bravo", "charlie", "delta"]);
+
+    const otherLane = lanes.find((lane) => lane.name === "Other");
+    expect(otherLane).toBeDefined();
+    expect(otherLane?.nodeIds).toEqual([]);
+    expect(otherLane?.hiddenNodeIds.sort()).toEqual(["r1", "r2", "r3", "r4"]);
+  });
+
   it("TOR-06-a3pVfbc: breaks ties for the 4th lane slot alphabetically by folder name", () => {
     const nodes = [
       { id: "a1", folder: "alpha" },
