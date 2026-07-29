@@ -148,15 +148,31 @@ legitimately describes the local dev setup and expected directory structure.
 
 ---
 
-## 12. Related/Referenced By Links: Markdown Body Sections, Not Frontmatter
+## 12. Generic Wikilink Vault-Parsing: Full-Body Scan with Case-Insensitive Resolution
 
-**Decision:** The graph builder extracts directional links from `## Related` and `## Referenced By` Markdown body sections containing `[[slug|Title]]` wikilinks, rather than from YAML frontmatter keys.
+**Decision:** The graph builder extracts wikilinks from the entire Markdown body (not restricted to specific H2 sections), resolves targets by case-insensitive filename/title match (not exact-id match), excludes embed syntax (`![[name]]`), and logs unresolved wikilinks at DEBUG level (not WARN).
 
-**Rationale:** The original TOR wording specified frontmatter-based sourcing for these links (e.g., `Related: [...]` in the YAML header). However, the real Karpathy-pattern `second-brain` wiki stores these links exclusively as body-section H2 headers. Implementing the literal TOR wording produced zero edges against real data. This deviation was disclosed and user-approved during Epic rTWYZfw implementation; independently verified by manual inspection of real vault pages (e.g., `second-brain/wiki/concepts/deterministic-compiler-pipeline.md`). The implementation (via `lib/frontmatter-parser.ts#extractWikilinks()` and `lib/graph-builder.ts`) correctly parses body sections and is confirmed to work end-to-end against real vault data (41 nodes, 96 edges, all edges valid and sourced correctly).
+**Rationale:** The initial heading-gated extraction (`## Related`/`## Referenced By` sections) was specific to this project's own bespoke convention and did not work against real-world Obsidian/PKM vaults where wikilinks appear throughout body text. Epic 0utMknV generalized the parser to match Obsidian's own resolution model: case-insensitive matching by filename or title, supporting wikilinks anywhere in the body (a strict superset of the heading-gated behavior, so existing vaults using the heading convention continue to work unchanged). The full-body scan is implemented via `extractAllWikilinks()` in `lib/frontmatter-parser.ts` using a negative-lookbehind regex (`(?<!!)\[\[...`) to distinguish wikilinks from embeds; case-insensitive resolution is a `Map<lowercase, actual-id>` built during graph construction in `lib/graph-builder.ts` using a first-write-wins deterministic tie-break. Unresolved wikilinks (broken links, a common occurrence in real-world vaults) are logged at DEBUG via an optional `debug` callback, keeping WARN reserved for actual build failures (malformed frontmatter). Real-data verification: second-brain vault went from 96→104 edges (strict superset), same 41 nodes, confirming both backward compatibility and forward coverage.
 
 ---
 
-## 13. Taxonomy Node Colors: Validated Categorical Palette with Golden-Angle Overflow
+## 13. Optional Status Field Defaulting
+
+**Decision:** The `status` frontmatter field is optional; if missing, it defaults to `"unknown"`.
+
+**Rationale:** The `status` field (indicating content freshness: active/revisiting/dormant/unknown) is a convention specific to this project's own vaults. Real-world Obsidian/PKM vaults do not consistently use this field — many omit it entirely. Defaulting to `"unknown"` rather than failing the build allows the tool to work against arbitrary vaults without requiring every note to declare a status. Implemented in `lib/frontmatter-parser.ts` via the `parseFrontmatter()` function.
+
+---
+
+## 14. Tags Normalization: Array, String, or Inline Hashtags
+
+**Decision:** Tags are accepted in three formats and normalized to a single `tags: string[]` shape: YAML array (`tags: [a, b, c]`), comma/space-separated string (`tags: "a, b, c"` or `tags: "a b c"`), or inline `#hashtag` markup in the body text (`#topic` becomes a tag).
+
+**Rationale:** Real-world PKM vaults encode tags in all three ways depending on the vault's conventions and the page author's preference. Supporting all three formats via the `normalizeTags()` helper in `lib/frontmatter-parser.ts` allows the tool to work with heterogeneous vaults without requiring a pre-processing step. Inline hashtags (detected by the pattern `#[A-Za-z0-9][\w-]*`, distinguishing them from Markdown heading markers by the lack of a trailing space) are extracted from the body and merged with frontmatter tags.
+
+---
+
+## 16. Taxonomy Node Colors: Validated Categorical Palette with Golden-Angle Overflow
 
 **Decision:** Nodes are colored by folder (taxonomy) using a validated 8-hue categorical palette,
 sourced from and re-checked against the project's `dataviz` skill palette validator
@@ -180,7 +196,7 @@ since it touches slots outside this refresh's scope.
 
 ---
 
-## 14. Content-Freshness Status Dots: Deliberate Separation from Health/Severity Colors
+## 17. Content-Freshness Status Dots: Deliberate Separation from Health/Severity Colors
 
 **Decision:** Status dots (small circles rendered atop each node) indicate content freshness
 (active/revisiting/dormant/unknown). Colors are: active=#0ca30c (good-ish green), revisiting=#fab219
@@ -197,7 +213,7 @@ coherence.
 
 ---
 
-## 15. Dynamic Import Requirement for `react-force-graph-2d` in Static Export
+## 18. Dynamic Import Requirement for `react-force-graph-2d` in Static Export
 
 **Decision:** The GraphCanvas component is imported dynamically via `next/dynamic(..., { ssr: false })`
 in `app/graph/page.tsx`, never as a static import.
