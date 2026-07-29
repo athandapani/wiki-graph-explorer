@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  extractAllWikilinks,
   extractFirstBodyParagraph,
   extractSourceLinks,
-  extractWikilinks,
   parseFrontmatter,
 } from "../lib/frontmatter-parser";
 
@@ -68,10 +68,49 @@ body
     const content = "# Just a heading\nno frontmatter here\n";
     expect(parseFrontmatter(content)).toBeNull();
   });
+
+  it("TOR-01-HbBhSDW: given frontmatter with no status key, when parsed, then status is 'unknown'", () => {
+    const content = `---
+title: Example
+tags: []
+---
+
+## Body
+content here
+`;
+    const result = parseFrontmatter(content);
+    expect(result?.status).toBe("unknown");
+  });
+
+  it("TOR-01-ffBGE8z: given frontmatter tags as a comma-separated string, when parsed, then tags is the normalized array", () => {
+    const content = `---
+title: Example
+tags: ai, change-management, research
+status: current
+---
+
+## Body
+content here
+`;
+    const result = parseFrontmatter(content);
+    expect(result?.tags).toEqual(["ai", "change-management", "research"]);
+  });
+
+  it("TOR-01-TsGnx0g: given no tags key and body hashtags, when parsed, then tags includes the hashtags", () => {
+    const content = `---
+title: Example
+status: current
+---
+
+This relates to #change-management and #adoption.
+`;
+    const result = parseFrontmatter(content);
+    expect(result?.tags).toEqual(["change-management", "adoption"]);
+  });
 });
 
-describe("extractWikilinks", () => {
-  it("given a body with a ## Related section containing piped and bare wikilinks, when extracted, then returns the slugs", () => {
+describe("extractAllWikilinks", () => {
+  it("given a body with a ## Related section containing piped and bare wikilinks, when extracted, then returns all the slugs, regardless of heading", () => {
     const body = `## Related
 - [[foo|Foo]]
 - [[bar]]
@@ -79,13 +118,22 @@ describe("extractWikilinks", () => {
 ## Referenced By
 - [[baz|Baz]]
 `;
-    expect(extractWikilinks(body, "Related")).toEqual(["foo", "bar"]);
-    expect(extractWikilinks(body, "Referenced By")).toEqual(["baz"]);
+    expect(extractAllWikilinks(body)).toEqual(["foo", "bar", "baz"]);
   });
 
-  it("given a body with no matching heading, when extracted, then returns an empty array", () => {
-    const body = "## Body\nno related section here\n";
-    expect(extractWikilinks(body, "Related")).toEqual([]);
+  it("given a body with no wikilinks at all, when extracted, then returns an empty array", () => {
+    const body = "## Body\nno links here\n";
+    expect(extractAllWikilinks(body)).toEqual([]);
+  });
+
+  it("TOR-01-jCHtzGb: given a wikilink outside any heading, when extracted, then it is included", () => {
+    const body = "This builds on [[Change Management]] directly.";
+    expect(extractAllWikilinks(body)).toEqual(["Change Management"]);
+  });
+
+  it("TOR-01-kCxBFeS: given an embed and a wikilink in the same body, when extracted, then only the wikilink is returned", () => {
+    const body = "![[project-diagram.png]]\n\nSee also [[some-page]].";
+    expect(extractAllWikilinks(body)).toEqual(["some-page"]);
   });
 });
 

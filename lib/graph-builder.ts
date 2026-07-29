@@ -1,9 +1,9 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import {
+  extractAllWikilinks,
   extractFirstBodyParagraph,
   extractSourceLinks,
-  extractWikilinks,
   parseFrontmatter,
 } from "./frontmatter-parser";
 
@@ -37,6 +37,7 @@ export function buildGraph(
   vaultPath: string,
   filePaths: string[],
   warn: (message: string) => void,
+  debug: (message: string) => void = () => {},
 ): { nodes: NodeRecord[]; edges: EdgeRecord[]; pageTexts: PageText[] } {
   const nodes: NodeRecord[] = [];
   const pageTexts: PageText[] = [];
@@ -74,23 +75,46 @@ export function buildGraph(
       text: [parsed.title, parsed.tags.join(" "), parsed.body].join("\n"),
     });
 
-    for (const target of extractWikilinks(parsed.body, "Related")) {
-      links.push({ from: id, to: target });
-    }
-    for (const target of extractWikilinks(parsed.body, "Referenced By")) {
+    for (const target of extractAllWikilinks(parsed.body)) {
       links.push({ from: id, to: target });
     }
   }
 
-  const nodeIds = new Set(nodes.map((node) => node.id));
+  // Resolves a wikilink target by filename or frontmatter title, case-insensitive, regardless of
+  // folder — Obsidian's own resolution model (TOR-01-7lCwTjk), replacing exact-id matching. Built
+  // once in vault-walk order; "first write wins" on a key collision gives a deterministic
+  // tie-break for ambiguous same-titled notes (TOR-01-OgWxAs0) — walkVault()'s fs.readdirSync-
+  // backed traversal is stable across repeated runs against an unchanged directory.
+  const resolutionMap = new Map<string, string>();
+  for (const node of nodes) {
+    const idKey = node.id.toLowerCase();
+    if (!resolutionMap.has(idKey)) {
+      resolutionMap.set(idKey, node.id);
+    }
+    if (node.title) {
+      const titleKey = node.title.toLowerCase();
+      if (!resolutionMap.has(titleKey)) {
+        resolutionMap.set(titleKey, node.id);
+      }
+    }
+  }
+
   const seenPairs = new Set<string>();
   const edges: EdgeRecord[] = [];
 
   for (const link of links) {
-    if (!nodeIds.has(link.to) || link.from === link.to) {
+    const resolved = resolutionMap.get(link.to.toLowerCase());
+    if (!resolved) {
+      // A wikilink with no matching note is an ordinary occurrence in real-world PKM vaults
+      // (an unfulfilled/broken link), not a build error — dropped silently from the edge set
+      // and surfaced only at DEBUG level, never WARN/ERROR (TOR-01-lgSvch6).
+      debug(`unresolved wikilink "${link.to}" referenced by ${link.from}`);
       continue;
     }
-    const [a, b] = [link.from, link.to].sort();
+    if (resolved === link.from) {
+      continue;
+    }
+    const [a, b] = [link.from, resolved].sort();
     const key = `${a}::${b}`;
     if (seenPairs.has(key)) {
       continue;

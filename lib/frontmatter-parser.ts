@@ -8,6 +8,40 @@ export interface ParsedFrontmatter {
   body: string;
 }
 
+// Real-world Obsidian/PKM frontmatter writes tags as a YAML array (this project's own
+// convention), a comma/space-separated string, or skips frontmatter tags entirely in favor of
+// inline '#hashtag' markup in the body — all three are normalized into the same tags: string[]
+// shape (TOR-01-ffBGE8z, TOR-01-TsGnx0g). A leading '#' immediately followed by a word character
+// distinguishes an inline hashtag from a Markdown heading marker, which is always followed by a
+// space.
+const INLINE_HASHTAG_PATTERN = /#([A-Za-z0-9][\w-]*)/g;
+
+function normalizeTags(rawTags: unknown, body: string): string[] {
+  const tags = new Set<string>();
+
+  if (Array.isArray(rawTags)) {
+    for (const tag of rawTags) {
+      tags.add(String(tag));
+    }
+  } else if (typeof rawTags === "string") {
+    const parts = rawTags.includes(",") ? rawTags.split(",") : rawTags.split(/\s+/);
+    for (const part of parts) {
+      const trimmed = part.trim();
+      if (trimmed) {
+        tags.add(trimmed);
+      }
+    }
+  }
+
+  let hashtagMatch: RegExpExecArray | null;
+  INLINE_HASHTAG_PATTERN.lastIndex = 0;
+  while ((hashtagMatch = INLINE_HASHTAG_PATTERN.exec(body)) !== null) {
+    tags.add(hashtagMatch[1]);
+  }
+
+  return Array.from(tags);
+}
+
 export function parseFrontmatter(content: string): ParsedFrontmatter | null {
   if (!content.trimStart().startsWith("---")) {
     return null;
@@ -21,8 +55,12 @@ export function parseFrontmatter(content: string): ParsedFrontmatter | null {
     const data = parsed.data as Record<string, unknown>;
     return {
       title: typeof data.title === "string" ? data.title : "",
-      tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
-      status: typeof data.status === "string" ? data.status : "",
+      tags: normalizeTags(data.tags, parsed.content),
+      // Real-world PKM vaults commonly declare no status/freshness field at all — that
+      // convention is specific to this project's own vaults, not a general PKM standard, so an
+      // absent status defaults to a neutral 'unknown' rather than failing the build
+      // (TOR-01-HbBhSDW).
+      status: typeof data.status === "string" ? data.status : "unknown",
       description: typeof data.description === "string" ? data.description.trim() : "",
       body: parsed.content,
     };
@@ -31,7 +69,11 @@ export function parseFrontmatter(content: string): ParsedFrontmatter | null {
   }
 }
 
-const WIKILINK_PATTERN = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
+// Negative lookbehind excludes '![[Page Name]]' embed/transclusion syntax — the '!' immediately
+// precedes '[[' for an embed, so this pattern matches every wikilink reference in the body
+// (not just inside specific H2 sections), while never matching an embed (TOR-01-jCHtzGb,
+// TOR-01-kCxBFeS).
+const ALL_WIKILINKS_PATTERN = /(?<!!)\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
 const WIKILINK_STRIP_PATTERN = /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g;
 const MARKDOWN_LINK_PATTERN = /\[([^\]]+)\]\([^)]+\)/g;
 const SOURCE_LINK_PATTERN = /\[([^\]]+)\]\(([^)]+)\)/g;
@@ -96,23 +138,18 @@ export function extractSourceLinks(body: string): { text: string; url: string }[
   return links;
 }
 
-export function extractWikilinks(body: string, heading: "Related" | "Referenced By"): string[] {
-  const headingPattern = new RegExp(`^##\\s+${heading}\\s*$`, "m");
-  const match = headingPattern.exec(body);
-  if (!match) {
-    return [];
+// Scans the entire page body for wikilink references, not just inside specific H2 sections —
+// the generic Obsidian/PKM backlink model, superseding the old heading-gated extraction
+// (TOR-01-jCHtzGb). A heading-scoped wikilink is a subset of "any wikilink in the body", so
+// this is a strict superset of the retired extractWikilinks(body, heading) behavior
+// (TOR-01-DPjgHwE — vaults using the '## Related'/'## Referenced By' convention keep working
+// unchanged).
+export function extractAllWikilinks(body: string): string[] {
+  const targets: string[] = [];
+  let match: RegExpExecArray | null;
+  ALL_WIKILINKS_PATTERN.lastIndex = 0;
+  while ((match = ALL_WIKILINKS_PATTERN.exec(body)) !== null) {
+    targets.push(match[1].trim());
   }
-
-  const sectionStart = match.index + match[0].length;
-  const rest = body.slice(sectionStart);
-  const nextHeadingMatch = /^##\s+/m.exec(rest);
-  const section = nextHeadingMatch ? rest.slice(0, nextHeadingMatch.index) : rest;
-
-  const slugs: string[] = [];
-  let linkMatch: RegExpExecArray | null;
-  WIKILINK_PATTERN.lastIndex = 0;
-  while ((linkMatch = WIKILINK_PATTERN.exec(section)) !== null) {
-    slugs.push(linkMatch[1].trim());
-  }
-  return slugs;
+  return targets;
 }

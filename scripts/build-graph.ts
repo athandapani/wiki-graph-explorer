@@ -84,7 +84,7 @@ async function main(): Promise<void> {
   }
 
   const filePaths = walkVault(vaultPath);
-  const { nodes, edges, pageTexts } = buildGraph(vaultPath, filePaths, logger.warn);
+  const { nodes, edges, pageTexts } = buildGraph(vaultPath, filePaths, logger.warn, logger.debug);
   const entries = await computeVectorIndexEntries(pageTexts);
   const sourceCount = countRawSources(vaultPath);
 
