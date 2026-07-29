@@ -1,7 +1,7 @@
 {
   "feature_id": "01",
   "feature_file": "01-build-pipeline.feature.md",
-  "generated": "2026-07-15",
+  "generated": "2026-07-29",
   "generator": "haiku-sub-agent via /peak-workflow:capture-requirements",
   "requirements": [
     {
@@ -614,6 +614,177 @@
             "scenario": "S15",
             "step": 6,
             "paraphrase": "When a visitor clicks a node whose page has no inline Markdown links, the cited-sources section is not rendered, and the build tool exits cleanly."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-jCHtzGb",
+      "title": "The build tool shall extract [[Page Name]] wikilinks found anywhere in a page's Markdown body as graph edges, not only within '## Related' or '## Referenced By' sections",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Vault-parsing Generalization, Cycle 5): Generic wikilink extraction",
+            "paraphrase": "The tool generalizes edge discovery beyond this project's own bespoke heading-gated convention so it works against real-world Obsidian/PKM vaults that scatter wikilinks freely through ordinary prose without such structure."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S16",
+            "step": 3,
+            "paraphrase": "When a third-party vault owner points the tool at their Obsidian vault, the build tool scans each page's full body for wikilinks anywhere in prose and resolves them to graph edges."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-DPjgHwE",
+      "title": "The build tool shall produce at least the same edge set for a vault using the '## Related'/'## Referenced By' body-section convention as the previous heading-gated extractor produced",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Vault-parsing Generalization, Cycle 5): Backward-compatible with existing vaults",
+            "paraphrase": "The generic full-body wikilink scan is a strict superset of the old heading-gated scan, ensuring no vault migration is required for existing second-brain or ai-adoption-wiki content."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S4",
+            "step": 2,
+            "paraphrase": "The generalized parser maintains backward compatibility: when applied to this project's own vaults with their bespoke Related/Referenced By sections, it produces the same edges as before."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-7lCwTjk",
+      "title": "The build tool shall resolve a [[Page Name]] wikilink against any note in the vault whose filename or frontmatter title matches, case-insensitively, regardless of folder",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Vault-parsing Generalization, Cycle 5): Title/filename link resolution",
+            "paraphrase": "Wikilinks resolve by filename or title match rather than exact slug path, enabling the tool to work with real-world Obsidian vaults where note organization doesn't follow a rigid path convention."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S16",
+            "step": 3,
+            "paraphrase": "When processing a third-party vault, wikilinks are resolved against any note whose filename or frontmatter title matches, case-insensitively, reflecting Obsidian's own resolution behavior."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-OgWxAs0",
+      "title": "The build tool shall resolve an ambiguous wikilink — one matching more than one note's filename or title — to the first such note encountered during the vault walk, deterministically",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Vault-parsing Generalization, Cycle 5): Backward-compatible with existing vaults",
+            "paraphrase": "Deterministic resolution of ambiguous wikilinks ensures consistent results across runs, a prerequisite for backward compatibility and reproducible graph generation."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S16",
+            "step": 3,
+            "paraphrase": "When multiple notes match a wikilink target, the tool deterministically selects the first one encountered in the vault walk, ensuring consistent results across multiple builds."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-kCxBFeS",
+      "title": "The build tool shall recognize '![[Page Name]]' embed syntax and exclude it from graph edges",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Vault-parsing Generalization, Cycle 5): Embeds excluded from edges",
+            "paraphrase": "Embed syntax represents inline content transclusion, not a relational reference, so it must be explicitly excluded to distinguish embeds from actual wikilinks in edge extraction."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S16",
+            "step": 4,
+            "paraphrase": "When scanning a third-party vault's body content, embed syntax is recognized and correctly excluded from the graph's edge set."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-lgSvch6",
+      "title": "The build tool shall silently drop a wikilink whose target note does not exist in the vault, logging the skip at DEBUG level only",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Vault-parsing Generalization, Cycle 5): Unresolved links handled gracefully",
+            "paraphrase": "Unresolved wikilinks are treated as ordinary data-quality variations, not errors—they are dropped silently and logged only at DEBUG level to keep the build reliable across real-world messy vaults."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S16",
+            "step": 5,
+            "paraphrase": "When a third-party vault contains wikilinks pointing to nonexistent notes, the tool silently drops them with DEBUG-level logging, allowing the build to complete successfully without false errors."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-HbBhSDW",
+      "title": "The build tool shall assign a neutral 'unknown' status to a node whose page frontmatter declares no status field, without error",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Vault-parsing Generalization, Cycle 5): Optional status field",
+            "paraphrase": "The status field becomes optional so third-party vaults without it still build successfully, with nodes rendering a neutral/unknown status dot instead of causing a build error."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S16",
+            "step": 6,
+            "paraphrase": "When a third-party vault contains no status frontmatter on any page, the build tool assigns a neutral/unknown status to each node and completes successfully."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-ffBGE8z",
+      "title": "The build tool shall normalize a page's tags frontmatter written as a comma-separated or space-separated string into the same tags array shape used for YAML list tags",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Vault-parsing Generalization, Cycle 5): Normalized tag shapes",
+            "paraphrase": "Tags are accepted in multiple formats (YAML array, comma/space-separated string) and normalized to a uniform array shape, allowing the tool to accept vaults with varied frontmatter conventions."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S16",
+            "step": 2,
+            "paraphrase": "When scanning a third-party vault's frontmatter, the tool normalizes tags written as comma or space-separated strings into the same array shape used internally."
+          }
+        ]
+      }
+    },
+    {
+      "id": "TOR-01-TsGnx0g",
+      "title": "The build tool shall extract inline '#hashtag' tags from a page's Markdown body and merge them into that page's tags array",
+      "traces_to": {
+        "vision": [
+          {
+            "section": "§5 — Goals & Success Criteria (Vault-parsing Generalization, Cycle 5): Normalized tag shapes",
+            "paraphrase": "Tags found as inline hashtags in page bodies are extracted and merged into the normalized tags array, accommodating vaults where tags are authored as free-form body hashtags."
+          }
+        ],
+        "conops": [
+          {
+            "scenario": "S16",
+            "step": 2,
+            "paraphrase": "The tool scans each page's body for inline hashtags and merges them into the frontmatter tags, accepting tags in multiple authorship styles."
           }
         ]
       }

@@ -1,7 +1,7 @@
 # wiki-graph-explorer — Product Vision & Brief
 
-**Document Version:** 1.4
-**Date:** 2026-07-18
+**Document Version:** 1.5
+**Date:** 2026-07-29
 **Status:** Draft
 
 ---
@@ -34,6 +34,11 @@ generalized into a reusable tool rather than a one-off.
   arbitrary Markdown-wiki content.
 - Fake "AI search" demos (keyword filters in disguise) are common enough that a discerning
   evaluator would penalize rather than credit one.
+- The build tool's vault-parsing is currently locked to this project's own bespoke convention
+  (edges only from `[[slug|Title]]` wikilinks inside literal `## Related`/`## Referenced By` H2
+  sections) — pointing it at a real-world Obsidian vault, which scatters wikilinks freely through
+  prose with no such heading convention, produces a near-edgeless graph, undermining the "generic,
+  point-at-a-repo tool" claim in the vision statement itself.
 
 ## 3. Target Users
 
@@ -41,7 +46,7 @@ generalized into a reusable tool rather than a one-off.
 |---|---|
 | Portfolio-site visitors (recruiters, hiring managers, technical evaluators) | Interact directly with a real artifact to verify applied-AI/engineering depth, not read a claim |
 | Tool author (dogfooding user) | Iterate locally against the rich private `second-brain` vault first (best test data, never published), before pointing the same tool at any public vault |
-| Future: other wiki/second-brain practitioners (stretch, not MVP) | Point the tool at their own Markdown-wiki repo for an instant explorable graph |
+| Other wiki/PKM practitioners (Obsidian vault owners) | Point the tool at their own real-world Obsidian/PKM vault and get a working, connected graph without reshaping their notes around this project's bespoke Related/Referenced-By convention |
 
 ## 4. Vision Statement
 
@@ -76,6 +81,18 @@ reference):**
 | Guided tour | One "Take a tour" control steps through 4–5 curated linked nodes with captions; Esc exits |
 | Demo-scale deployed dataset | Deployed public vault built from ~40 ingested research sources (fanning out to potentially a few hundred wiki pages/connections), replacing the 2-page placeholder |
 | Source transparency actually works | Repo made public after a history audit for private content; GitHub source links resolve (path-join bug fixed and verified against the deployed vault) |
+
+**Vault-parsing generalization goals (Cycle 5 — broadening beyond this project's own bespoke convention):**
+
+| Goal | Success Criteria |
+|---|---|
+| Generic wikilink extraction | Edges are derived from `[[Page Name]]` / `[[Page Name\|Alias]]` wikilinks found anywhere in a page's Markdown body, not gated behind specific `## Related`/`## Referenced By` headings |
+| Title/filename link resolution | A wikilink resolves to any note whose filename or frontmatter title matches, case-insensitively, regardless of folder location — matching Obsidian's own resolution behavior |
+| Backward-compatible with existing vaults | Running the broadened parser against `second-brain` and the deployed `ai-adoption-wiki` vault produces the same (or a superset of) edges as today — no vault migration required |
+| Optional status field | A vault with no `status` frontmatter on any page still builds successfully; affected nodes render a neutral/unknown status dot instead of erroring |
+| Normalized tag shapes | `tags:` accepted as a YAML array, a comma/space-separated string, or inline `#hashtags` in the body — all normalized to the same `tags: string[]` shape |
+| Embeds excluded from edges | `![[Page Name]]` embed/transclusion syntax is recognized and excluded from graph edges (distinct from a `[[Page Name]]` reference) |
+| Unresolved links handled gracefully | A `[[wikilink]]` targeting a nonexistent note is dropped silently (no phantom node/dangling edge) and logged at DEBUG level only |
 
 ## 6. MVP Scope Summary
 
@@ -195,6 +212,35 @@ makes*, not just a self-link to the page's own file:
   link). When a node has zero `sourceLinks`, the section is omitted entirely — no empty list or
   placeholder — mirroring the existing empty-description precedent.
 
+### Vault-Parsing Generalization (Cycle 5)
+
+Post-Cycle-4 scope, driven by the goal of supporting real-world Obsidian/PKM vaults rather than
+only this project's own bespoke convention:
+
+- **Generic wikilink scanning**: the build tool scans each page's full Markdown body for
+  `[[Page Name]]` / `[[Page Name|Alias]]` wikilinks anywhere in prose — not gated behind the
+  literal `## Related`/`## Referenced By` H2 headings. The existing H2-gated extractor is retired;
+  since a heading-scoped wikilink is a subset of "any wikilink in the body," this project's own
+  `second-brain` and `ai-adoption-wiki` content keeps producing the same edges without changes.
+- **Title/filename-based link resolution**: `[[Page Name]]` resolves against any note in the
+  vault whose filename or frontmatter `title` matches, case-insensitively, regardless of folder
+  — not the current exact-slug-path match.
+- **Embed exclusion**: `![[Page Name]]` (Obsidian's embed/transclusion syntax) is recognized and
+  explicitly excluded from graph edges — it represents inline content transclusion, not a
+  relational reference.
+- **Unresolved-link handling**: a wikilink with no matching note in the vault is dropped silently
+  (no phantom node, no dangling edge) and logged at DEBUG level for build-time visibility only.
+- **Optional status field**: pages with no `status` frontmatter default to a neutral/unknown
+  status dot rather than causing a build error or omitting the status system.
+- **Normalized tag shapes**: `tags:` frontmatter is accepted as a YAML array, a comma/space-separated
+  string, or inline `#hashtags` found in the page body — all normalized into the existing
+  `tags: string[]` shape used by the rest of the pipeline.
+
+*Cross-cutting concern:* this cycle is a parsing-layer generalization only — it does not add new
+UI, new frontmatter fields, or change `graph-data.json`'s existing shape beyond making `status`
+tolerate absence. The safe-by-construction deployment boundary (public vault only, ever) is
+unaffected.
+
 ## 7. Out of Scope for MVP
 
 - GitHub-URL / remote-clone input (local filesystem path only, for now)
@@ -212,6 +258,10 @@ makes*, not just a self-link to the page's own file:
 - Automated research pipeline — the deep-research step for the demo vault is manual/user-provided
   (Perplexity or similar), never automated in-tool
 - In-app raw-markdown reader (source transparency stays a GitHub link)
+- Non-Markdown PKM formats and vault-specific query/plugin syntax (e.g. Logseq's outline-based
+  `.md` dialect, Roam-specific block references, Obsidian Dataview query blocks, Obsidian Canvas
+  `.canvas` files) — generic parsing targets standard Obsidian-flavored Markdown + YAML
+  frontmatter + `[[wikilink]]` syntax only
 
 ## 8. Key Business Scenarios
 
@@ -258,6 +308,13 @@ makes*, not just a self-link to the page's own file:
     up to 5 of those cited links as a distinct "Cited sources" list, separate from the page's own
     "View source on GitHub" link — letting the visitor jump straight to the material the page
     references, not just the page itself.
+
+14. **Generic PKM vault ingestion** — a third-party Obsidian/PKM practitioner points the tool at
+    their own vault (which has never seen a `## Related`/`## Referenced By` heading), and the
+    build tool still produces a populated `graph-data.json` — extracting edges from wikilinks
+    found naturally throughout their notes' prose, tolerating missing status fields and varied
+    tag formats — proving the tool is genuinely generic, not bespoke to this project's own vault
+    conventions.
 
 ## 9. Design Direction
 
@@ -328,6 +385,17 @@ twice counts twice toward the 5-link cap). This is parsed independently of the e
 the per-node GitHub self-link. Pages with no inline links get an empty array; the side panel
 omits the "Cited sources" section entirely in that case.
 
+**Cycle 5 addition:** Edge extraction generalizes from the H2-heading-gated `[[slug|Title]]`
+scan to a full-body wikilink scan (`[[Page Name]]` / `[[Page Name|Alias]]`, resolved by
+filename/title match rather than exact slug path, case-insensitive, any folder). `![[embed]]`
+syntax is recognized and excluded from edges. Wikilinks with no resolvable target are dropped
+silently (DEBUG-logged only, never surfaced in `graph-data.json` or the UI). `status` frontmatter
+becomes optional — its absence yields a neutral/unknown status dot rather than a build error.
+`tags` frontmatter accepts a YAML array, a comma/space-separated string, or inline `#hashtags`,
+all normalized to the same `tags: string[]` shape. This is a parsing-layer change only; existing
+vaults (`second-brain`, `ai-adoption-wiki`) require no migration, since their heading-scoped
+wikilinks are a strict subset of what the generalized scanner finds.
+
 ## 11. Backlog / Future Vision
 
 - GitHub-URL / remote-clone input support (point the tool at any public repo URL, not just a local
@@ -338,8 +406,12 @@ omits the "Cited sources" section entirely in that case.
 - Author-side tooling to help populate/curate vault content (currently render-only beyond the
   initial research-ingestion pass)
 - Real authentication (e.g. Cloudflare Access) if a non-public mode is ever needed
-- Generalizing the taxonomy/status framework for other wiki practitioners to point the tool at
-  their own vaults
+- Support for Obsidian-specific plugin syntax (Dataview query blocks, Canvas `.canvas` files,
+  Templater templates) beyond core wikilink/frontmatter parsing
+- Support for other PKM tools' non-standard dialects (Logseq outline blocks, Roam block
+  references) as distinct parsing modes
+- A disambiguation UI for wikilinks that resolve ambiguously (two notes sharing a title in
+  different folders) — Cycle 5 resolves ambiguity deterministically but silently
 - Analytics on which nodes/queries visitors actually explore (including tour completion)
 - Persona-based tour paths ("I'm new here" / "I build things" / "I run a business") beyond the
   single Cycle 2 tour

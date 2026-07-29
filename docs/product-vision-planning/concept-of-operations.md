@@ -1,7 +1,7 @@
 # wiki-graph-explorer — Concept of Operations (ConOps)
 
-**Document Version:** 1.4
-**Date:** 2026-07-18
+**Document Version:** 1.5
+**Date:** 2026-07-29
 **Status:** Draft
 
 ---
@@ -21,6 +21,7 @@ wiki-graph-explorer MVP.
 | Screenshots of the private `second-brain` wiki | Can't be published (privacy risk); even redacted, static images aren't interactive |
 | Generic "digital transformation leader" resume language | Doesn't demonstrate applied-AI technical craft specifically |
 | No existing public tool for backlink-graph visualization of arbitrary Markdown wikis | Would require a one-off, non-reusable script each time |
+| Vault-parsing locked to this project's own bespoke convention (`## Related`/`## Referenced By` H2 sections) | A real-world Obsidian/PKM vault with wikilinks scattered through ordinary prose produces a near-edgeless graph — the tool isn't actually generic yet |
 
 **Core pain points:**
 
@@ -29,6 +30,9 @@ wiki-graph-explorer MVP.
 3. No safe, generic tool exists to render a Markdown-wiki backlink graph as a public artifact.
 4. Fake "AI search" demos (keyword filters mislabeled as semantic search) are common enough that a
    discerning technical evaluator would penalize rather than credit one.
+5. The build tool's vault-parsing only recognizes this project's own bespoke cross-reference
+   convention, undermining the "generic, point-at-a-repo tool" claim for anyone with a
+   differently-structured Obsidian/PKM vault.
 
 **Cycle 2 As-Is — the shipped MVP `/graph` page vs the "AI Stack, Connected" reference (issue #4
 critical review):**
@@ -104,6 +108,17 @@ up to the first 5 found, in document order, as a new `sourceLinks` field per nod
 "Connected pages" section when a node has at least one; the section is omitted entirely when a
 node has none, matching the existing empty-description omission pattern.
 
+**Cycle 5 (vault-parsing generalization):** The build tool's edge extraction generalizes from
+scanning only literal `## Related`/`## Referenced By` H2 sections to scanning a page's entire
+Markdown body for `[[Page Name]]` / `[[Page Name|Alias]]` wikilinks, resolved against any note
+in the vault by filename/title match (case-insensitive, any folder) rather than an exact slug
+path. `![[Page Name]]` embed syntax is recognized and excluded from edges. Wikilinks with no
+resolvable target are dropped silently and logged at DEBUG level only. `status` frontmatter
+becomes optional (absent status renders a neutral/unknown dot), and `tags` frontmatter accepts
+a YAML array, a comma/space-separated string, or inline `#hashtags`, normalized uniformly. This
+is a parsing-layer generalization only — existing vaults require no migration, since their
+heading-scoped wikilinks are a strict subset of what the generic scanner now finds.
+
 ## 4. User Roles & Profiles
 
 | Role | Question they bring |
@@ -112,6 +127,7 @@ node has none, matching the existing empty-description omission pattern.
 | Technical evaluator / peer engineer | "Is the 'semantic search' actually semantic, or a keyword filter with marketing language?" |
 | Tool author (dev/maintainer) | "Does this render correctly against messy real-world wiki data before I trust it on the public vault?" |
 | Casual visitor | "What is this, and why does exploring a graph matter?" |
+| Third-party Obsidian/PKM vault owner | "Can I point this at my own vault, as-is, without restructuring my notes to match someone else's convention?" |
 
 ## 5. Operational Scenarios
 
@@ -352,12 +368,29 @@ node has none, matching the existing empty-description omission pattern.
 
 **Outcome:** A visitor can distinguish "this page is genuinely sourced content" (self-link) from "this page cites specific external material" (cited sources), reinforcing the tool's overall source-transparency goal
 
+### Scenario 16: Generic PKM vault ingestion
+**Actor:** Third-party Obsidian/PKM vault owner
+**Trigger:** Owner runs `npm run build:graph -- --vault <path-to-their-own-obsidian-vault>` against a vault that has never used this project's `## Related`/`## Referenced By` convention
+**Goal:** Get a populated, correctly-linked graph without reshaping their existing notes
+
+**Steps:**
+1. Owner points the CLI at their own Obsidian vault root (plain Markdown files with ordinary `[[Page Name]]` wikilinks scattered through prose, no special headings)
+2. The build tool walks the vault and parses each page's frontmatter (title, tags in whatever shape — array, comma-separated string, or inline `#hashtags` — and no `status` field present)
+3. The build tool scans each page's full body for `[[Page Name]]` / `[[Page Name|Alias]]` wikilinks, resolving each against any note whose filename or title matches, case-insensitively, regardless of folder
+4. A page containing `![[some-image.png]]` has that embed correctly excluded from its edges
+5. A page containing `[[Nonexistent Page]]` has that unresolved link silently dropped; a DEBUG log line records the skip, but the build does not fail or warn on stdout
+6. The tool writes `graph-data.json` with populated edges and nodes showing a neutral/unknown status dot (no status frontmatter existed in this vault)
+7. Owner runs the Next.js dev server and opens `/graph`; the graph renders as a connected structure reflecting their vault's actual note relationships, not a near-edgeless scatter
+8. Owner confirms folder/taxonomy coloring and search work the same as they do against this project's own vaults
+
+**Outcome:** A vault owner with zero knowledge of this project's internal conventions gets a working, connected graph from their existing Obsidian vault, unmodified
+
 ## 6. System Interfaces & Data Flows
 
 | Source | Format | Produced By |
 |---|---|---|
-| Public vault markdown files | `.md` + YAML frontmatter (title, tags, status, Related, Referenced By) | Karpathy-pattern raw→wiki ingestion of AI-in-enterprises research |
-| `graph-data.json` | Nodes (id, title, folder/taxonomy, status, **description**, **`sourceLinks`**) + undirected edges + **`meta.sourceCount`** | Build-time graph-builder script; description from frontmatter `description:` with first-body-paragraph fallback. `meta.sourceCount` counts `.md` files in the `raw/` directory sibling to the `--vault` path — `null` when no `raw/` sibling exists (vault declares no provenance), `0` when it exists but is empty. `sourceLinks` is an array of up to 5 `{ text, url }` pairs, extracted from standard `[text](url)` Markdown links found anywhere in the page body (frontmatter excluded), in document order, capped (not deduplicated) at 5 — empty array when the page has no such links |
+| Public vault markdown files | `.md` + YAML frontmatter (title, tags — array/string/inline-`#hashtag`, optional status) + `[[Page Name]]`/`[[Page Name\|Alias]]` wikilinks anywhere in the Markdown body (not gated by heading); `![[...]]` embeds excluded | Any standard Obsidian-flavored Markdown vault; Karpathy-pattern raw→wiki ingestion (`## Related`/`## Referenced By` sections) remains one conforming convention among others (Cycle 5) |
+| `graph-data.json` | Nodes (id, title, folder/taxonomy, status — `"unknown"` when absent, **description**, **`sourceLinks`**) + undirected edges + **`meta.sourceCount`** | Build-time graph-builder script; description from frontmatter `description:` with first-body-paragraph fallback. `meta.sourceCount` counts `.md` files in the `raw/` directory sibling to the `--vault` path — `null` when no `raw/` sibling exists (vault declares no provenance), `0` when it exists but is empty. `sourceLinks` is an array of up to 5 `{ text, url }` pairs, extracted from standard `[text](url)` Markdown links found anywhere in the page body (frontmatter excluded), in document order, capped (not deduplicated) at 5 — empty array when the page has no such links. Edges (Cycle 5) are resolved via filename/title match across the whole vault, case-insensitive, any folder; unresolved wikilinks are dropped silently (DEBUG-logged only) |
 | `vector-index.json` | Per-page precomputed embedding + metadata | Build-time embedding script |
 | GitHub source links | URL to raw `.md` per node | Derived from vault repo path at build time (repo public; path join verified against the deployed vault layout) |
 | Deep-research Markdown file | Author-provided `.md` with ~40 source links + findings (e.g. Perplexity output) | Manual deep-research pass; input to the raw→wiki ingestion epic, never processed by the build tool directly |
@@ -390,7 +423,7 @@ node has none, matching the existing empty-description omission pattern.
 | Onboarding & identity | Hero/tagline row, stats footer (`Built from K raw sources → Y wiki pages and Z connections` + Esc hint; provenance clause omitted for vaults with no `raw/` sibling), guided tour (single 4–5 node path), Geist typography + deliberate palette |
 | Keyboard | Esc de-escalates (tour → popover → search → selection); Ctrl+K / `/` focuses search |
 | Explainer | "Why build this" static content section, copy matched to the UI that exists per mode |
-| Build pipeline | `graph-data.json` (incl. per-page `description` and `sourceLinks`) + `vector-index.json` generation from a local vault path |
+| Build pipeline | `graph-data.json` (incl. per-page `description` and `sourceLinks`) + `vector-index.json` generation from a local vault path; generic wikilink-anywhere-in-body edge extraction with filename/title resolution, optional status, normalized tag shapes (Cycle 5) |
 | Demo vault | One-time research-ingestion epic: deep-research MD → `raw/` → interlinked `wiki/` pages at demo scale |
 | Pane layout | Independent 1-pane/2-pane control beside the Options & help hamburger (wide-screen only); 2-pane shows both layout modes side by side with synced node selection |
 | Theming | 3 CVD-validated presets (font + color) plus a custom accent-color option, chrome-and-node-palette synced for presets, chrome-only for custom; persisted via localStorage |
@@ -415,6 +448,10 @@ node has none, matching the existing empty-description omission pattern.
 | Pane-count breakpoint | 2-pane mode requires a wide-screen viewport; below it, the control is hidden and the board is 1-pane only — exact breakpoint px value to be set during epic planning |
 | Custom theme accessibility | A visitor-chosen custom accent is not validated for CVD-safety or contrast; the UI must disclose this rather than imply the same guarantee as the curated presets |
 | Body source-link cap | `sourceLinks` extraction is capped at the first 5 `[text](url)` links found in document order per page, with no deduplication and no "+N more" affordance for links beyond the cap — deliberately kept simple/contained rather than exhaustive |
+| Supported PKM conventions | Standard Obsidian-flavored Markdown: YAML frontmatter, `[[wikilink]]` / `[[wikilink\|alias]]` syntax anywhere in body, `#hashtag` inline tags. Karpathy-pattern `## Related`/`## Referenced By` sections remain supported as a subset case, not a required convention |
+| Unsupported PKM conventions | Dataview query blocks, Canvas `.canvas` files, Templater templates, Logseq outline-block syntax, Roam block references — out of scope for Cycle 5 |
+| Link resolution | `[[Page Name]]` resolves by filename or frontmatter `title` match, case-insensitive, regardless of folder; ambiguous matches (two notes with the same title in different folders) resolve to an arbitrarily-but-deterministically chosen one (first found in vault-walk order) — see Product Vision §11 Backlog for a future disambiguation UI |
+| Unresolved links | Dropped silently from the edge set; logged at DEBUG level only, never surfaced on stdout or in the UI |
 
 ## 9. Glossary
 
@@ -445,3 +482,6 @@ node has none, matching the existing empty-description omission pattern.
 | Theme preset | One of 3 curated font+accent-color combinations, CVD-validated as a set, selectable independently of the light/dark toggle |
 | `sourceLinks` | Per-node `graph-data.json` field: an array of up to 5 `{ text, url }` pairs extracted from standard `[text](url)` Markdown links found in a page's body, in document order; distinct from wikilinks (graph edges) and the GitHub self-link |
 | Cited sources | The side-panel list rendering a node's `sourceLinks`; omitted entirely (no heading) when the node has none |
+| Generic wikilink extraction | Edge-extraction strategy (Cycle 5) that scans a page's entire Markdown body for `[[Page Name]]` wikilinks, rather than only within specific H2-heading sections |
+| Backlink | Obsidian's term for an inbound reference to a note, computed implicitly from any wikilink anywhere in another note's body — the model broadened parsing adopts |
+| Embed / transclusion | Obsidian's `![[Page Name]]` syntax for inline-embedding another note's content; recognized and excluded from graph edges (distinct from a `[[Page Name]]` reference) |
