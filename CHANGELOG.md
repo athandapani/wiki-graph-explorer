@@ -15,6 +15,22 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.4.0] — 29-Jul-2026
+
+### Added
+- Generalized wikilink vault-parsing so the build tool works against real-world Obsidian/PKM
+  vaults, not only this project's own bespoke `## Related`/`## Referenced By` heading convention.
+  Edge extraction now scans a page's entire Markdown body for `[[wikilinks]]`, resolves targets by
+  case-insensitive filename/title match instead of exact-id match, excludes `![[embed]]` syntax,
+  and drops unresolved links silently with a DEBUG-only log. Frontmatter parsing now tolerates a
+  missing `status` field (defaults to `"unknown"`) and accepts `tags` as a YAML array, a
+  comma/space-separated string, or inline `#hashtag`s in the body. Backward-compatible by
+  construction — the existing `second-brain` and `ai-adoption-wiki` vaults' heading-scoped
+  wikilinks are a strict subset of what the generalized full-body scan finds, confirmed on real
+  data (`second-brain`: 96→104 edges, same 41 nodes). (Epic 0utMknV)
+
+---
+
 ## [1.3.1] — 28-Jul-2026
 
 ### Fixed
