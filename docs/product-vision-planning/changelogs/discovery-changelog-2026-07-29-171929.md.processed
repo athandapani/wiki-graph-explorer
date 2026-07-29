@@ -1,0 +1,45 @@
+# Discovery Changelog
+
+**Date:** 2026-07-29
+**Mode:** Brownfield (post-MVP ideation)
+**Previous Version:** 1.4
+
+## What Changed
+
+| Document | Section | Change Type | Summary |
+|----------|---------|-------------|---------|
+| product-vision.md | §2 Problem Statement | Modified | Added pain point: vault-parsing locked to bespoke Related/Referenced-By convention |
+| product-vision.md | §3 Target Users | Modified | Promoted "other wiki/PKM practitioners" from backlog-only aspiration to a real target user group |
+| product-vision.md | §5 Goals & Success Criteria | Added | New "Vault-Parsing Generalization (Cycle 5)" goals table: generic wikilink extraction, title/filename resolution, backward compatibility, optional status, normalized tags, embed exclusion, unresolved-link handling |
+| product-vision.md | §6 MVP Scope Summary | Added | New "Vault-Parsing Generalization (Cycle 5)" subsection detailing the parsing-layer scope |
+| product-vision.md | §7 Out of Scope | Modified | Added explicit exclusion of non-Markdown PKM formats (Dataview, Canvas, Logseq, Roam) |
+| product-vision.md | §8 Key Business Scenarios | Added | Scenario 14: Generic PKM vault ingestion |
+| product-vision.md | §10 Data Strategy | Modified | Added Cycle 5 paragraph describing generalized edge extraction and frontmatter tolerance |
+| product-vision.md | §11 Backlog | Modified | Removed now-in-scope "generalize taxonomy/status for other wiki practitioners" item; added 3 new deferred items (plugin syntax, other PKM dialects, link-disambiguation UI) |
+| concept-of-operations.md | §2 As-Is | Modified | Added row + pain point #5 on bespoke-convention lock-in |
+| concept-of-operations.md | §3 To-Be | Modified | Added Cycle 5 paragraph |
+| concept-of-operations.md | §4 User Roles | Modified | Added "Third-party Obsidian/PKM vault owner" role |
+| concept-of-operations.md | §5 Operational Scenarios | Added | Scenario 16: Generic PKM vault ingestion (8 concrete steps) |
+| concept-of-operations.md | §6 System Interfaces & Data Flows | Modified | Updated vault-markdown and graph-data.json rows to describe generic parsing |
+| concept-of-operations.md | §7 Functional Summary | Modified | Updated build pipeline row |
+| concept-of-operations.md | §8 Constraints & Assumptions | Added | 4 new rows: supported/unsupported PKM conventions, link resolution rule, unresolved-link handling |
+| concept-of-operations.md | §9 Glossary | Added | Generic wikilink extraction, Backlink, Embed/transclusion, Link resolution, Unresolved link |
+
+## New Capabilities Identified
+
+- **Generic wikilink scanning**: extract edges from `[[Page Name]]`/`[[Page Name|Alias]]` wikilinks anywhere in a page's Markdown body, retiring the current H2-heading-gated extractor (`extractWikilinks()` in `lib/frontmatter-parser.ts`), which only recognizes literal `## Related`/`## Referenced By` sections.
+- **Title/filename-based link resolution**: resolve wikilinks against any note's filename or frontmatter title, case-insensitive, regardless of folder — replacing the current exact-slug-path match.
+- **Embed exclusion**: recognize and exclude `![[Page Name]]` transclusion syntax from graph edges.
+- **Graceful unresolved-link handling**: silently drop wikilinks with no matching note; log at DEBUG only.
+- **Optional status field**: tolerate vaults with no `status` frontmatter; default affected nodes to a neutral/unknown status dot.
+- **Normalized tag shapes**: accept `tags:` as a YAML array, comma/space-separated string, or inline `#hashtags`, unifying all into `tags: string[]`.
+
+## Priority Signal
+
+The user's stated priority is broadening vault-parsing to work against real-world Obsidian/PKM vaults, not just this project's own bespoke convention — a parsing-layer generalization, not a UI or feature change. Backward compatibility with the two existing deployed vaults (`second-brain`, `ai-adoption-wiki`) is a hard constraint, not a nice-to-have: their heading-scoped wikilinks must continue to produce the same edges without any vault migration, since the new full-body scan is a strict superset of the old H2-gated scan.
+
+## Deferred Items
+
+- Disambiguation UI for wikilinks resolving to multiple same-titled notes in different folders (resolved deterministically-but-silently for now)
+- Support for Obsidian plugin-specific syntax: Dataview query blocks, Canvas `.canvas` files, Templater templates
+- Support for other PKM tools' non-standard dialects: Logseq outline blocks, Roam block references

@@ -313,3 +313,87 @@ Scenario: [TOR-01-6VVefyP] The build tool shall emit an empty sourceLinks array,
     When the Tool is Run with '--vault <path>'
     Then that page's node entry's 'sourceLinks' field should be an empty array
     And the exit code should be 0
+
+
+# --------------------------------------------------------------------------------------------------
+# Generic Wikilink Edge Extraction (added 2026-07-29, Cycle 5)
+# --------------------------------------------------------------------------------------------------
+
+Scenario: [TOR-01-jCHtzGb] The build tool shall extract [[Page Name]] wikilinks found anywhere in a page's Markdown body as graph edges, not only within '## Related' or '## Referenced By' sections
+    #
+    # Note:
+    #   1. This generalizes edge discovery beyond this project's own bespoke convention so the
+    #      tool works against real-world Obsidian/PKM vaults, which scatter wikilinks freely
+    #      through ordinary prose with no such heading convention (Product Vision §5 Cycle 5).
+    #
+    Given a vault page whose body contains the sentence "This builds on [[Change Management]] directly." outside of any '## Related' or '## Referenced By' heading
+    And a second vault page titled "Change Management"
+    When the Tool is Run with '--vault <path>'
+    Then graph-data.json should contain an edge connecting the two pages' nodes
+
+Scenario: [TOR-01-DPjgHwE] The build tool shall produce at least the same edge set for a vault using the '## Related'/'## Referenced By' body-section convention as the previous heading-gated extractor produced
+    #
+    # Note:
+    #   1. Regression-coverage requirement for Product Vision §5 Cycle 5 "Backward-compatible
+    #      with existing vaults" — the generic full-body wikilink scan is a strict superset of
+    #      the old heading-gated scan, so no vault migration is required for second-brain or
+    #      ai-adoption-wiki.
+    #
+    Given a vault page with body content:
+        """
+        ## Related
+        - [[training-programs]]
+
+        ## Referenced By
+        - [[change-management-overview]]
+        """
+    When the Tool is Run with '--vault <path>'
+    Then graph-data.json should contain an edge to the node for 'training-programs'
+    And graph-data.json should contain an edge to the node for 'change-management-overview'
+
+Scenario: [TOR-01-7lCwTjk] The build tool shall resolve a [[Page Name]] wikilink against any note in the vault whose filename or frontmatter title matches, case-insensitively, regardless of folder
+    Given a vault page in folder 'concepts/' containing the wikilink '[[change management]]'
+    And a target vault page located at 'sources/Change Management.md' with frontmatter title 'Change Management'
+    When the Tool is Run with '--vault <path>'
+    Then graph-data.json should contain an edge connecting the two pages' nodes
+
+Scenario: [TOR-01-OgWxAs0] The build tool shall resolve an ambiguous wikilink — one matching more than one note's filename or title — to the first such note encountered during the vault walk, deterministically
+    Given two vault pages in different folders both titled 'Overview'
+    And a third vault page containing the wikilink '[[Overview]]'
+    When the Tool is Run twice in succession with '--vault <path>'
+    Then both runs should produce an edge to the identical one of the two 'Overview' nodes
+
+Scenario: [TOR-01-kCxBFeS] The build tool shall recognize '![[Page Name]]' embed syntax and exclude it from graph edges
+    Given a vault page whose body contains '![[project-diagram.png]]'
+    And no vault page named 'project-diagram.png' exists as a graph node
+    When the Tool is Run with '--vault <path>'
+    Then graph-data.json should not contain an edge derived from that embed reference
+
+Scenario: [TOR-01-lgSvch6] The build tool shall silently drop a wikilink whose target note does not exist in the vault, logging the skip at DEBUG level only
+    Given a vault page whose body contains the wikilink '[[Nonexistent Page]]', with no matching note anywhere in the vault
+    When the Tool is Run with '--vault <path>'
+    Then graph-data.json should contain no edge or phantom node for 'Nonexistent Page'
+    And the standard error should contain a DEBUG record naming the unresolved link
+    And no WARN or ERROR record should be emitted for that unresolved link
+    And the exit code should be 0
+
+
+# --------------------------------------------------------------------------------------------------
+# Optional Status & Normalized Tag Shapes (added 2026-07-29, Cycle 5)
+# --------------------------------------------------------------------------------------------------
+
+Scenario: [TOR-01-HbBhSDW] The build tool shall assign a neutral 'unknown' status to a node whose page frontmatter declares no status field, without error
+    Given a vault page with valid frontmatter containing no 'status' key
+    When the Tool is Run with '--vault <path>'
+    Then that page's node entry in graph-data.json should have a 'status' field with the value 'unknown'
+    And the exit code should be 0
+
+Scenario: [TOR-01-ffBGE8z] The build tool shall normalize a page's tags frontmatter written as a comma-separated or space-separated string into the same tags array shape used for YAML list tags
+    Given a vault page whose frontmatter contains 'tags: ai, change-management, research'
+    When the Tool is Run with '--vault <path>'
+    Then that page's node entry's 'tags' field should be the array ["ai", "change-management", "research"]
+
+Scenario: [TOR-01-TsGnx0g] The build tool shall extract inline '#hashtag' tags from a page's Markdown body and merge them into that page's tags array
+    Given a vault page with no 'tags' frontmatter key and a body containing the text "This relates to #change-management and #adoption."
+    When the Tool is Run with '--vault <path>'
+    Then that page's node entry's 'tags' field should include "change-management" and "adoption"
