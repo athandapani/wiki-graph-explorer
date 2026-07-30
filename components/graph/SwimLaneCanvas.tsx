@@ -56,7 +56,12 @@ const LOW_DEGREE_THRESHOLD = 1;
 // starving large lanes below what theirs needed. MAX_VISIBLE_ROWS is a hard ceiling per lane so
 // one very large folder can't push the board past the viewport (TOR-06-0ZRtILL).
 const PILL_ROW_HEIGHT_PX = 24;
-const MAX_VISIBLE_ROWS = 12;
+// Capped low enough that even a large, imbalanced vault (e.g. one folder with 200+ nodes)
+// leaves room for every lane's header to stay within the viewport at default size
+// (TOR-06-0ZRtILL) — a large lane's excess pills are clipped here rather than pushing
+// smaller lanes below the fold; see the "+N more" affordance (a separate mechanism, for
+// low-degree/zero-degree nodes) for a different, non-overlapping visibility concern.
+const MAX_VISIBLE_ROWS = 5;
 
 function ConnectorPath({
   d,
