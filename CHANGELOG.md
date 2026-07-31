@@ -15,6 +15,20 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.4.2] — 30-Jul-2026
+
+### Fixed
+- v1.4.1's registry publish accidentally repeated the exact bug it was meant to fix — an
+  npm one-time-password prompt required a second, separate `npm publish` invocation to
+  complete, and that second command ran from the repo root again rather than `dist/`, shipping
+  the same no-`bin`-field package under the 1.4.1 version number. Republished as 1.4.2 using
+  `npm publish ./dist` (a single, self-contained command immune to working-directory drift
+  across separate invocations, unlike a `cd dist && npm publish` that might not survive an
+  OTP-retry as two separate commands). Verified on the registry after publishing:
+  `npm view wiki-graph-explorer bin` is non-empty and matches `dist/package.json`.
+
+---
+
 ## [1.4.1] — 30-Jul-2026
 
 ### Fixed
@@ -24,9 +38,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   root, which publishes the web-app's own `package.json` (no `bin` field) instead of the
   CLI-specific package `scripts/prepare-publish.ts` builds into `dist/`. This silently shipped
   in v1.3.0, v1.3.1, and v1.4.0 — three releases with a non-functional CLI entry point.
-  Republished correctly from `dist/`, verified end-to-end (packed, installed, and run as an end
-  user would) before publishing this time. `.claude/skills/release-protocol/SKILL.md` corrected
-  so this can't regress again.
+  `.claude/skills/release-protocol/SKILL.md` corrected so the intended fix wouldn't regress —
+  though the registry publish for this version itself still shipped broken; see v1.4.2.
 
 ---
 

@@ -63,9 +63,15 @@ releases are cut and tagged on `master` too.
    ```bash
    npm whoami                    # confirm logged in as the package owner before publishing
    npm run prepublish:cli        # builds dist/ with the correct package.json + bin field
-   cd dist && npm publish        # publish FROM dist/, not the repo root
-   cd ..
+   npm publish ./dist            # publish the dist/ folder, not the repo root
    ```
+   Use `npm publish ./dist` (folder-argument form), **not** `cd dist && npm publish`. An npm
+   one-time-password prompt can require a second, separate command to complete the publish after
+   opening the browser link — if that retry is a bare `npm publish` typed fresh, it silently runs
+   from whatever directory the shell is in at that moment (often back at the repo root), shipping
+   the broken root package again under the new version number. `npm publish ./dist` is a single,
+   self-contained command with no directory state to lose across a retry — confirmed necessary
+   after v1.4.1's own publish hit exactly this failure mode.
    **Before publishing**, sanity-check the built package actually works — pack it and run the
    packed tarball's bin script directly (not `npx <tarball>`, which has shown unreliable local-
    tarball resolution in some environments):
