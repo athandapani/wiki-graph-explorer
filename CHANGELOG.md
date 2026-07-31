@@ -15,6 +15,21 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.4.1] — 30-Jul-2026
+
+### Fixed
+- `npx wiki-graph-explorer` was completely broken — the published package had no `bin` entry,
+  so npm couldn't determine an executable to run (`could not determine executable to run`).
+  Root cause: the release protocol's npm-publish step ran a bare `npm publish` from the repo
+  root, which publishes the web-app's own `package.json` (no `bin` field) instead of the
+  CLI-specific package `scripts/prepare-publish.ts` builds into `dist/`. This silently shipped
+  in v1.3.0, v1.3.1, and v1.4.0 — three releases with a non-functional CLI entry point.
+  Republished correctly from `dist/`, verified end-to-end (packed, installed, and run as an end
+  user would) before publishing this time. `.claude/skills/release-protocol/SKILL.md` corrected
+  so this can't regress again.
+
+---
+
 ## [1.4.0] — 29-Jul-2026
 
 ### Added

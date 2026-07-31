@@ -47,18 +47,42 @@ releases are cut and tagged on `master` too.
    git push origin vX.Y.Z
    ```
 
-7. **Publish to npm** (ASK USER FIRST — this is a real, public, irreversible publish) — from the
-   clean `master` checkout just pushed (which now matches tag `vX.Y.Z`):
+7. **Publish to npm** (ASK USER FIRST — this is a real, public, irreversible publish).
+
+   **Never run a bare `npm publish` from the repo root** — the root `package.json` has no `bin`
+   field at all (it's the Next.js web-app manifest, not the CLI's). Publishing it directly ships
+   a package with no working `wiki-graph-explorer` command — `npx wiki-graph-explorer` fails with
+   "could not determine executable to run". This exact regression shipped silently in v1.3.0,
+   v1.3.1, and v1.4.0 before being caught, because this step previously said just `npm publish`.
+
+   The correct publishable package lives in `dist/`, built by `scripts/prepare-publish.ts`, which
+   writes its own `dist/package.json` with the right `bin` field, bundles the CLI's compiled JS
+   and the static web-app preview site, and only depends on the CLI's own runtime dependencies
+   (`@huggingface/transformers`, `gray-matter`), not the whole Next.js app. From the clean
+   `master` checkout just pushed (which now matches tag `vX.Y.Z`):
    ```bash
-   npm whoami          # confirm logged in as the package owner before publishing
-   npm publish
+   npm whoami                    # confirm logged in as the package owner before publishing
+   npm run prepublish:cli        # builds dist/ with the correct package.json + bin field
+   cd dist && npm publish        # publish FROM dist/, not the repo root
+   cd ..
    ```
-   There is no CI workflow that does this — `.github/workflows/deploy.yml` only builds and
+   **Before publishing**, sanity-check the built package actually works — pack it and run the
+   packed tarball's bin script directly (not `npx <tarball>`, which has shown unreliable local-
+   tarball resolution in some environments):
+   ```bash
+   cd dist && npm pack --pack-destination /tmp && cd ..
+   mkdir -p /tmp/wge-verify && cd /tmp/wge-verify && npm init -y
+   npm install --no-save /tmp/wiki-graph-explorer-X.Y.Z.tgz
+   ./node_modules/.bin/wiki-graph-explorer --version   # must print "wiki-graph-explorer vX.Y.Z"
+   cd - && rm -rf /tmp/wge-verify /tmp/wiki-graph-explorer-X.Y.Z.tgz
+   ```
+   There is no CI workflow that does any of this — `.github/workflows/deploy.yml` only builds and
    deploys the GitHub Pages site (see the Note below). Publishing to npm is a separate, manual
-   step that is easy to forget after a release, silently leaving the registry version behind
-   `package.json`/the git tag. Confirm afterward:
+   step that is easy to forget or get wrong after a release, silently leaving the registry version
+   broken or behind `package.json`/the git tag. Confirm afterward:
    ```bash
    npm view wiki-graph-explorer version   # should now equal X.Y.Z
+   npm view wiki-graph-explorer bin       # must NOT be empty
    ```
 
 **Note:** Deployment target is GitHub Pages via a GitHub Actions workflow
